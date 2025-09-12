@@ -1,4 +1,4 @@
-package model;
+package app.model;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -8,9 +8,9 @@ import jakarta.persistence.Id;
 public class Account {
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer userid;
-    private String username;
-    private String password;
+    public Integer userid;
+    public String username;
+    public String password;
 
     // Getters and Setters
     public Integer getId() {
