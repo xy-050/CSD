@@ -1,47 +1,94 @@
 package app.account;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.google.common.hash.Hashing;
+
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
 public class AccountService {
 
-    // @Autowired
     private AccountRepository accountRepository;
+    // private final AccountRepository accountRepository;
     private Integer userid;
-    
-    //get all accounts
+
+    // /**
+    //  * Constructor-based injection.
+    //  * 
+    //  * @param accountRepository Repository dependency.
+    //  */
+    // public AccountService(AccountRepository accountRepository) {
+    //     this.accountRepository = accountRepository;
+    // }
+
+    /**
+     * Retrieves all accounts stored in the DB.
+     * 
+     * @return List containing instances of accounts.
+     */
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();
     }
 
-    //create account
-    public Account saveAccount(Account account) {
+    /**
+     * Creates a new account.
+     * 
+     * @param account Account object to save.
+     * @return Account object that is saved.
+     */
+    public Account createAccount(Account account) {
+        String plain = account.getPassword();
+        String hashed = Hashing.sha256().hashString(plain, StandardCharsets.UTF_8).toString();
+        account.setPassword(hashed);
         return accountRepository.save(account);
     }
 
-    //get account by userId
+    /**
+     * Retrieves the account given the user ID.
+     * 
+     * @param id Target user ID.
+     * @return Corresponding Account instance.
+     */
     public Account getAccountById(Long id) {
         return accountRepository.findByUserID(userid);
     }
-    
-    //get account by username
+
+    /**
+     * Retrieves the account given the username.
+     * 
+     * @param username Target username.
+     * @return Corresponding Account instance.
+     */
     public Account getAccountByUsername(String username) {
         return accountRepository.findByUsername(username);
     }
 
-    //update account
+    /**
+     * Updates an account.
+     * 
+     * @param account Target Account instance.
+     * @return Updated Account.
+     */
     public Account updateAccount(Account account) {
         return accountRepository.save(account);
     }
 
-    //delete account by userId
+    /**
+     * Deletes an Account by User ID.
+     * 
+     * @param userId Target User ID.
+     */
     public void deleteAccount(Integer userId) {
         accountRepository.deleteById(userId);
     }
-    //delete account by username
+
+    /**
+     * Deleted an Account by username.
+     * 
+     * @param username Target username.
+     */
     public void deleteAccountByUsername(String username) {
         Account account = accountRepository.findByUsername(username);
         if (account != null) {
@@ -49,11 +96,18 @@ public class AccountService {
         }
     }
 
-    // Change password method
+    /**
+     * Updates the password of an Account.
+     * 
+     * @param userId           Target user ID.
+     * @param previousPassword Original password.
+     * @param newPassword      New password to update to.
+     */
     public void changePassword(Integer userId, String previousPassword, String newPassword) {
         Account account = accountRepository.findByUserID(userId);
         if (account != null && account.getPassword().equals(previousPassword)) {
-            account.setPassword(newPassword);
+            String hashed = Hashing.sha256().hashString(newPassword, StandardCharsets.UTF_8).toString();
+            account.setPassword(hashed);
             accountRepository.save(account);
         } else {
             // Handle error: account not found or previous password incorrect
@@ -62,4 +116,3 @@ public class AccountService {
     }
 
 }
-
