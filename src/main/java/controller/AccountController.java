@@ -7,7 +7,9 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,10 +45,14 @@ public class AccountController {
         return new String();
     }
 
+    //todo: find out the js file name + return it 
     @GetMapping("/viewAccount")
     public String viewAccount(@RequestParam String param) {
         ClassPathResource resource = new ClassPathResource("static/viewAccount.html");
-        return new String();
+        String jsContent = Files.readString(resource.getFile().toPath());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, "application/javascript")
+                .body(jsContent);
     }
     
     @PostMapping("/createAccount")
