@@ -10,18 +10,18 @@ import java.util.List;
 @Service
 public class AccountService {
 
-    private AccountRepository accountRepository;
-    // private final AccountRepository accountRepository;
+    // private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
     private Integer userid;
 
-    // /**
-    //  * Constructor-based injection.
-    //  * 
-    //  * @param accountRepository Repository dependency.
-    //  */
-    // public AccountService(AccountRepository accountRepository) {
-    //     this.accountRepository = accountRepository;
-    // }
+    /**
+     * Constructor-based injection.
+     * 
+     * @param accountRepository Repository dependency.
+     */
+    public AccountService(AccountRepository accountRepository) {
+        this.accountRepository = accountRepository;
+    }
 
     /**
      * Retrieves all accounts stored in the DB.
@@ -105,14 +105,20 @@ public class AccountService {
      */
     public void changePassword(Integer userId, String previousPassword, String newPassword) {
         Account account = accountRepository.findByUserID(userId);
-        if (account != null && account.getPassword().equals(previousPassword)) {
-            String hashed = Hashing.sha256().hashString(newPassword, StandardCharsets.UTF_8).toString();
-            account.setPassword(hashed);
-            accountRepository.save(account);
-        } else {
-            // Handle error: account not found or previous password incorrect
-            throw new IllegalArgumentException("Invalid user or password");
+        if (account == null) {
+            throw new IllegalArgumentException("Account not found.");
         }
+
+        String password = account.getPassword();
+        if (!password.equals(previousPassword)) {
+            throw new IllegalArgumentException("Previous password is incorrect.");
+        } else if (password.equals(newPassword)) {
+            throw new IllegalArgumentException("New password must be different from the previous password.");
+        }
+
+        String hashed = Hashing.sha256().hashString(newPassword, StandardCharsets.UTF_8).toString();
+        account.setPassword(hashed);
+        accountRepository.save(account);
     }
 
 }
