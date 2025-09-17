@@ -1,16 +1,22 @@
 package app.model;
+import java.util.ArrayList;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 
 @Entity
 public class Account {
-    @Id 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public Integer userid;
-    public String username;
-    public String password;
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer userid;
+    private String username;
+    private String password;
+
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
+    private List<Query> queries = new ArrayList<>();
 
     // Getters and Setters
     public Integer getId() {
