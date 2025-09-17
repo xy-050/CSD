@@ -1,8 +1,10 @@
 package app.query;
 
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
+
 
 @Repository
-public class QueryRepository {
+public interface QueryRepository extends JpaRepository <Query, Long> {
 
 }
