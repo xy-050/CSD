@@ -92,7 +92,7 @@ public class AccountService {
     public void deleteAccountByUsername(String username) {
         Account account = accountRepository.findByUsername(username);
         if (account != null) {
-            accountRepository.deleteById(account.getUserid());
+            accountRepository.deleteById(account.getUserID());
         }
     }
 
