@@ -1,5 +1,17 @@
 /* App.css - Calm Blue Color Scheme */
 
+/* put near the top */
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  margin: 0;
+}
+
 /* GLOBAL STYLES */
 * {
   margin: 0;
@@ -18,10 +30,14 @@ body {
 
 /* COLOR VARIABLES */
 :root {
-  --calm-blue-light: #90D5FF;   /* Lightest blue */
-  --calm-blue-medium: #57B9FF;  /* Medium blue */
-  --calm-blue-dark: #77B1D4;    /* Darker blue */
-  --calm-blue-darkest: #517891; /* Darkest blue */
+  --calm-blue-light: #90D5FF;
+  /* Lightest blue */
+  --calm-blue-medium: #57B9FF;
+  /* Medium blue */
+  --calm-blue-dark: #77B1D4;
+  /* Darker blue */
+  --calm-blue-darkest: #517891;
+  /* Darkest blue */
   --white: #ffffff;
   --light-gray: #f8fafc;
   --medium-gray: #64748b;
@@ -33,13 +49,32 @@ body {
 /* ========================================
    LOGIN PAGE STYLES
    ======================================== */
-.login-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, var(--calm-blue-light) 0%, var(--calm-blue-medium) 50%, var(--calm-blue-dark) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
+.login-container,
+.signup-container {
+  min-height: 100dvh;
+  /* full screen incl. mobile UI bars */
+  width: 100vw;
+  /* full browser width */
+  display: grid;
+  /* simple perfect centering */
+  place-items: center;
+  padding: 2rem;
+  margin: 0;
+
+  background: linear-gradient(135deg,
+      var(--calm-blue-light) 0%,
+      var(--calm-blue-medium) 50%,
+      var(--calm-blue-dark) 100%);
+  background-size: cover;
+  background-position: center;
+}
+
+/* keep the signup hue bias if you want it different */
+.signup-container {
+  background: linear-gradient(135deg,
+      var(--calm-blue-medium) 0%,
+      var(--calm-blue-dark) 50%,
+      var(--calm-blue-darkest) 100%);
 }
 
 .login-box {
@@ -155,6 +190,9 @@ body {
   font-size: 1rem;
   transition: all 0.3s ease;
   background-color: rgba(144, 213, 255, 0.05);
+  color: var(--dark-gray);
+  /* visible text */
+  caret-color: var(--calm-blue-darkest);
 }
 
 .input-wrapper input:focus {
@@ -166,7 +204,7 @@ body {
 
 .input-wrapper input::placeholder {
   color: var(--medium-gray);
-  opacity: 0.7;
+  opacity: 1;
 }
 
 .input-wrapper input.error {
@@ -442,7 +480,13 @@ body {
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 3rem 1.5rem;
+  padding: 4rem 2rem;
+}
+
+@media (min-width: 1280px) {
+  .main-content {
+    max-width: 1280px;
+  }
 }
 
 .hero-section {
@@ -597,54 +641,109 @@ body {
   .desktop-menu {
     display: none;
   }
-  
+
   .mobile-menu-btn {
     display: flex;
   }
-  
+
   .hero-title {
     font-size: 2.2rem;
   }
-  
+
   .hero-subtitle {
     font-size: 1.1rem;
   }
-  
+
   .features-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .main-content {
     padding: 2rem 1rem;
   }
-  
+
   .nav-container {
     padding: 0 1rem;
   }
 }
 
 @media (max-width: 480px) {
+
   .login-box,
   .signup-box {
+    width: min(92vw, 720px); /* expand on desktop, comfy on phones */
+    max-width: 720px; /* harmonize with your media queries */
     padding: 2rem;
     margin: 1rem;
   }
-  
+
   .hero-title {
     font-size: 1.8rem;
   }
-  
+
   .account-info {
     padding: 2rem;
   }
-  
+
   .feature-card {
     padding: 1.5rem;
   }
-  
+
   .login-header h1,
   .signup-header h1 {
     font-size: 2rem;
+  }
+}
+
+/* Base: mobile-first (your current styles) */
+.login-box,
+.signup-box {
+  max-width: 400px;
+  width: 100%;
+}
+
+/* Tablet */
+@media (min-width: 768px) {
+
+  .login-box,
+  .signup-box {
+    max-width: 520px;
+  }
+
+  .login-header h1,
+  .signup-header h1 {
+    font-size: 2.5rem;
+  }
+}
+
+/* Desktop/laptop */
+@media (min-width: 1024px) {
+
+  .login-box,
+  .signup-box {
+    max-width: 640px;
+  }
+
+  .form-container {
+    gap: 1.25rem;
+  }
+
+  .input-wrapper input {
+    padding: 16px 18px 16px 52px;
+  }
+
+  .submit-btn {
+    padding: 16px 24px;
+    font-size: 1.05rem;
+  }
+}
+
+/* Wide desktop */
+@media (min-width: 1440px) {
+
+  .login-box,
+  .signup-box {
+    max-width: 720px;
   }
 }
 
@@ -655,12 +754,34 @@ body {
   text-align: center;
 }
 
-.mb-1 { margin-bottom: 0.25rem; }
-.mb-2 { margin-bottom: 0.5rem; }
-.mb-3 { margin-bottom: 0.75rem; }
-.mb-4 { margin-bottom: 1rem; }
+.mb-1 {
+  margin-bottom: 0.25rem;
+}
 
-.mt-1 { margin-top: 0.25rem; }
-.mt-2 { margin-top: 0.5rem; }
-.mt-3 { margin-top: 0.75rem; }
-.mt-4 { margin-top: 1rem; }
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+  margin-bottom: 0.75rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mt-3 {
+  margin-top: 0.75rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}

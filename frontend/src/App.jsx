@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import App from './App.js';
-import LoginPage from './components/LoginPage.js';
-import SignupPage from './components/SignupPage.js';
-import HomePage from './components/Homepage.js';
+// import App from './App.js';
+import LoginPage from './components/LoginPage.jsx';
+import SignupPage from './components/SignupPage.jsx';
+import HomePage from './components/Homepage.jsx';
 import './App.css';
 
 const App = () => {
