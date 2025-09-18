@@ -46,11 +46,12 @@ public class AccountController {
 
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody Account signupAccount) {
-        Account existingAccount = accountService.getAccountByUsername(signupAccount.getUsername());
+        Account existingAccount1 = accountService.getAccountByUsername(signupAccount.getUsername());
+        Account existingAccount2 = accountService.getAccountByUsername(signupAccount.getEmail());
 
         // check if account already exists
-        if (existingAccount != null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
+        if (existingAccount1 != null || existingAccount2 != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Account already exists");
         }
 
         // check strength of password

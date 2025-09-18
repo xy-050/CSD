@@ -1,5 +1,6 @@
 package app.model;
 import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -14,6 +15,7 @@ public class Account {
     private Integer userid;
     private String username;
     private String password;
+    private String email;
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     private List<Query> queries = new ArrayList<>();

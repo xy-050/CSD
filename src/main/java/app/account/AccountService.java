@@ -65,6 +65,16 @@ public class AccountService {
         return accountRepository.findByUsername(username);
     }
 
+       /**
+     * Retrieves the account given the email.
+     * 
+     * @param username Target username.
+     * @return Corresponding Account instance.
+     */
+    public Account getAccountByEmail(String email) {
+        return accountRepository.findByEmail(email);
+    }
+
     /**
      * Updates an account.
      * 
