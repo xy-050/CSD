@@ -1,14 +1,19 @@
 import { useState, useRef, useEffect } from "react";
 import SearchBar from "./Searchbar"
 
-export default function Homepage({ user, setUser, setCurrentPage }) {
+export default function Homepage({ user, setUser, setCurrentPage, setCalcQuery }) {
   const [lastQuery, setLastQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
   const btnRef = useRef(null)
   const [imgOk, setImgOk] = useState(true);
   const logout = () => { setUser(null); setCurrentPage('login') };
-  const handleSearch = (q) => console.log("Searching:", q);
+  const handleSearch = (q) => {
+    const term = (q || "").trim();
+    if (!term) return;
+    setCalcQuery(term);
+    setCurrentPage("calculator");
+  };
 
   useEffect(() => {
     const onDown = (e) => {
@@ -32,7 +37,7 @@ export default function Homepage({ user, setUser, setCurrentPage }) {
             <span className="nav-icon">💵</span>
             <span className="nav-title">Tariff-ic!</span>
           </div>
-{/* 
+          {/* 
           <div className="desktop-menu">
             <a className="nav-link" href="#" onClick={(e) => e.preventDefault()}>Dashboard</a>
             <a className="nav-link" href="#" onClick={(e) => e.preventDefault()}>Docs</a>
@@ -126,20 +131,6 @@ export default function Homepage({ user, setUser, setCurrentPage }) {
             <p>Tune preferences and notification rules.</p>
             <button className="feature-btn">Manage</button>
           </article>
-        </section>
-
-        <section className="account-info">
-          <h2>Account</h2>
-          <div className="info-grid mt-3">
-            <div className="info-item">
-              <label>Username</label>
-              <p>{user?.username}</p>
-            </div>
-            <div className="info-item">
-              <label>Email</label>
-              <p>{user?.email}</p>
-            </div>
-          </div>
         </section>
       </main>
     </div>

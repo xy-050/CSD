@@ -813,6 +813,223 @@ body {
 }
 
 /* ========================================
+   CALCULATOR
+   ======================================== */
+.calc-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .calc-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.calc-card {
+  background: linear-gradient(135deg, var(--white), rgba(144, 213, 255, 0.02));
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(var(--shadow-clr) / 0.10);
+  border: 1px solid rgba(144, 213, 255, 0.12);
+  padding: 1.25rem;
+}
+
+.calc-title {
+  color: var(--brand-ink);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  margin-bottom: 1rem;
+}
+
+.form-row.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+}
+
+.form-row label {
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--brand-ink);
+}
+
+.lines-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lines-list {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.line-item {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.6fr auto;
+  gap: .5rem;
+  align-items: center;
+}
+
+.line-item .inline {
+  position: relative;
+}
+
+.line-item .pct {
+  position: absolute;
+  right: .5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.results-top {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.duty-rate {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--brand-ink);
+}
+
+.breakdown .muted {
+  color: var(--muted);
+  font-size: .85rem;
+  margin-bottom: .25rem;
+}
+
+.breakdown .row {
+  display: flex;
+  justify-content: space-between;
+  padding: .35rem 0;
+}
+
+.breakdown .row.small {
+  font-size: .95rem;
+}
+
+.breakdown .row.total {
+  border-top: 1px solid rgba(144, 213, 255, 0.25);
+  margin-top: .35rem;
+  padding-top: .6rem;
+}
+
+.lines-table {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.line-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr .5fr auto;
+  gap: .5rem;
+  align-items: center;
+}
+
+.line-row .code {
+  color: var(--muted);
+}
+
+.pill {
+  background: var(--hover-bg);
+  border-radius: 9999px;
+  padding: .25rem .6rem;
+  display: inline-block;
+}
+
+.amt {
+  text-align: right;
+  font-weight: 600;
+}
+
+.chip.danger {
+  background: rgba(239, 68, 68, 0.08);
+  color: #B42318;
+}
+
+/* Inputs header with star */
+.calc-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: .5rem;
+}
+
+.calc-title-wrap .mini-label {
+  font-size: .72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: .2rem;
+}
+
+.calc-title {
+  margin: 0;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 1.25rem;
+  color: #c9dff6;
+  transition: transform .08s ease, color .2s ease;
+}
+
+.star-btn:hover {
+  transform: scale(1.06);
+  color: #a9cff3;
+}
+
+.star-btn.on {
+  color: #f5b301;
+  text-shadow: 0 0 6px rgba(245, 179, 1, .35);
+}
+.calc-card-head .star-btn{
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 1.25rem;
+  color: #c9dff6;                 /* default (off) */
+  transition: transform .08s ease, color .2s ease, text-shadow .2s ease;
+}
+.calc-card-head .star-btn:hover{ transform: scale(1.06); color: #a9cff3; }
+
+/* ON state via aria-pressed (no class needed) */
+.calc-card-head .star-btn[aria-pressed="true"]{
+  color: #f5b301;                 /* yellow */
+  text-shadow: 0 0 6px rgba(245,179,1,.35);
+}
+
+.query-pill {
+  display: inline-block;
+  margin: .25rem 0 1rem;
+  background: var(--hover-bg);
+  border-radius: 9999px;
+  padding: .25rem .6rem;
+  color: var(--brand-ink);
+  font-size: .85rem;
+}
+
+/* ========================================
    RESPONSIVE
    ======================================== */
 @media (max-width: 768px) {

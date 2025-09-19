@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react"
 
-function SearchBar({ onSearch }) {
+function SearchBar({ onSearch, live = false }) {
   const [q, setQ] = useState("")
   const [history, setHistory] = useState([])
   const inputRef = useRef(null)
@@ -10,9 +10,10 @@ function SearchBar({ onSearch }) {
     const t = (term ?? q).trim()
     if (!t) return
     setHistory(prev => [t, ...prev.filter(x => x !== t)].slice(0, 10))
-    if (onSearch) onSearch(t)
+    onSearch?.(t)
   }
 
+  // optional live search
   const debounced = useMemo(() => {
     return (value) => {
       if (timerRef.current) clearTimeout(timerRef.current)
@@ -36,16 +37,16 @@ function SearchBar({ onSearch }) {
           className="search-input"
           style={{ cursor: "text" }}
           value={q}
-          onChange={(e) => { setQ(e.target.value); debounced(e.target.value) }}
+          onChange={(e) => {
+            const v = e.target.value
+            setQ(v)
+            if (live) debounced(v)        // <-- only when live=true
+          }}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder="Search…"
           aria-label="Search input"
         />
-        <button
-          type="button"
-          className="btn-primary search-btn"
-          onClick={() => submit()}
-        >
+        <button type="button" className="btn-primary search-btn" onClick={() => submit()}>
           Search
         </button>
       </div>
@@ -58,21 +59,13 @@ function SearchBar({ onSearch }) {
           </div>
           <div className="chips">
             {history.map((term) => (
-              <button
-                key={term}
-                className="chip"
-                onClick={() => submit(term)}
-                title={`Search "${term}"`}
-              >
+              <button key={term} className="chip" onClick={() => submit(term)} title={`Search "${term}"`}>
                 <span className="chip-text">{term}</span>
                 <span
                   className="chip-x"
                   role="button"
                   aria-label={`Remove ${term}`}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setHistory(prev => prev.filter(x => x !== term))
-                  }}
+                  onClick={(e) => { e.stopPropagation(); setHistory(prev => prev.filter(x => x !== term)) }}
                 >
                   ×
                 </span>

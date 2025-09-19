@@ -4,20 +4,25 @@ import SignupPage from './components/SignupPage.jsx';
 import HomePage from './components/Homepage.jsx';
 import ProfilePage from './components/ProfilePage.jsx';
 import johnpork from "./assets/johnpork.png";
+import CalculatorPage from "./components/CalculatorPage.jsx";
 import './App.css';
 
-const App = () => {
+export default function App(){
   const [currentPage, setCurrentPage] = useState('login');
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState([
     { username: 'demo', email: 'demo@example.com', password: 'password123', avatarUrl: johnpork }
   ]);
 
-  const appProps = { currentPage, setCurrentPage, user, setUser, users, setUsers };
+  const [calcQuery, setCalcQuery] = useState("");
+
+  const appProps = { currentPage, setCurrentPage, user, setUser, users, setUsers, calcQuery, setCalcQuery };
 
   switch (currentPage) {
     case "home":
       return user ? <HomePage {...appProps} /> : <LoginPage {...appProps} />;
+    case "calculator":
+      return user ? <CalculatorPage {...appProps} /> : <LoginPage {...appProps} />;
     case "profile":
       return user ? <ProfilePage {...appProps} /> : <LoginPage {...appProps} />;
     case "signup":
@@ -28,4 +33,4 @@ const App = () => {
   }
 };
 
-export default App;
+// export default App;
