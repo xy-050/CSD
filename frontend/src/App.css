@@ -436,6 +436,25 @@ body {
 }
 
 /* ========================================
+   CARET ANIMATION
+   ======================================== */
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  background: var(--calm-blue-darkest);
+  animation: caret-blink 1s steps(1) infinite;
+  vertical-align: -0.15em;
+}
+@keyframes caret-blink { 50% { opacity: 0; } }
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .caret { animation: none; }
+}
+
+/* ========================================
    HOMEPAGE
    ======================================== */
 .homepage {
@@ -1002,21 +1021,28 @@ body {
   color: #f5b301;
   text-shadow: 0 0 6px rgba(245, 179, 1, .35);
 }
-.calc-card-head .star-btn{
+
+.calc-card-head .star-btn {
   background: none;
   border: none;
   cursor: pointer;
   line-height: 1;
   font-size: 1.25rem;
-  color: #c9dff6;                 /* default (off) */
+  color: #c9dff6;
+  /* default (off) */
   transition: transform .08s ease, color .2s ease, text-shadow .2s ease;
 }
-.calc-card-head .star-btn:hover{ transform: scale(1.06); color: #a9cff3; }
+
+.calc-card-head .star-btn:hover {
+  transform: scale(1.06);
+  color: #a9cff3;
+}
 
 /* ON state via aria-pressed (no class needed) */
-.calc-card-head .star-btn[aria-pressed="true"]{
-  color: #f5b301;                 /* yellow */
-  text-shadow: 0 0 6px rgba(245,179,1,.35);
+.calc-card-head .star-btn[aria-pressed="true"] {
+  color: #f5b301;
+  /* yellow */
+  text-shadow: 0 0 6px rgba(245, 179, 1, .35);
 }
 
 .query-pill {
@@ -1061,6 +1087,37 @@ body {
     padding: 0 1rem;
   }
 }
+
+/* keep navbar above content */
+.navbar {
+  position: sticky;
+  /* or fixed if you prefer */
+  top: 0;
+  z-index: 1000;
+}
+
+/* ALWAYS-on-top dropdown (top-right of viewport) */
+.profile-menu {
+  position: fixed;
+  /* key change */
+  top: 72px;
+  /* ≈ navbar height; tweak as needed */
+  right: 16px;
+  z-index: 2147483647;
+  /* max-ish */
+  width: 240px;
+  background: #fff;
+  border: 1px solid rgba(144, 213, 255, .25);
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(81, 120, 145, .2);
+}
+
+/* ensure the avatar button doesn't clip the menu */
+.nav-user {
+  position: static;
+}
+
+/* no clipping/relative stacking */
 
 @media (max-width: 480px) {
 

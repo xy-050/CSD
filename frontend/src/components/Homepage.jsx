@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import NavBar from "./NavBar";
 import SearchBar from "./Searchbar"
 
 export default function Homepage({ user, setUser, setCurrentPage, setCalcQuery }) {
@@ -14,6 +15,22 @@ export default function Homepage({ user, setUser, setCurrentPage, setCalcQuery }
     setCalcQuery(term);
     setCurrentPage("calculator");
   };
+  const fullTitle = "Welcome to your dashboard :)";
+  const [typedTitle, setTypedTitle] = useState("");
+  const [doneTyping, setDoneTyping] = useState(false);
+
+  useEffect(() => {
+    let i = 0;
+    const id = setInterval(() => {
+      i += 1;
+      setTypedTitle(fullTitle.slice(0, i));
+      if (i >= fullTitle.length) {
+        clearInterval(id);
+        setDoneTyping(true);
+      }
+    }, 60); // typing speed (ms per char)
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const onDown = (e) => {
@@ -30,108 +47,50 @@ export default function Homepage({ user, setUser, setCurrentPage, setCalcQuery }
 
   return (
     <div className="homepage">
-      {/* Navbar */}
-      <nav className="navbar">
-        <div className="nav-container">
-          <div className="nav-brand">
-            <span className="nav-icon">💵</span>
-            <span className="nav-title">Tariff-ic!</span>
-          </div>
-          {/* 
-          <div className="desktop-menu">
-            <a className="nav-link" href="#" onClick={(e) => e.preventDefault()}>Dashboard</a>
-            <a className="nav-link" href="#" onClick={(e) => e.preventDefault()}>Docs</a>
-            <a className="nav-link" href="#" onClick={(e) => e.preventDefault()}>Settings</a>
-          </div> */}
-
-          {/* Avatar + dropdown (top-right) */}
-          <div className="nav-user" style={{ position: "relative" }}>
-            <button
-              ref={btnRef}
-              className="avatar-btn"
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-              title={user?.username || user?.email}
-              onClick={() => setMenuOpen(v => !v)}
-            >
-              {(user?.avatarUrl && imgOk) ? (
-                <img
-                  className="avatar-img"
-                  src={user.avatarUrl}
-                  alt={`${user?.username || user?.email} avatar`}
-                  onError={() => setImgOk(false)}
-                />
-              ) : (
-                <span className="avatar-initials">{initials}</span>
-              )}
-            </button>
-
-            {menuOpen && (
-              <div className="profile-menu" role="menu" ref={menuRef}>
-                <div className="menu-header">
-                  Signed in as <b>{user?.username || user?.email}</b>
-                </div>
-
-                <button
-                  className="menu-item"
-                  role="menuitem"
-                  onClick={() => { setMenuOpen(false); setCurrentPage("profile"); }}
-                >
-                  Profile
-                </button>
-
-                <div className="menu-sep" />
-
-                <button className="menu-item danger" role="menuitem" onClick={logout}>
-                  Log out
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </nav>
+      <NavBar user={user} setUser={setUser} setCurrentPage={setCurrentPage} />
 
       {/* Main */}
       <main className="main-content">
-        <section className="hero-section">
-          <h1 className="hero-title">Welcome to your dashboard :)</h1>
+        <><section className="hero-section">
+          <h1 className="hero-title">
+            {typedTitle}
+            {!doneTyping && <span className="caret" aria-hidden="true" />}
+          </h1>
           {/* SearchBar */}
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar user={user} onSearch={handleSearch} />
           {lastQuery && (
             <p className="hero-subtitle" style={{ marginTop: "0.75rem" }}>
               Showing results for: <b>{lastQuery}</b>
             </p>
           )}
-        </section>
+        </section><section className="features-grid">
+            <article className="feature-card">
+              <div className="feature-header">
+                <div className="feature-icon blue">📈</div>
+                <h3>Insights</h3>
+              </div>
+              <p>Track activity and recent events at a glance.</p>
+              <button className="feature-btn">View reports</button>
+            </article>
 
-        <section className="features-grid">
-          <article className="feature-card">
-            <div className="feature-header">
-              <div className="feature-icon blue">📈</div>
-              <h3>Insights</h3>
-            </div>
-            <p>Track activity and recent events at a glance.</p>
-            <button className="feature-btn">View reports</button>
-          </article>
+            <article className="feature-card">
+              <div className="feature-header">
+                <div className="feature-icon green">🗂️</div>
+                <h3>Projects</h3>
+              </div>
+              <p>Organize work with a soothing, minimal UI.</p>
+              <button className="feature-btn">Open projects</button>
+            </article>
 
-          <article className="feature-card">
-            <div className="feature-header">
-              <div className="feature-icon green">🗂️</div>
-              <h3>Projects</h3>
-            </div>
-            <p>Organize work with a soothing, minimal UI.</p>
-            <button className="feature-btn">Open projects</button>
-          </article>
-
-          <article className="feature-card">
-            <div className="feature-header">
-              <div className="feature-icon purple">⚙️</div>
-              <h3>Settings</h3>
-            </div>
-            <p>Tune preferences and notification rules.</p>
-            <button className="feature-btn">Manage</button>
-          </article>
-        </section>
+            <article className="feature-card">
+              <div className="feature-header">
+                <div className="feature-icon purple">⚙️</div>
+                <h3>Settings</h3>
+              </div>
+              <p>Tune preferences and notification rules.</p>
+              <button className="feature-btn">Manage</button>
+            </article>
+          </section></>
       </main>
     </div>
   )
