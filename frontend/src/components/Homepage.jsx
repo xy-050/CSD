@@ -6,6 +6,7 @@ export default function Homepage({ user, setUser, setCurrentPage }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef(null)
   const btnRef = useRef(null)
+  const [imgOk, setImgOk] = useState(true);
   const logout = () => { setUser(null); setCurrentPage('login') };
   const handleSearch = (q) => console.log("Searching:", q);
 
@@ -48,7 +49,16 @@ export default function Homepage({ user, setUser, setCurrentPage }) {
               title={user?.username || user?.email}
               onClick={() => setMenuOpen(v => !v)}
             >
-              <span className="avatar-initials">{initials}</span>
+              {(user?.avatarUrl && imgOk) ? (
+                <img
+                  className="avatar-img"
+                  src={user.avatarUrl}
+                  alt={`${user?.username || user?.email} avatar`}
+                  onError={() => setImgOk(false)}
+                />
+              ) : (
+                <span className="avatar-initials">{initials}</span>
+              )}
             </button>
 
             {menuOpen && (

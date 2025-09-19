@@ -730,34 +730,87 @@ body {
 /* ========================================
    AVATAR & DROPDOWN
    ======================================== */
-.avatar-btn{
-  width: 36px; height: 36px; border-radius: 9999px; border: none;
-  display: grid; place-items: center; font-weight: 700;
+.avatar-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: none;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
   background: linear-gradient(135deg, var(--calm-blue-medium), var(--calm-blue-dark));
-  color: #fff; box-shadow: 0 4px 12px rgba(var(--shadow-clr) / 0.25);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(var(--shadow-clr) / 0.25);
+  overflow: hidden;
+  padding: 0;
 }
-.avatar-btn:hover{ filter: brightness(0.98); }
-.avatar-initials{ font-size: 0.9rem; line-height: 1; }
 
-.profile-menu{
-  position: absolute; right: 0; top: calc(100% + 8px); z-index: 50;
-  width: 220px; background: #fff; border-radius: 12px;
-  box-shadow: 0 16px 40px rgba(var(--shadow-clr) / 0.18);
-  border: 1px solid rgba(144,213,255,0.25); padding: 8px;
+.avatar-btn:hover {
+  filter: brightness(0.98);
 }
-.menu-header{
-  font-size: 0.8rem; color: var(--muted);
-  padding: 8px 10px 6px; border-bottom: 1px solid rgba(144,213,255,0.25);
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.avatar-initials {
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+
+.profile-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 50;
+  width: 220px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(var(--shadow-clr) / 0.18);
+  border: 1px solid rgba(144, 213, 255, 0.25);
+  padding: 8px;
+}
+
+.menu-header {
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding: 8px 10px 6px;
+  border-bottom: 1px solid rgba(144, 213, 255, 0.25);
   margin-bottom: 6px;
 }
-.menu-item{
-  width: 100%; text-align: left; background: none; border: none; padding: 10px 10px;
-  border-radius: 8px; font-size: 0.95rem; color: var(--brand-ink); cursor: pointer;
+
+.menu-item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 10px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: var(--brand-ink);
+  cursor: pointer;
 }
-.menu-item:hover{ background: var(--hover-bg); }
-.menu-item.danger{ color: #b42318; }
-.menu-item.danger:hover{ background: rgba(239,68,68,0.08); }
-.menu-sep{ height: 8px; }
+
+.menu-item:hover {
+  background: var(--hover-bg);
+}
+
+.menu-item.danger {
+  color: #b42318;
+}
+
+.menu-item.danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.menu-sep {
+  height: 8px;
+}
 
 /* ========================================
    RESPONSIVE

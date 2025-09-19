@@ -3,13 +3,14 @@ import LoginPage from './components/LoginPage.jsx';
 import SignupPage from './components/SignupPage.jsx';
 import HomePage from './components/Homepage.jsx';
 import ProfilePage from './components/ProfilePage.jsx';
+import johnpork from "./assets/johnpork.png";
 import './App.css';
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('login');
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState([
-    { username: 'demo', email: 'demo@example.com', password: 'password123' }
+    { username: 'demo', email: 'demo@example.com', password: 'password123', avatarUrl: johnpork }
   ]);
 
   const appProps = { currentPage, setCurrentPage, user, setUser, users, setUsers };
