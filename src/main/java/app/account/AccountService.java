@@ -1,17 +1,14 @@
 package app.account;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.google.common.hash.Hashing;
-
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
 public class AccountService {
-
-    // private AccountRepository accountRepository;
     private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
     private Integer userid;
 
     /**
@@ -19,8 +16,9 @@ public class AccountService {
      * 
      * @param accountRepository Repository dependency.
      */
-    public AccountService(AccountRepository accountRepository) {
+    public AccountService(AccountRepository accountRepository, PasswordEncoder passwordEncoder) {
         this.accountRepository = accountRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -39,9 +37,7 @@ public class AccountService {
      * @return Account object that is saved.
      */
     public Account createAccount(Account account) {
-        String plain = account.getPassword();
-        String hashed = Hashing.sha256().hashString(plain, StandardCharsets.UTF_8).toString();
-        account.setPassword(hashed);
+        account.setPassword(passwordEncoder.encode(account.getPassword()));
         return accountRepository.save(account);
     }
 
@@ -116,8 +112,7 @@ public class AccountService {
             throw new IllegalArgumentException("New password must be different from the previous password.");
         }
 
-        String hashed = Hashing.sha256().hashString(newPassword, StandardCharsets.UTF_8).toString();
-        account.setPassword(hashed);
+        account.setPassword(passwordEncoder.encode(newPassword));
         accountRepository.save(account);
     }
 

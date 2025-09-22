@@ -1,4 +1,4 @@
-package app.utility;
+package app.security;
 
 public class PasswordChecker {
     /**
