@@ -74,14 +74,17 @@ export default function App() {
     
     case "searchResults":
       return (
-        <SearchResults 
-          results={results} 
-          onSelectOption={(option) => {
-            setCalcQuery(option.name);
-            setCurrentPage("calculator"); // try to change to searchResults???
-          }} 
-        />
-      );
+    <SearchResults 
+      results={results} 
+      onSelectOption={(option) => {
+        setCalcQuery(option.name);
+        setCurrentPage("calculator");
+      }}
+      user={user}
+      setUser={setUser}
+      setCurrentPage={setCurrentPage}
+    />
+  );
 
     case "calculator":
       return user ? <CalculatorPage {...appProps} /> : <LoginPage {...appProps} />;

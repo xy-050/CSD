@@ -1,4 +1,5 @@
 import { useState } from "react"
+import NavBar from "./NavBar.jsx"
 
 export default function ProfilePage({ user, setUser, setCurrentPage }) {
   const [form, setForm] = useState({
@@ -18,6 +19,8 @@ export default function ProfilePage({ user, setUser, setCurrentPage }) {
 
   return (
     <div className="homepage">
+      <NavBar user={user} setUser={setUser} setCurrentPage={setCurrentPage} />
+      
       <main className="main-content">
         <section className="hero-section">
           <h1 className="hero-title">Your profile</h1>

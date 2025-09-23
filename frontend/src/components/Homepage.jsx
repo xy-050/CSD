@@ -5,7 +5,7 @@ import SearchBar from "./SearchBar"
 export default function Homepage({ onSearch, user, setUser, setCurrentPage, setCalcQuery }) {
   const [lastQuery, setLastQuery] = useState("");
   // const [menuOpen, setMenuOpen] = useState(false)
-  // const menuRef = useRef(null)
+  const menuRef = useRef(null)
   // const btnRef = useRef(null)
   // const [imgOk, setImgOk] = useState(true);
   // const logout = () => { setUser(null); setCurrentPage('login') };
