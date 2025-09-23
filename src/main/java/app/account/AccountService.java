@@ -12,7 +12,7 @@ public class AccountService {
 
     // private AccountRepository accountRepository;
     private final AccountRepository accountRepository;
-    private Integer userid;
+    private Integer userID;
 
     /**
      * Constructor-based injection.
@@ -52,7 +52,7 @@ public class AccountService {
      * @return Corresponding Account instance.
      */
     public Account getAccountById(Long id) {
-        return accountRepository.findByUserID(userid);
+        return accountRepository.findByUserID(userID);
     }
 
     /**
