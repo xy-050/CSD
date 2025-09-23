@@ -32,7 +32,7 @@ export default function SearchResults({ results, onSelectOption, user, setUser, 
         <div className="results-grid">
           {results.map((result, index) => (
             <div className="result-item" key={index}>
-              <h3>{result.name}</h3>
+              <h3>{result.htsno}</h3>
               <p>{result.description}</p>
               <button onClick={() => onSelectOption(result)}>Shortlist</button>
             </div>

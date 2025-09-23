@@ -22,26 +22,29 @@ export default function App() {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:8080/api/tariffs/search?keyword=${term}`,
+        `http://localhost:8080/api/tariffs/search?keyword=${encodeURIComponent(term)}`,
         {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         }
       );
+
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
       const data = await response.json();
-      setResults(data);  // Update results in parent
-      setCurrentPage('searchResults');  // Navigate to search results page
+      console.log('Search results:', data); // Debug log
+      setResults(data);
+      setCurrentPage('searchResults');
     } catch (error) {
       console.error('Error during search:', error);
-      setResults([]);  // Optionally clear results on error
+      setResults([]);
+      // Show user-friendly error message
     } finally {
       setIsLoading(false);
     }
   };
-
   // Function to handle login
   const handleLogin = (email, password) => {
     const foundUser = users.find(u => u.email === email && u.password === password);
@@ -64,27 +67,27 @@ export default function App() {
   switch (currentPage) {
     case "home":
       return user ? (
-        <HomePage 
+        <HomePage
           onSearch={runSearch} // Pass the runSearch function as a prop
-          setCurrentPage={setCurrentPage} 
-          user={user} 
+          setCurrentPage={setCurrentPage}
+          user={user}
           {...appProps} // Spread the rest of the app props here
         />
       ) : <LoginPage {...appProps} />;
-    
+
     case "searchResults":
       return (
-    <SearchResults 
-      results={results} 
-      onSelectOption={(option) => {
-        setCalcQuery(option.name);
-        setCurrentPage("calculator");
-      }}
-      user={user}
-      setUser={setUser}
-      setCurrentPage={setCurrentPage}
-    />
-  );
+        <SearchResults
+          results={results}
+          onSelectOption={(option) => {
+            setCalcQuery(option.htsno || option.description); // Set the calculator query to the selected option's htsno
+            setCurrentPage("calculator");
+          }}
+          user={user}
+          setUser={setUser}
+          setCurrentPage={setCurrentPage}
+        />
+      );
 
     case "calculator":
       return user ? <CalculatorPage {...appProps} /> : <LoginPage {...appProps} />;

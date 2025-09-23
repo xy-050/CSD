@@ -44,12 +44,18 @@ export default function Homepage({ onSearch, user, setUser, setCurrentPage, setC
   const initials = (user?.username || user?.email || "U").split(/\s+/).map(s => s[0]).slice(0, 2).join("").toUpperCase()
 
   // Handle the search by passing the query to parent (App.jsx)
-  const handleSearch = (q) => {
-    const term = (q || "").trim();
+  const handleSearch = (searchTerm, results) => {
+    const term = (searchTerm || "").trim();
     if (!term) return;
     setLastQuery(term); // Store the last query
     setCalcQuery(term);  // Pass query to setCalcQuery (for use in calculator page)
-    setCurrentPage("searchResults");  // Navigate to the search results page
+    
+    // If onSearch is provided (from App.js), call it
+    if (typeof onSearch === 'function') {
+      onSearch(term);
+    }
+    
+    // Navigate to search results will be handled by SearchBar's setCurrentPage
   };
 
   return (
@@ -64,7 +70,11 @@ export default function Homepage({ onSearch, user, setUser, setCurrentPage, setC
             {!doneTyping && <span className="caret" aria-hidden="true" />}
           </h1>
           {/* SearchBar */}
-          <SearchBar user={user} onSearch={handleSearch} />
+          <SearchBar 
+          user={user}
+          onSearch={handleSearch}
+          setCurrentPage={setCurrentPage}
+          />
           {lastQuery && (
             <p className="hero-subtitle" style={{ marginTop: "0.75rem" }}>
               Showing results for: <b>{lastQuery}</b>
