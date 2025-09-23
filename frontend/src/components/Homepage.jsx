@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import NavBar from "./NavBar";
-import SearchBar from "./Searchbar"
+import SearchBar from "./SearchBar"
 
 export default function Homepage({ user, setUser, setCurrentPage, setCalcQuery }) {
   const [lastQuery, setLastQuery] = useState("");
