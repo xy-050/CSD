@@ -48,23 +48,16 @@ public class AccountController {
         return ResponseEntity.ok("home " + userID);
     }
 
-    // /**
-    //  * Login endpoint to authenticate user.
-    //  * 
-    //  * @param loginAccount Account object from request body.
-    //  * @return ResponseEntity with status and message.
-    //  */
-    // @PostMapping("/login")
-    // public ResponseEntity<String> login(@RequestBody Account loginAccount) {
-    //     Account account = accountService.getAccountByUsername(loginAccount.getUsername());
-
-    //     // check if account exists and password matches
-    //     if (account == null || !account.getPassword().equals(loginAccount.getPassword())) {
-    //         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
-    //     }
-
-    //     return ResponseEntity.ok("Login successful for user: " + account.getUsername());
-    // }
+    /**
+     * Login endpoint to authenticate user.
+     * 
+     * @param loginAccount Account object from request body.
+     * @return ResponseEntity with status and message.
+     */
+    @GetMapping("/login")
+    public ResponseEntity<String> login(@RequestBody Account loginAccount) {
+        return ResponseEntity.ok("Login successful for user: " + loginAccount.getUsername());
+    }
 
     /**
      * Signup endpoint to create a new account.

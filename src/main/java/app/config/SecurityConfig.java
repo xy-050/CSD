@@ -31,7 +31,10 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
+                .loginPage("/login")
                 .loginProcessingUrl("/login")
+                .usernameParameter("username")
+                .passwordParameter("password")
                 .successHandler((request, response, authentication) -> {
                     response.setStatus(HttpStatus.OK.value());
                     response.getWriter().write("Login successful");
