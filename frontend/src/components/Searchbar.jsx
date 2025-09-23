@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-export default function SearchBar({ onSearch, user, live = false }) {
+export default function SearchBar({ onSearch, user, live = false, setCurrentPage }) {
   const [q, setQ] = useState("");
   const [history, setHistory] = useState([]);
+  const [results, setResults] = useState([]);
   const inputRef = useRef(null);
   const timerRef = useRef(null);
 
@@ -33,6 +34,37 @@ export default function SearchBar({ onSearch, user, live = false }) {
     if (onSearch) onSearch(t);
   };
 
+  // API call function
+  const [isLoading, setIsLoading] = useState(false);
+
+  const runSearch = async (term) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/tariffs/search?keyword=${term}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+      );
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setResults(data);
+      setCurrentPage("searchResults"); // Navigate to search results page
+    } catch (error) {
+      console.error('Error during search:', error);
+      setResults([]); // Optionally clear results on error
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // show loading indicator if isLoading is true
+  const loadingIndicator = isLoading && <div className="loading">Loading...</div>;
+
   // optional live search (off by default)
   const debounced = useMemo(() => (value) => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -43,7 +75,7 @@ export default function SearchBar({ onSearch, user, live = false }) {
   }, [live, onSearch]);
 
   const removeOne = (term) => saveHistory(history.filter(x => x !== term));
-  const clearAll  = () => saveHistory([]);
+  const clearAll = () => saveHistory([]);
 
   return (
     <section className="search-section">

@@ -4,9 +4,11 @@ export default function LoginPage({ setCurrentPage, setUser, users }) {
   const [emailOrUser, setEmailOrUser] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const onSubmit = (e) => {
     e.preventDefault()
+    setLoading(true)
     const found = users.find(
       u =>
         u.username.toLowerCase() === emailOrUser.toLowerCase() ||
@@ -14,10 +16,17 @@ export default function LoginPage({ setCurrentPage, setUser, users }) {
     )
     if (!found || found.password !== password) {
       setError('Invalid credentials. Try demo / password123.')
+      setLoading(false)
       return
     }
     setUser(found)
     setCurrentPage('home')
+    setLoading(false)
+  }
+
+  const handleInputChange = (setter) => (e) => {
+    setter(e.target.value)
+    if (error) setError('') // Clear error message when user starts typing again
   }
 
   return (

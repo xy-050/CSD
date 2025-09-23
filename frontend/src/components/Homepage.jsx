@@ -2,24 +2,20 @@ import { useState, useRef, useEffect } from "react";
 import NavBar from "./NavBar";
 import SearchBar from "./SearchBar"
 
-export default function Homepage({ user, setUser, setCurrentPage, setCalcQuery }) {
+export default function Homepage({ onSearch, user, setUser, setCurrentPage, setCalcQuery }) {
   const [lastQuery, setLastQuery] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false)
-  const menuRef = useRef(null)
-  const btnRef = useRef(null)
-  const [imgOk, setImgOk] = useState(true);
-  const logout = () => { setUser(null); setCurrentPage('login') };
-  const handleSearch = (q) => {
-    const term = (q || "").trim();
-    if (!term) return;
-    setCalcQuery(term);
-    setCurrentPage("calculator");
-  };
-  const fullTitle = "Welcome to your dashboard :)";
+  // const [menuOpen, setMenuOpen] = useState(false)
+  // const menuRef = useRef(null)
+  // const btnRef = useRef(null)
+  // const [imgOk, setImgOk] = useState(true);
+  // const logout = () => { setUser(null); setCurrentPage('login') };
+  // const fullTitle = "Welcome to your dashboard :)";
   const [typedTitle, setTypedTitle] = useState("");
   const [doneTyping, setDoneTyping] = useState(false);
 
+  // typing effect for welcome message
   useEffect(() => {
+    const fullTitle = "Welcome to your dashboard :)";
     let i = 0;
     const id = setInterval(() => {
       i += 1;
@@ -32,6 +28,7 @@ export default function Homepage({ user, setUser, setCurrentPage, setCalcQuery }
     return () => clearInterval(id);
   }, []);
 
+  // handle outside clicks and escape key
   useEffect(() => {
     const onDown = (e) => {
       if (!menuRef.current || !btnRef.current) return
@@ -43,7 +40,17 @@ export default function Homepage({ user, setUser, setCurrentPage, setCalcQuery }
     return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey) }
   }, [])
 
+  // display initials from user's name or email
   const initials = (user?.username || user?.email || "U").split(/\s+/).map(s => s[0]).slice(0, 2).join("").toUpperCase()
+
+  // Handle the search by passing the query to parent (App.jsx)
+  const handleSearch = (q) => {
+    const term = (q || "").trim();
+    if (!term) return;
+    setLastQuery(term); // Store the last query
+    setCalcQuery(term);  // Pass query to setCalcQuery (for use in calculator page)
+    setCurrentPage("searchResults");  // Navigate to the search results page
+  };
 
   return (
     <div className="homepage">
@@ -75,11 +82,11 @@ export default function Homepage({ user, setUser, setCurrentPage, setCalcQuery }
 
             <article className="feature-card">
               <div className="feature-header">
-                <div className="feature-icon green">🗂️</div>
-                <h3>Projects</h3>
+                <div className="feature-icon green">⭐️</div>
+                <h3>Favourites</h3>
               </div>
               <p>Organize work with a soothing, minimal UI.</p>
-              <button className="feature-btn">Open projects</button>
+              <button className="feature-btn">Open favourites</button>
             </article>
 
             <article className="feature-card">
