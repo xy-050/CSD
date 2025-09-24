@@ -13,7 +13,6 @@ public class QueryController {
 
 	private final QueryService queryService;
 
-	@Autowired
 	public QueryController(QueryService queryService) {
 		this.queryService = queryService;
 	}
@@ -84,5 +83,11 @@ public class QueryController {
 		}
 		Map<String, Object> countryTariffs = queryService.extractCountryTariffs(item);
 		return ResponseEntity.ok(countryTariffs);
+	}
+
+	@GetMapping("/most-queried")  // TODO: should the /api/tariff mapping be moved to each part so this does not become /api/tariffs/most-queried?
+	public ResponseEntity<List<String>> getMostQueriedHTSCodes() {
+		List<String> results = queryService.getMostQueried();
+		return ResponseEntity.ok(results);
 	}
 }

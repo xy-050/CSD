@@ -1,5 +1,4 @@
 
-
 package app.query;
 
 import org.springframework.stereotype.Service;
@@ -12,12 +11,25 @@ public class QueryService {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String HTS_SEARCH_API = "https://hts.usitc.gov/reststop/search";
+    private final QueryRepository queryRepository;
 
     /**
-     * Searches the US HTS REST API for tariff articles containing the given keyword.
+     * Constructor-based injection
+     * 
+     * @param queryRepository The QueryRepository instance
+     */
+    public QueryService(QueryRepository queryRepository) {
+        this.queryRepository = queryRepository;
+    }
+
+    /**
+     * Searches the US HTS REST API for tariff articles containing the given
+     * keyword.
      * Returns up to the first 100 matching articles in JSON format.
+     * 
      * @param keyword The word or phrase to search for
-     * @return List of matching tariff articles (as Maps), or empty list if none found
+     * @return List of matching tariff articles (as Maps), or empty list if none
+     *         found
      */
     public List<Map<String, Object>> searchTariffArticles(String keyword) {
         String url = HTS_SEARCH_API + "?keyword=" + keyword;
@@ -26,16 +38,17 @@ public class QueryService {
             // System.out.println("Raw API response: " + response);
             List<Map<String, Object>> rawResults = null;
             if (response instanceof List<?> resultsList) {
-                //noinspection unchecked
+                // noinspection unchecked
                 rawResults = (List<Map<String, Object>>) resultsList;
             } else if (response instanceof Map<?, ?> map) {
                 Object resultsObj = map.get("results");
                 if (resultsObj instanceof List<?> resultsList) {
-                    //noinspection unchecked
+                    // noinspection unchecked
                     rawResults = (List<Map<String, Object>>) resultsList;
                 }
             }
-            if (rawResults == null) return List.of();
+            if (rawResults == null)
+                return List.of();
             return rawResults;
         } catch (Exception e) {
             e.printStackTrace();
@@ -44,7 +57,9 @@ public class QueryService {
     }
 
     /**
-     * Extracts only the relevant fields (htsno, description, units, general) from the raw tariff articles.
+     * Extracts only the relevant fields (htsno, description, units, general) from
+     * the raw tariff articles.
+     * 
      * @param keyword The word or phrase to search for
      * @return List of simplified tariff articles
      */
@@ -60,9 +75,11 @@ public class QueryService {
         }).toList();
     }
 
-        /**
-     * Given a tariff article (as a Map), returns a map of country names to their special tariff rate.
+    /**
+     * Given a tariff article (as a Map), returns a map of country names to their
+     * special tariff rate.
      * Countries not listed in 'special' get the 'general' or 'other' rate.
+     * 
      * @param item The tariff article map (from the API)
      * @return Map of country name to tariff rate string
      */
@@ -95,7 +112,8 @@ public class QueryService {
         }
 
         // Assign general/other rates to the rest
-        String defaultRate = general != null && !general.isEmpty() ? general : (other != null && !other.isEmpty() ? other : "N/A");
+        String defaultRate = general != null && !general.isEmpty() ? general
+                : (other != null && !other.isEmpty() ? other : "N/A");
         for (String code : isoCountryMap.keySet()) {
             String country = isoCountryMap.get(code);
             if (!countryToRate.containsKey(country)) {
@@ -119,8 +137,8 @@ public class QueryService {
             final String specialRateFinal = specialRate;
             java.util.List<String> specialList = rateToCountries.get(specialRateFinal);
             java.util.List<String> otherList = rateToCountries.entrySet().stream()
-                .filter(e -> !e.getKey().equals(specialRateFinal))
-                .flatMap(e -> e.getValue().stream()).toList();
+                    .filter(e -> !e.getKey().equals(specialRateFinal))
+                    .flatMap(e -> e.getValue().stream()).toList();
             result.put("Special countries", specialList);
             result.put("Special rate", specialRateFinal);
             result.put("Other Countries", otherList);
@@ -132,5 +150,15 @@ public class QueryService {
             }
         }
         return result;
+    }
+
+    /**
+     * Returns the most queried product.
+     * TODO: currently returns HTS codes, should we change to the name of the product? if so, need to map HTS codes to product names
+     * 
+     * @return List of most queried product codes (HTS codes)
+     */
+    public List<String> getMostQueried() {
+        return queryRepository.findMostQueried();
     }
 }

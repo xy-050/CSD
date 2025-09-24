@@ -12,3 +12,7 @@
 GET http://localhost:8080/api/tariffs/compare-countries?htsno=2710.12.15&keyword=motor
 
 Accept: application/json
+
+###
+GET http://localhost:8080/api/tariffs/most-queried
+Accept: application/json
