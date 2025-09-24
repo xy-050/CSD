@@ -3,7 +3,12 @@ package app.query;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import app.account.Account;
+import app.account.AccountRepository;
+
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -14,6 +19,15 @@ public class QueryService {
 	// Example: Inject the API URL from application properties
 	@Value("https://data.gov.sg/api/action/datastore_search?resource_id=d_c63822ef11e6a79b8281db36b1975bef")
 	private String tariffApiUrl;
+
+	private final QueryRepository queryRepository;
+	private final AccountRepository accountRepository;
+
+	@Autowired
+	public QueryService(QueryRepository queryRepository, AccountRepository accountRepository) {
+		this.queryRepository = queryRepository;
+		this.accountRepository = accountRepository;
+	}
 
 	/**
 	 * Fetches tariff rates from an external API as a standalone feature.
@@ -56,4 +70,34 @@ public class QueryService {
 		double perUnitRate = rates.getOrDefault("perUnitRate", 0.0);
 		return quantity * perUnitRate;
 	}
+
+	/**
+	 * Adds a new Query record to the database.
+	 * @param query The Query object to be saved
+	 * @return The saved Query object with generated ID
+	 */	public Query addQuery(Query query) {
+		return queryRepository.save(query);
+	 }
+
+	 public List<Query> getQueriesByUserId(Integer userID) {
+		Account user = accountRepository.findByUserID(userID);
+		if (user == null) {
+			throw new IllegalArgumentException("User with ID " + userID + " not found.");
+		}
+		return queryRepository.findByUserID(user);
+	 }
+
+	 public void deleteQuery(Long queryID) {
+		if (!queryRepository.existsById(queryID)) {
+			throw new IllegalArgumentException("Query with ID " + queryID + " not found.");	
+
+		} else {
+			queryRepository.deleteById(queryID);
+		}
+	}
+
+
+
+
+
 }
