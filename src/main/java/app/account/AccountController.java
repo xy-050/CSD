@@ -3,6 +3,7 @@ package app.account;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -115,7 +116,7 @@ public class AccountController {
                     .body("Password does not meet the minimum requirements");
         }
 
-        // update account details
+        // update account details-
         existingAccount.setPassword(updateAccount.getPassword());
         existingAccount.setEmail(updateAccount.getEmail());
         accountService.updateAccount(existingAccount);
@@ -160,4 +161,25 @@ public class AccountController {
     public List<Account> getAccounts() {
         return accountService.getAllAccounts();
     }
+
+    /*
+     * Managing favourite hts codes saved by users
+     */
+    @PostMapping("/account/{userID}/favourites")
+    public ResponseEntity<?> addFavourite(@PathVariable Integer userID, @RequestParam String htsCode) {
+        accountService.addFavouriteHtsCode(userID, htsCode);
+        return ResponseEntity.ok("Added favourite: " + htsCode);
+    }
+
+    @DeleteMapping("/account/{userID}/favourites")
+    public ResponseEntity<?> removeFavourite(@PathVariable Integer userID, @RequestParam String htsCode) {
+        accountService.removeFavouriteHtsCode(userID, htsCode);
+        return ResponseEntity.ok("Removed favourite: " + htsCode);
+    }
+
+    @GetMapping("/account/{userID}/favourites")
+    public ResponseEntity<Set<String>> getFavourites(@PathVariable Integer userID) {
+        return ResponseEntity.ok(accountService.getFavouriteHtsCodes(userID));
+    }
+
 }
