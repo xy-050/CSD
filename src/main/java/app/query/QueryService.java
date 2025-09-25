@@ -1,5 +1,4 @@
 
-
 package app.query;
 
 import org.springframework.stereotype.Service;
@@ -12,12 +11,25 @@ public class QueryService {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String HTS_SEARCH_API = "https://hts.usitc.gov/reststop/search";
+    private final QueryRepository queryRepository;
 
     /**
-     * Searches the US HTS REST API for tariff articles containing the given keyword.
+     * Constructor-based injection
+     * 
+     * @param queryRepository The QueryRepository instance
+     */
+    public QueryService(QueryRepository queryRepository) {
+        this.queryRepository = queryRepository;
+    }
+
+    /**
+     * Searches the US HTS REST API for tariff articles containing the given
+     * keyword.
      * Returns up to the first 100 matching articles in JSON format.
+     * 
      * @param keyword The word or phrase to search for
-     * @return List of matching tariff articles (as Maps), or empty list if none found
+     * @return List of matching tariff articles (as Maps), or empty list if none
+     *         found
      */
     public List<Map<String, Object>> searchTariffArticles(String keyword) {
         String url = HTS_SEARCH_API + "?keyword=" + keyword;
@@ -26,16 +38,17 @@ public class QueryService {
             // System.out.println("Raw API response: " + response);
             List<Map<String, Object>> rawResults = null;
             if (response instanceof List<?> resultsList) {
-                //noinspection unchecked
+                // noinspection unchecked
                 rawResults = (List<Map<String, Object>>) resultsList;
             } else if (response instanceof Map<?, ?> map) {
                 Object resultsObj = map.get("results");
                 if (resultsObj instanceof List<?> resultsList) {
-                    //noinspection unchecked
+                    // noinspection unchecked
                     rawResults = (List<Map<String, Object>>) resultsList;
                 }
             }
-            if (rawResults == null) return List.of();
+            if (rawResults == null)
+                return List.of();
             return rawResults;
         } catch (Exception e) {
             e.printStackTrace();
@@ -207,6 +220,7 @@ public class QueryService {
         /**
      * Given a tariff article (as a Map), returns a map of country names to their special tariff rate.
      * Countries not listed in 'special' get the 'general' or 'other' rate.
+     * 
      * @param item The tariff article map (from the API)
      * @return Map of country name to tariff rate string
      */
@@ -239,5 +253,15 @@ public class QueryService {
             result.put("General rate", general);
         }
         return result;
+    }
+
+    /**
+     * Returns the most queried product.
+     * TODO: currently returns HTS codes, should we change to the name of the product? if so, need to map HTS codes to product names
+     * 
+     * @return List of most queried product codes (HTS codes)
+     */
+    public List<String> getMostQueried() {
+        return queryRepository.findMostQueried();
     }
 }
