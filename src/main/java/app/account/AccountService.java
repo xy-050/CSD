@@ -1,17 +1,16 @@
 package app.account;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.google.common.hash.Hashing;
-
-import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class AccountService {
-
-    // private AccountRepository accountRepository;
     private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
     private Integer userID;
 
     /**
@@ -19,8 +18,9 @@ public class AccountService {
      * 
      * @param accountRepository Repository dependency.
      */
-    public AccountService(AccountRepository accountRepository) {
+    public AccountService(AccountRepository accountRepository, PasswordEncoder passwordEncoder) {
         this.accountRepository = accountRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -39,9 +39,7 @@ public class AccountService {
      * @return Account object that is saved.
      */
     public Account createAccount(Account account) {
-        String plain = account.getPassword();
-        String hashed = Hashing.sha256().hashString(plain, StandardCharsets.UTF_8).toString();
-        account.setPassword(hashed);
+        account.setPassword(passwordEncoder.encode(account.getPassword()));
         return accountRepository.save(account);
     }
 
@@ -116,9 +114,37 @@ public class AccountService {
             throw new IllegalArgumentException("New password must be different from the previous password.");
         }
 
-        String hashed = Hashing.sha256().hashString(newPassword, StandardCharsets.UTF_8).toString();
-        account.setPassword(hashed);
+        account.setPassword(passwordEncoder.encode(newPassword));
         accountRepository.save(account);
+    }
+
+    /*
+     * Saves the favourite hts code of user into their account
+     */
+    public void addFavouriteHtsCode(Integer userId, String htsCode) {
+        Account account = accountRepository.findById(userId).orElseThrow();
+        account.getFavouriteHtsCodes().add(new FavouriteHtsCodes(htsCode));
+        accountRepository.save(account);
+    }
+
+    /*
+     * Removes the favourite hts code of user from their account
+     */
+    public void removeFavouriteHtsCode(Integer userId, String htsCode) {
+        Account account = accountRepository.findById(userId).orElseThrow();
+        account.getFavouriteHtsCodes().remove(new FavouriteHtsCodes(htsCode));
+        accountRepository.save(account);
+    }
+
+    /*
+     * Retrieves the favourite hts codes of a user from their account
+     */
+    public Set<String> getFavouriteHtsCodes(Integer userId) {
+        Account account = accountRepository.findById(userId).orElseThrow();
+        return account.getFavouriteHtsCodes()
+                      .stream()
+                      .map(FavouriteHtsCodes::getHtsCode)
+                      .collect(Collectors.toSet());
     }
 
 }
