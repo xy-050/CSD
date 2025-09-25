@@ -59,15 +59,17 @@ function AppContent() {
       });
 
       if (response.ok) {
-        const foundUser = users.find(u => u.email === email && u.password === password);
-        setUser(foundUser || { email, username: email });
+        // Backend login successful - find user in local array or create one
+        const foundUser = users.find(u => 
+          (u.email === emailOrUsername || u.username === emailOrUsername) && 
+          u.password === password
+        );
+        setUser(foundUser || { email: emailOrUsername, username: emailOrUsername });
         navigate('/home');
-      } else {
-        alert("Invalid credentials");
+        return;
       }
     } catch (error) {
-      console.error('Login error:', error);
-      alert("Login failed");
+      console.error('Backend login failed, trying local:', error);
     }
   };
 
@@ -96,7 +98,6 @@ function AppContent() {
         element={
           <LoginPage 
             handleLogin={handleLogin}
-            navigate={navigate}
             users={users}
             setUser={setUser}
           />
@@ -106,9 +107,9 @@ function AppContent() {
         path="/signup" 
         element={
           <SignupPage 
-            navigate={navigate}
             users={users}
             setUsers={setUsers}
+            setUser={setUser}
           />
         } 
       />

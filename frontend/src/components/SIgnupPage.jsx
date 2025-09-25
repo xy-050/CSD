@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 
-export default function SignupPage({ setCurrentPage, setUser, users, setUsers }) {
+export default function SignupPage({ setUser, users, setUsers }) {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -9,17 +10,49 @@ export default function SignupPage({ setCurrentPage, setUser, users, setUsers })
 
   const onSubmit = (e) => {
     e.preventDefault()
-    if (password !== confirm) return setError('Passwords do not match.')
+    setError('') // Clear previous errors
+    
+    // Validation checks
+    if (!username.trim()) {
+      setError('Username is required.')
+      return
+    }
+    
+    if (!email.trim()) {
+      setError('Email is required.')
+      return
+    }
+    
+    if (!password) {
+      setError('Password is required.')
+      return
+    }
+    
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.')
+      return
+    }
+    
+    if (password !== confirm) {
+      setError('Passwords do not match.')
+      return
+    }
 
+    // Check if user already exists
     const exists = users.some(
-      u => u.username.toLowerCase() === username.toLowerCase() || u.email.toLowerCase() === email.toLowerCase()
+      u => u.username.toLowerCase() === username.toLowerCase() || 
+           u.email.toLowerCase() === email.toLowerCase()
     )
-    if (exists) return setError('User with that username/email already exists.')
+    
+    if (exists) {
+      setError('User with that username/email already exists.')
+      return
+    }
 
-    const newUser = { username, email, password }
+    // Create new user
+    const newUser = { username: username.trim(), email: email.trim(), password }
     setUsers([...users, newUser])
     setUser(newUser)
-    setCurrentPage('home')
   }
 
   return (
@@ -30,7 +63,18 @@ export default function SignupPage({ setCurrentPage, setUser, users, setUsers })
           <p>Join us on this Tariff-ic day! 🌤️</p>
         </div>
 
-        {error && <div className="error-message mb-3">{error}</div>}
+        {error && (
+          <div className="error-message mb-3" style={{ 
+            backgroundColor: '#fee', 
+            color: '#c33', 
+            padding: '12px', 
+            borderRadius: '8px',
+            border: '1px solid #fcc',
+            marginBottom: '16px'
+          }}>
+            {error}
+          </div>
+        )}
 
         <form className="form-container" onSubmit={onSubmit}>
           <div className="input-group">
@@ -38,9 +82,13 @@ export default function SignupPage({ setCurrentPage, setUser, users, setUsers })
             <div className="input-wrapper">
               <span className="input-icon">👤</span>
               <input
+                type="text"
                 placeholder="yourname"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => {
+                  setUsername(e.target.value)
+                  if (error) setError('') // Clear error when user types
+                }}
                 required
               />
             </div>
@@ -54,7 +102,10 @@ export default function SignupPage({ setCurrentPage, setUser, users, setUsers })
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  if (error) setError('')
+                }}
                 required
               />
             </div>
@@ -68,7 +119,10 @@ export default function SignupPage({ setCurrentPage, setUser, users, setUsers })
                 type="password"
                 placeholder="At least 8 characters"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  if (error) setError('')
+                }}
                 required
                 minLength={8}
               />
@@ -83,21 +137,26 @@ export default function SignupPage({ setCurrentPage, setUser, users, setUsers })
                 type="password"
                 placeholder="Repeat password"
                 value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
+                onChange={(e) => {
+                  setConfirm(e.target.value)
+                  if (error) setError('')
+                }}
                 required
               />
             </div>
           </div>
 
-          <button className="submit-btn signup-btn" type="submit">Sign up</button>
+          <button className="submit-btn signup-btn" type="submit">
+            SIGN UP
+          </button>
         </form>
 
         <div className="switch-form">
           <p>
             Already have an account?{' '}
-            <button className="link-btn" onClick={() => setCurrentPage('login')}>
+            <Link to="/login" className="link-btn">
               Log in
-            </button>
+            </Link>
           </p>
         </div>
       </div>
