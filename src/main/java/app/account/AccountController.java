@@ -16,7 +16,7 @@ import app.utility.PasswordChecker;
 public class AccountController {
 
     private final AccountService accountService;
-    
+
     /**
      * Constructor-based injection.
      * 
