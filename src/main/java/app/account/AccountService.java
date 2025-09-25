@@ -121,12 +121,4 @@ public class AccountService {
         accountRepository.save(account);
     }
 
-    /*
-     * Search for account via email
-    */
-    public Account getAccountByEmail(String email) {
-        return accountRepository.findByEmail(email);
-    }
-    
-
 }

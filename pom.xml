@@ -117,13 +117,6 @@
       <artifactId>guava</artifactId>
       <version>32.1.3-jre</version>
     </dependency>
-    
-    <!-- Starter mail -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-mail</artifactId>
-      <version>3.5.5</version>
-    </dependency>
   </dependencies>
 
   <build>
