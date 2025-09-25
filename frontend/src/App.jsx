@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import LoginPage from './components/LoginPage.jsx';
 import SignupPage from './components/SignupPage.jsx';
 import HomePage from './components/Homepage.jsx';
@@ -8,15 +9,16 @@ import SearchResults from './components/SearchResults.jsx';
 import CalculatorPage from "./components/CalculatorPage.jsx";
 import './App.css';
 
-export default function App() {
-  const [currentPage, setCurrentPage] = useState('login');
+// Create a wrapper component to handle navigation
+function AppContent() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState([
     { username: 'demo', email: 'demo@example.com', password: 'password123', avatarUrl: johnpork }
   ]);
-  const [results, setResults] = useState([]); // Search results state
+  const [results, setResults] = useState([]);
   const [calcQuery, setCalcQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [isLoading, setIsLoading] = useState(false);
 
   const runSearch = async (term) => {
     setIsLoading(true);
@@ -34,71 +36,143 @@ export default function App() {
       }
 
       const data = await response.json();
-      console.log('Search results:', data); // Debug log
+      console.log('Search results:', data);
       setResults(data);
-      setCurrentPage('searchResults');
+      navigate('/results');
     } catch (error) {
       console.error('Error during search:', error);
       setResults([]);
-      // Show user-friendly error message
     } finally {
       setIsLoading(false);
     }
   };
+
   // Function to handle login
-  const handleLogin = (email, password) => {
-    const foundUser = users.find(u => u.email === email && u.password === password);
-    if (foundUser) {
-      setUser(foundUser);
-      setCurrentPage("home");
-    } else {
-      alert("Invalid credentials");
+  const handleLogin = async (email, password) => {
+    try {
+      const response = await fetch('http://localhost:8080/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username: email, password: password }),
+      });
+
+      if (response.ok) {
+        const foundUser = users.find(u => u.email === email && u.password === password);
+        setUser(foundUser || { email, username: email });
+        navigate('/home');
+      } else {
+        alert("Invalid credentials");
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert("Login failed");
     }
   };
 
   // Function to handle logout
   const handleLogout = () => {
     setUser(null);
-    setCurrentPage("login");
+    navigate('/login');
   };
 
-  const appProps = { currentPage, setCurrentPage, user, setUser, users, setUsers, calcQuery, setCalcQuery };
+  const handleSelectOption = (option) => {
+    setCalcQuery(option.htsno || option.description);
+    navigate('/calculator');
+  };
 
-  switch (currentPage) {
-    case "home":
-      return user ? (
-        <HomePage
-          onSearch={runSearch} // Pass the runSearch function as a prop
-          setCurrentPage={setCurrentPage}
-          user={user}
-          {...appProps} // Spread the rest of the app props here
-        />
-      ) : <LoginPage {...appProps} />;
+  // Protected route wrapper
+  const ProtectedRoute = ({ children }) => {
+    return user ? children : <Navigate to="/login" replace />;
+  };
 
-    case "searchResults":
-      return (
-        <SearchResults
-          results={results}
-          onSelectOption={(option) => {
-            setCalcQuery(option.htsno || option.description); // Set the calculator query to the selected option's htsno
-            setCurrentPage("calculator");
-          }}
-          user={user}
-          setUser={setUser}
-          setCurrentPage={setCurrentPage}
-        />
-      );
+  // const appProps = { currentPage, setCurrentPage, user, setUser, users, setUsers, calcQuery, setCalcQuery };
 
-    case "calculator":
-      return user ? <CalculatorPage {...appProps} /> : <LoginPage {...appProps} />;
-    case "profile":
-      return user ? <ProfilePage {...appProps} /> : <LoginPage {...appProps} />;
-    case "signup":
-      return <SignupPage {...appProps} />;
-    case "login":
-    default:
-      return <LoginPage {...appProps} />;
-  }
-};
+  return (
+    <Routes>
+      <Route 
+        path="/login" 
+        element={
+          <LoginPage 
+            handleLogin={handleLogin}
+            navigate={navigate}
+            users={users}
+            setUser={setUser}
+          />
+        } 
+      />
+      <Route 
+        path="/signup" 
+        element={
+          <SignupPage 
+            navigate={navigate}
+            users={users}
+            setUsers={setUsers}
+          />
+        } 
+      />
+      <Route 
+        path="/home" 
+        element={
+          <ProtectedRoute>
+            <HomePage 
+              onSearch={runSearch}
+              navigate={navigate}
+              user={user}
+              handleLogout={handleLogout}
+              isLoading={isLoading}
+            />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/results" 
+        element={
+          <ProtectedRoute>
+            <SearchResults 
+              results={results}
+              onSelectOption={handleSelectOption}
+              user={user}
+              navigate={navigate}
+            />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/calculator" 
+        element={
+          <ProtectedRoute>
+            <CalculatorPage 
+              calcQuery={calcQuery}
+              setCalcQuery={setCalcQuery}
+              navigate={navigate}
+              user={user}
+            />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <ProfilePage 
+              user={user}
+              setUser={setUser}
+              navigate={navigate}
+            />
+          </ProtectedRoute>
+        } 
+      />
+      <Route path="/" element={<Navigate to="/login" replace />} />
+    </Routes>
+  );
+}
 
-// export default App;
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
+  );
+}

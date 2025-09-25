@@ -1,32 +1,52 @@
 import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
-export default function LoginPage({ setCurrentPage, setUser, users }) {
+export default function LoginPage({setUser, users, handleLogin }) {
+  const navigate = useNavigate()
   const [emailOrUser, setEmailOrUser] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    const found = users.find(
-      u =>
-        u.username.toLowerCase() === emailOrUser.toLowerCase() ||
-        u.email.toLowerCase() === emailOrUser.toLowerCase()
-    )
-    if (!found || found.password !== password) {
-      setError('Invalid credentials. Try demo / password123.')
+    setError('')
+
+    // Check if users array exists and has data
+    if (!users || users.length === 0) {
+      setError('No users found. Please try again later.')
       setLoading(false)
       return
     }
-    setUser(found)
-    setCurrentPage('home')
-    setLoading(false)
-  }
 
-  const handleInputChange = (setter) => (e) => {
-    setter(e.target.value)
-    if (error) setError('') // Clear error message when user starts typing again
+    try {
+      // If handleLogin function is passed (for backend integration), use it
+      if (handleLogin) {
+        await handleLogin(emailOrUser, password)
+      } else {
+        // Otherwise use the local user validation
+        const found = users.find(
+          u =>
+            u.username.toLowerCase() === emailOrUser.toLowerCase() ||
+            u.email.toLowerCase() === emailOrUser.toLowerCase()
+        )
+        
+        if (!found || found.password !== password) {
+          setError('Invalid credentials. Try demo / password123.')
+          setLoading(false)
+          return
+        }
+        
+        setUser(found)
+        navigate('/home')
+      }
+    } catch (error) {
+      setError('Login failed. Please try again.')
+      console.error('Login error:', error)
+    }
+    
+    setLoading(false)
   }
 
   return (
@@ -47,7 +67,10 @@ export default function LoginPage({ setCurrentPage, setUser, users }) {
               <input
                 placeholder="demo or demo@example.com"
                 value={emailOrUser}
-                onChange={(e) => setEmailOrUser(e.target.value)}
+                onChange={(e) => {
+                  setEmailOrUser(e.target.value)
+                  if (error) setError('')
+                }}
                 required
               />
             </div>
@@ -61,21 +84,30 @@ export default function LoginPage({ setCurrentPage, setUser, users }) {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  if (error) setError('')
+                }}
                 required
               />
             </div>
           </div>
 
-          <button className="submit-btn login-btn" type="submit">Sign in</button>
+          <button 
+            className="submit-btn login-btn" 
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? 'Signing in...' : 'Sign in'}
+          </button>
         </form>
 
         <div className="switch-form">
           <p>
             New here?{' '}
-            <button className="link-btn" onClick={() => setCurrentPage('signup')}>
+            <Link to="/signup" className="link-btn">
               Create an account
-            </button>
+            </Link>
           </p>
         </div>
 
