@@ -67,14 +67,34 @@ public class QueryController {
 	@GetMapping("/search")
 	public ResponseEntity<List<Map<String, Object>>> searchTariffArticles(@RequestParam String keyword) {
 		List<Map<String, Object>> results = queryService.extractTariffSummary(keyword);
-		return ResponseEntity.ok(results);
+		// Sort by 'general' tariff value, highest to lowest
+		List<Map<String, Object>> sortedResults = results.stream()
+			.sorted((a, b) -> {
+				double valA = parseTariffValue(a.get("general"));
+				double valB = parseTariffValue(b.get("general"));
+				return Double.compare(valB, valA); // descending
+			})
+			.toList();
+		return ResponseEntity.ok(sortedResults);
 	}
 
-	// 5. Compare tariff rates for a given HTS number across all countries
+	// Helper to parse tariff value from Object (String or null)
+	private static double parseTariffValue(Object value) {
+		if (value == null) return Double.NEGATIVE_INFINITY;
+		String str = value.toString().replaceAll("[^0-9.]+", "");
+		if (str.isEmpty()) return Double.NEGATIVE_INFINITY;
+		try {
+			return Double.parseDouble(str);
+		} catch (NumberFormatException e) {
+			return Double.NEGATIVE_INFINITY;
+		}
+	}
+
+	// 5. Compare tariff rates for a given HTS number across all countries (no keyword needed)
 	@GetMapping("/compare-countries")
-	public ResponseEntity<Map<String, Object>> compareCountryTariffs(@RequestParam String htsno, @RequestParam String keyword) {
-		// Find the item with the given htsno from the search results
-		List<Map<String, Object>> results = queryService.searchTariffArticles(keyword);
+	public ResponseEntity<Map<String, Object>> compareCountryTariffs(@RequestParam String htsno) {
+		// Use the htsno as the keyword to maximize chance of finding the correct article
+		List<Map<String, Object>> results = queryService.searchTariffArticles(htsno);
 		Map<String, Object> item = results.stream()
 			.filter(map -> htsno.equals(map.get("htsno")))
 			.findFirst()
