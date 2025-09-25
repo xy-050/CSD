@@ -9,7 +9,7 @@ POST http://localhost:8080/api/email
 Content-Type: application/json
 
 {
-    "to": "sapphire32181@gmail.com",
+    "to": "example@email.com",
     "subject": "Test Email",
     "body": "This is a test email."
 }

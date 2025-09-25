@@ -89,7 +89,8 @@ public class EmailController {
         return base64Encoder.encodeToString(randomBytes);
     }
 
-    //Password reset page
+    //Password reset page 
+    //it might be related to frontend im not sure 
     @GetMapping("")
 
     

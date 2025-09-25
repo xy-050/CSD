@@ -1,3 +1,0 @@
-Please type in your original password here: 
-Please type in your new password here: 
-Please type in your new password to confirm it here: 
