@@ -1,0 +1,15 @@
+### GET all emails
+GET http://localhost:8080/api/email
+Accept: application/json
+
+###
+
+### POST a new email
+POST http://localhost:8080/api/email
+Content-Type: application/json
+
+{
+    "to": "sapphire32181@gmail.com",
+    "subject": "Test Email",
+    "body": "This is a test email."
+}
