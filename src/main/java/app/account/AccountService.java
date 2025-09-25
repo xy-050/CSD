@@ -123,7 +123,7 @@ public class AccountService {
      */
     public void addFavouriteHtsCode(Integer userId, String htsCode) {
         Account account = accountRepository.findById(userId).orElseThrow();
-        account.getFavouriteHtsCodes().add(new FavouriteHtsCodes(htsCode));
+        account.getFavouriteHtsCodes().add(new FavouriteHtsCodes());
         accountRepository.save(account);
     }
 
@@ -132,7 +132,7 @@ public class AccountService {
      */
     public void removeFavouriteHtsCode(Integer userId, String htsCode) {
         Account account = accountRepository.findById(userId).orElseThrow();
-        account.getFavouriteHtsCodes().remove(new FavouriteHtsCodes(htsCode));
+        account.getFavouriteHtsCodes().remove(new FavouriteHtsCodes());
         accountRepository.save(account);
     }
 

@@ -13,12 +13,11 @@ import lombok.*;
 @AllArgsConstructor 
 @EqualsAndHashCode 
 @ToString
-
 public class FavouriteHtsCodes {
     @Id
     private String htsCode;
 
-     @ManyToMany(mappedBy = "favouriteHtsCodes")
+    @ManyToMany(mappedBy = "favouriteHtsCodes")
     private Set<Account> accounts = new HashSet<>();
 
 }
