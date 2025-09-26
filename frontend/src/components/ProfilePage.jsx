@@ -1,72 +1,109 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom";
 import NavBar from "./NavBar.jsx"
+import api from "../api/AxiosConfig.jsx";
 
-export default function ProfilePage({ user, setUser, setCurrentPage }) {
-  const [form, setForm] = useState({
-    username: user?.username || "",
-    email: user?.email || ""
-  })
-  const [msg, setMsg] = useState("")
+export default function ProfilePage({ }) {
+    // const [username, setUsername] = useState(null);
+    const [oldUsername, setOldUsername] = useState(null);
+    const [email, setEmail] = useState(null);
+    const [userID, setUserID] = useState(null);
+    const [msg, setMsg] = useState("");
+    const navigate = useNavigate();
 
-  const update = (k) => (e) => setForm({ ...form, [k]: e.target.value })
+    useEffect(() => {
+        const getUsername = async () => {
+            try {
+                const response = await api.get(`/authStatus`);
+                console.log(response);
+                setOldUsername(response.data);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        getUsername();
+    }, []);
 
-  const save = (e) => {
-    e.preventDefault()
-    setUser((prev) => ({ ...prev, username: form.username.trim(), email: form.email.trim() }))
-    setMsg("Profile updated")
-    setTimeout(() => setCurrentPage("home"), 500)
-  }
+    useEffect(() => {
+        if (oldUsername) {
+            const getUserID = async () => {
+                try {
+                    const response = await api.get(`/currentID`, {
+                        params: { username: oldUsername }
+                    });
+                    console.log(response);
+                    setUserID(response.data);
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+            getUserID();
+        }
+    }, [oldUsername]);
 
-  return (
-    <div className="homepage">
-      <NavBar user={user} setUser={setUser} setCurrentPage={setCurrentPage} />
-      
-      <main className="main-content">
-        <section className="hero-section">
-          <h1 className="hero-title">Your profile</h1>
-          <p className="hero-subtitle">Update your account details.</p>
-        </section>
+    const handleUpdate = async () => {
+        // try {
+        //     const response = await api.post(`/updateUsername/${encodeURIComponent(userID)}`, {
+        //         "userID": userID,
+        //         "username": username
+        //     });
+        //     console.log(response);
+        // } catch (error) {
+        //     console.log("Error: " + error);
+        // }
 
-        <section className="account-info" id="account">
-          <h2>Account</h2>
+        try {
+            const response = await api.post(`/updateEmail/${encodeURIComponent(userID)}`, {
+                "userID": userID,
+                "email": email
+            });
+            console.log(response);
+        } catch (error) {
+            console.log("Error: " + error);
+        }
 
-          <form className="form-container mt-3" onSubmit={save}>
-            <div className="input-group">
-              <label>Username</label>
-              <input
-                className="search-input" /* reuse your clean input style */
-                value={form.username}
-                onChange={update("username")}
-                placeholder="Enter a username"
-              />
-            </div>
+        setMsg("Profile updated");
+    }
 
-            <div className="input-group">
-              <label>Email</label>
-              <input
-                className="search-input"
-                value={form.email}
-                onChange={update("email")}
-                placeholder="name@example.com"
-              />
-            </div>
+    return (
+        <div className="homepage">
+            <NavBar />
 
-            <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
-              <button type="submit" className="feature-btn">Save changes</button>
-              <button
-                type="button"
-                className="feature-btn"
-                onClick={() => setCurrentPage("home")}
-                style={{ background: "linear-gradient(135deg, var(--brand-strong), var(--brand-ink))" }}
-              >
-                Cancel
-              </button>
-            </div>
+            <main className="main-content">
+                <section className="hero-section">
+                    <h1 className="hero-title">Your profile</h1>
+                    <p className="hero-subtitle">Update your account details.</p>
+                </section>
 
-            {msg && <p className="mt-2" style={{ color: "var(--brand-ink)" }}>{msg}</p>}
-          </form>
-        </section>
-      </main>
-    </div>
-  )
+                <section className="account-info" id="account">
+                    <h2>Account</h2>
+
+                    <form className="form-container mt-3" onSubmit={handleUpdate}>
+                        <div className="input-group">
+                            <label>Email</label>
+                            <input
+                                className="search-input"
+                                // value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="name@example.com"
+                            />
+                        </div>
+
+                        <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                            <button type="submit" className="feature-btn">Save changes</button>
+                            <button
+                                type="button"
+                                className="feature-btn"
+                                style={{ background: "linear-gradient(135deg, var(--brand-strong), var(--brand-ink))" }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+
+                        {msg && <p className="mt-2" style={{ color: "var(--brand-ink)" }}>{msg}</p>}
+                    </form>
+                </section>
+            </main>
+        </div>
+    )
 }
