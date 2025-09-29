@@ -1,5 +1,6 @@
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import NavBar from './NavBar.jsx';
+import api from '../api/AxiosConfig.jsx';
 
 export default function SearchResults({ }) {
     // // Debug: Log the props to see what's being passed
@@ -12,8 +13,53 @@ export default function SearchResults({ }) {
     const navigate = useNavigate();
     
     const handleShortlist = async (result) => {
-        navigate("/calculator", { state: { result: result, keyword: keyword } })
+        // If general tariff exists, go to calculator
+        if (result.general && result.general.trim() !== '') {
+            const formattedResult = {
+                ...result,
+                // Create a single description from the description chain for backward compatibility
+                description: result.descriptionChain && result.descriptionChain.length > 0 
+                    ? result.descriptionChain[result.descriptionChain.length - 1] // Use the most specific description
+                    : 'No description available',
+                // Keep the full chain for detailed display if needed
+                fullDescriptionChain: result.descriptionChain
+            };
+            
+            console.log('Going to calculator with result:', formattedResult);
+            navigate("/calculator", { 
+                state: { 
+                    result: formattedResult, 
+                    keyword: keyword 
+                } 
+            });
+        } else {
+            // No general tariff, search for subcategories
+            try {
+                console.log('Searching for HTS code subcategories:', result.htsno);
+                
+                const response = await api.get(`/api/tariffs/search`, {
+                    params: {
+                        keyword: result.htsno
+                    }
+                });
+                
+                console.log('HTS subcategory results:', response.data);
+                // Navigate to the same page with new results
+                navigate("/results", { 
+                    state: { 
+                        results: response.data, 
+                        keyword: result.htsno 
+                    },
+                    replace: true // Replace current history entry to avoid back button issues
+                });
+            } catch (error) {
+                console.error('Error searching HTS subcategories:', error);
+                alert('Failed to load subcategories. Please try again.');
+            }
+        }
     }
+
+
 
     if (!results || results.length === 0) {
         return (
@@ -41,8 +87,30 @@ export default function SearchResults({ }) {
                     {results.map((result, index) => (
                         <div className="result-item" key={index}>
                             <h3>{result.htsno}</h3>
-                            <p>{result.description}</p>
-                            <button onClick={() => handleShortlist(result)}>Shortlist</button>
+                            <div className="description-chain">
+                                {result.descriptionChain && result.descriptionChain.length > 0 ? (
+                                    result.descriptionChain.map((desc, descIndex) => (
+                                        <p key={descIndex} className="description-level">
+                                            {"→ ".repeat(descIndex)}{desc}
+                                        </p>
+                                    ))
+                                ) : (
+                                    <p>No description available</p>
+                                )}
+                            </div>
+                            {result.general && (
+                                <p className="tariff-info">
+                                    <strong>General Tariff:</strong> {result.general}
+                                </p>
+                            )}
+                            {result.units && (
+                                <p className="units-info">
+                                    <strong>Units:</strong> {result.units}
+                                </p>
+                            )}
+                            <button onClick={() => handleShortlist(result)}>
+                                {result.general && result.general.trim() !== '' ? 'Calculate' : 'See More'}
+                            </button>
                         </div>
                     ))}
                 </div>
