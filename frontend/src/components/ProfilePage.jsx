@@ -5,9 +5,9 @@ import api from "../api/AxiosConfig.jsx";
 
 export default function ProfilePage({ }) {
     // const [username, setUsername] = useState(null);
-    const [oldUsername, setOldUsername] = useState(null);
-    const [email, setEmail] = useState(null);
-    const [userID, setUserID] = useState(null);
+    const [oldUsername, setOldUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [userID, setUserID] = useState("");
     const [msg, setMsg] = useState("");
     const navigate = useNavigate();
 
@@ -25,7 +25,7 @@ export default function ProfilePage({ }) {
     }, []);
 
     useEffect(() => {
-        if (oldUsername) {
+        if (oldUsername != "") {
             const getUserID = async () => {
                 try {
                     const response = await api.get(`/currentID`, {
@@ -41,7 +41,25 @@ export default function ProfilePage({ }) {
         }
     }, [oldUsername]);
 
-    const handleUpdate = async () => {
+    useEffect(() => {
+        if (oldUsername != "" && userID != "") {
+            const getEmail = async () => {
+                try {
+                    const response = await api.get(`/currentEmail`, {
+                        params: { username: oldUsername }
+                    });
+                    console.log(response);
+                    setEmail(response.data);
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+            getEmail();
+        }
+    }, [oldUsername, userID]);
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
         // try {
         //     const response = await api.post(`/updateUsername/${encodeURIComponent(userID)}`, {
         //         "userID": userID,
@@ -61,8 +79,12 @@ export default function ProfilePage({ }) {
         } catch (error) {
             console.log("Error: " + error);
         }
+        console.log("test");
+        navigate("/");
+    }
 
-        setMsg("Profile updated");
+    const handleCancel = () => {
+        navigate("/");
     }
 
     return (
@@ -83,7 +105,7 @@ export default function ProfilePage({ }) {
                             <label>Email</label>
                             <input
                                 className="search-input"
-                                // value={email}
+                                value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="name@example.com"
                             />
@@ -95,6 +117,7 @@ export default function ProfilePage({ }) {
                                 type="button"
                                 className="feature-btn"
                                 style={{ background: "linear-gradient(135deg, var(--brand-strong), var(--brand-ink))" }}
+                                onClick={handleCancel}
                             >
                                 Cancel
                             </button>
