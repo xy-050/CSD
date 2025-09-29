@@ -10,8 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "axois": "^0.0.1-security",
+    "cors": "^2.8.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-router-dom": "^7.9.2",
     "swagger-ui-react": "^5.29.0"
   },
   "devDependencies": {
