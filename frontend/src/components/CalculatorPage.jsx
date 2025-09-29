@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import NavBar from "./NavBar";
+import api from '../api/AxiosConfig.jsx';
 
 export default function CalculatorPage({  }) {
 
@@ -8,17 +9,120 @@ export default function CalculatorPage({  }) {
     const { result, keyword } = location.state || {};
     console.log(keyword);
     console.log(result);
-    console.log(result.description)
+    console.log('Full description chain:', result?.fullDescriptionChain);
+    console.log('Single description:', result?.description);
+    
+    // Handle case where result is missing
+    if (!result) {
+        return (
+            <div className="homepage">
+                <NavBar />
+                <main className="main-content">
+                    <div>No tariff data available. Please go back and select an item.</div>
+                </main>
+            </div>
+        );
+    }
 
     // seed
     const [hts, setHts] = useState(result.htsno);
-    const [desc, setDesc] = useState(result.description);
+    const [desc, setDesc] = useState(
+        result.fullDescriptionChain && result.fullDescriptionChain.length > 0
+            ? result.fullDescriptionChain.join(' → ') // Join the full chain with arrows
+            : result.description || 'No description available'
+    );
     const [value, setValue] = useState(10000);
-    const [origin, setOrigin] = useState("MX");
+    const [origin, setOrigin] = useState("Mexico");
     const [program, setProgram] = useState("none");
+    const [countryTariffs, setCountryTariffs] = useState(null);
+    const [currentTariffRate, setCurrentTariffRate] = useState(null);
+    const [availableCountries, setAvailableCountries] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [transport, setTransport] = useState("OCEAN");
     const [entryDate, setEntryDate] = useState(new Date().toISOString().slice(0, 10));
     const [loadDate, setLoadDate] = useState(new Date().toISOString().slice(0, 10));
+
+    // Fetch country-specific tariff data
+    useEffect(() => {
+        const fetchCountryTariffs = async () => {
+            if (!result?.htsno) return;
+            
+            setLoading(true);
+            try {
+                const response = await api.get(`/api/tariffs/compare-countries`, {
+                    params: { htsno: result.htsno }
+                });
+                
+                setCountryTariffs(response.data);
+                buildCountryList(response.data);
+                updateTariffRate(origin, response.data);
+                
+            } catch (error) {
+                console.error('Error fetching country tariffs:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        fetchCountryTariffs();
+    }, [result?.htsno]);
+    
+    // Build country list from API response
+    const buildCountryList = (tariffData) => {
+        const countries = [];
+        
+        // Add special countries with special rates
+        if (tariffData['Special countries']) {
+            tariffData['Special countries'].forEach(countryName => {
+                countries.push({
+                    name: countryName,
+                    rate: tariffData['Special rate'] || 'N/A'
+                });
+            });
+        }
+        
+        // Add common countries with general rate (only if not already in special list)
+        const commonCountries = ['China', 'Germany', 'Japan', 'United Kingdom', 'France', 'Italy', 'India', 'Brazil', 'Mexico', 'Canada'];
+        commonCountries.forEach(countryName => {
+            if (!countries.find(c => c.name === countryName)) {
+                countries.push({
+                    name: countryName,
+                    rate: tariffData['General rate'] || 'N/A'
+                });
+            }
+        });
+        
+        setAvailableCountries(countries);
+    };
+    
+    // Update tariff rate when origin changes
+    const updateTariffRate = (selectedCountry, tariffData) => {
+        if (!tariffData) return;
+        
+        const country = availableCountries.find(c => c.name === selectedCountry);
+        const newRate = country ? country.rate : tariffData['General rate'] || 'N/A';
+        setCurrentTariffRate(newRate);
+        
+        // Update the duty line percentage
+        const numericRate = extractNumericRate(newRate);
+        setLines(prevLines => [
+            { ...prevLines[0], ratePct: numericRate },
+            ...prevLines.slice(1)
+        ]);
+    };
+    
+    // Helper to extract numeric rate from strings like "5.6%" or "Free"
+    const extractNumericRate = (rateString) => {
+        if (!rateString || rateString === 'Free' || rateString === 'N/A') return 0;
+        const match = rateString.match(/([0-9.]+)/);
+        return match ? parseFloat(match[1]) : 0;
+    };
+    
+    // Handle origin change
+    const handleOriginChange = (newOrigin) => {
+        setOrigin(newOrigin);
+        updateTariffRate(newOrigin, countryTariffs);
+    };
 
     // ⭐ favourites
     // const favNamespace = useMemo(() => `fav:${user?.email || "anon"}`, [user?.email]);
@@ -39,10 +143,18 @@ export default function CalculatorPage({  }) {
     //     setIsFav(v => !v);
     // };
 
-    // calc
+    // calc - Initialize with actual tariff rate
+    const getInitialTariffRate = () => {
+        if (result?.general) {
+            // Extract percentage from strings like "5.6%" or "Free"
+            const match = result.general.match(/([0-9.]+)/);
+            return match ? parseFloat(match[1]) : 0;
+        }
+        return 0;
+    };
+    
     const [lines, setLines] = useState([
-        { label: "Line 1", base: 7000, ratePct: 25 },
-        { label: "Line 2", base: 3000, ratePct: 50 },
+        { label: "Tariff Duty", base: value, ratePct: getInitialTariffRate() },
     ]);
     const hmf = useMemo(() => Math.round(value * 0.0013), [value]);
     const mpf = 35;
@@ -98,18 +210,35 @@ export default function CalculatorPage({  }) {
                         <div className="form-row">
                             <label>Shipment Value (USD)</label>
                             <input type="number" className="search-input" value={value}
-                                onChange={e => setValue(Number(e.target.value) || 0)} />
+                                onChange={e => {
+                                    const newValue = Number(e.target.value) || 0;
+                                    setValue(newValue);
+                                    // Update the first duty line base to match shipment value
+                                    setLines(prevLines => [
+                                        { ...prevLines[0], base: newValue },
+                                        ...prevLines.slice(1)
+                                    ]);
+                                }} />
                         </div>
 
                         <div className="form-row two">
                             <div>
                                 <label>Country of Origin</label>
-                                <select className="search-input" value={origin} onChange={e => setOrigin(e.target.value)}>
-                                    <option value="MX">🇲🇽 Mexico (MX)</option>
-                                    <option value="US">🇺🇸 United States (US)</option>
-                                    <option value="CN">🇨🇳 China (CN)</option>
-                                    <option value="CA">🇨🇦 Canada (CA)</option>
-                                </select>
+                                {loading ? (
+                                    <div className="search-input">Loading countries...</div>
+                                ) : (
+                                    <select className="search-input" value={origin} onChange={e => handleOriginChange(e.target.value)}>
+                                        {availableCountries.map((country, index) => (
+                                            <option key={index} value={country.name}>
+                                                {country.name} - {country.rate}
+                                            </option>
+                                        ))}
+                                        {/* Fallback if API fails */}
+                                        {availableCountries.length === 0 && (
+                                            <option value="Mexico">Mexico</option>
+                                        )}
+                                    </select>
+                                )}
                             </div>
                             <div>
                                 <label>Import Programs</label>
@@ -141,6 +270,12 @@ export default function CalculatorPage({  }) {
                                 <label>Date of Loading</label>
                                 <input type="date" className="search-input" value={loadDate} onChange={e => setLoadDate(e.target.value)} />
                             </div>
+                            {/* <div>
+                                <label>Current Tariff Rate</label>
+                                <div className="search-input" style={{backgroundColor: '#f8f9fa', fontWeight: 'bold', color: currentTariffRate === 'Free' ? '#28a745' : '#007bff'}}>
+                                    {currentTariffRate || 'Loading...'}
+                                </div>
+                            </div> */}
                         </div>
 
                         <div className="form-row">

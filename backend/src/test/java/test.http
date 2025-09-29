@@ -9,7 +9,7 @@
 
 
 # Search for tariff articles containing the word "sugar" and compare countries
-GET http://localhost:8080/api/tariffs/compare-countries?htsno=2710.12.15&keyword=motor
+GET http://localhost:8080/api/tariffs/compare-countries?htsno=1704.90.35
 
 Accept: application/json
 
@@ -18,7 +18,7 @@ GET http://localhost:8080/api/tariffs/most-queried
 Accept: application/json
 
 ###
-GET http://localhost:8080/api/tariffs/search?keyword=1704.90
+GET http://localhost:8080/api/tariffs/search?keyword=1704
 Accept: application/json
 
 ###
