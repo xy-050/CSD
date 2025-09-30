@@ -156,11 +156,11 @@ export default function CalculatorPage({  }) {
     const [lines, setLines] = useState([
         { label: "Tariff Duty", base: value, ratePct: getInitialTariffRate() },
     ]);
-    const hmf = useMemo(() => Math.round(value * 0.0013), [value]);
-    const mpf = 35;
+    // const hmf = useMemo(() => Math.round(value * 0.0013), [value]);
+    // const mpf = 35;
     const dutyTotal = useMemo(() => lines.reduce((s, l) => s + l.base * (l.ratePct / 100), 0), [lines]);
     const dutyRatePct = useMemo(() => (value ? (dutyTotal / value) * 100 : 0), [dutyTotal, value]);
-    const landedCost = value + dutyTotal + hmf + mpf;
+    const landedCost = value + dutyTotal; // + hmf + mpf; (commented out for demo)
 
     const updateLine = (i, patch) => setLines(p => p.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
     const addLine = () => setLines(p => [...p, { label: `Line ${p.length + 1}`, base: 0, ratePct: 0 }]);
@@ -204,7 +204,7 @@ export default function CalculatorPage({  }) {
 
                         <div className="form-row">
                             <label>Commodity Description</label>
-                            <input className="search-input" value={desc} onChange={e => setDesc(e.target.value)} />
+                            <input className="search-input" value={desc} readOnly style={{backgroundColor: '#f8f9fa', cursor: 'default'}} />
                         </div>
 
                         <div className="form-row">
@@ -316,8 +316,8 @@ export default function CalculatorPage({  }) {
                                 <div className="muted">COST BREAKDOWN</div>
                                 <div className="row"><span>Base Cost</span><b>${value.toLocaleString()}</b></div>
                                 <div className="row"><span>Total Duties</span><b>${dutyTotal.toLocaleString()}</b></div>
-                                <div className="row small"><span>Harbor Maintenance Fee (HMF)</span><b>${hmf.toLocaleString()}</b></div>
-                                <div className="row small"><span>Merchandise Processing Fee (MPF)</span><b>${mpf.toLocaleString()}</b></div>
+                                {/* <div className="row small"><span>Harbor Maintenance Fee (HMF)</span><b>${hmf.toLocaleString()}</b></div>
+                                <div className="row small"><span>Merchandise Processing Fee (MPF)</span><b>${mpf.toLocaleString()}</b></div> */}
                                 <div className="row total"><span>Landed Cost</span><b>${landedCost.toLocaleString()}</b></div>
                             </div>
                         </div>
