@@ -32,6 +32,7 @@ export default function CalculatorPage({  }) {
             : result.description || 'No description available'
     );
     const [value, setValue] = useState(10000);
+    const [valueInput, setValueInput] = useState('10000');
     const [origin, setOrigin] = useState("Mexico");
     const [program, setProgram] = useState("none");
     const [countryTariffs, setCountryTariffs] = useState(null);
@@ -199,7 +200,7 @@ export default function CalculatorPage({  }) {
 
                         <div className="form-row">
                             <label>HTS Code</label>
-                            <input className="search-input" value={hts} onChange={e => setHts(e.target.value)} />
+                            <input className="search-input" value={hts} readOnly style={{backgroundColor: '#f8f9fa', cursor: 'default'}} />
                         </div>
 
                         <div className="form-row">
@@ -209,13 +210,18 @@ export default function CalculatorPage({  }) {
 
                         <div className="form-row">
                             <label>Shipment Value (USD)</label>
-                            <input type="number" className="search-input" value={value}
+                            <input type="number" className="search-input" value={valueInput}
                                 onChange={e => {
-                                    const newValue = Number(e.target.value) || 0;
-                                    setValue(newValue);
+                                    const inputValue = e.target.value;
+                                    setValueInput(inputValue);
+                                    
+                                    // Convert to number for calculations, default to 0 if empty or invalid
+                                    const numericValue = inputValue === '' || isNaN(Number(inputValue)) ? 0 : Number(inputValue);
+                                    setValue(numericValue);
+                                    
                                     // Update the first duty line base to match shipment value
                                     setLines(prevLines => [
-                                        { ...prevLines[0], base: newValue },
+                                        { ...prevLines[0], base: numericValue },
                                         ...prevLines.slice(1)
                                     ]);
                                 }} />
