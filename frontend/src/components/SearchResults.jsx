@@ -48,7 +48,7 @@ export default function SearchResults({ }) {
                 navigate("/results", { 
                     state: { 
                         results: response.data, 
-                        keyword: result.htsno 
+                        keyword: keyword
                     },
                     replace: true // Replace current history entry to avoid back button issues
                 });
