@@ -8,11 +8,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface AccountRepository extends JpaRepository<Account, Integer> {
     Account findByUsername(String username);
 
-    Account findByUserID(Integer userid);
+    Account findByUserID(Integer userID);
 
     Account save(Account account);
 
     List<Account> findAll();
 
-    void deleteById(Integer userId);
+    void deleteById(Integer userID);
 }
