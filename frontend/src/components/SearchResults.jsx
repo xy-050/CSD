@@ -12,6 +12,21 @@ export default function SearchResults({ }) {
     const { results, keyword } = location.state || {};
     const navigate = useNavigate();
     
+    // map category keys to icons (keep in sync with SearchBar)
+    const categoryIcons = {
+        sugar: '🍬',
+        bread: '🍞',
+        milk: '🥛',
+        egg: '🥚',
+        rice: '🍚',
+    };
+
+    // determine icon for current keyword (if any) - case-insensitive
+    const currentCategoryIcon = keyword ? categoryIcons[String(keyword).toLowerCase()] : null;
+    
+    // show at most 8 results
+    const displayedResults = Array.isArray(results) ? results.slice(0, 8) : [];
+    
     const handleShortlist = async (result) => {
         // If general tariff exists, go to calculator
         if (result.general && result.general.trim() !== '') {
@@ -44,13 +59,13 @@ export default function SearchResults({ }) {
                 });
                 
                 console.log('HTS subcategory results:', response.data);
-                // Navigate to the same page with new results
+                // Navigate to the same page with new results (do NOT replace history)
                 navigate("/results", { 
                     state: { 
                         results: response.data, 
                         keyword: keyword
-                    },
-                    replace: true // Replace current history entry to avoid back button issues
+                    }
+                    // removed replace: true
                 });
             } catch (error) {
                 console.error('Error searching HTS subcategories:', error);
@@ -82,9 +97,18 @@ export default function SearchResults({ }) {
         <>
             <NavBar />
             <div className="search-results">
-                <h2>Search Results</h2>
+                {/* header now shows selected category icon when available */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    {currentCategoryIcon && (
+                        <span style={{ fontSize: '2rem', lineHeight: 1 }} aria-hidden="true">
+                            {currentCategoryIcon}
+                        </span>
+                    )}
+                    <h2 style={{ margin: 0 }}>Search Results{keyword ? ` — ${keyword}` : ''}</h2>
+                </div>
+
                 <div className="results-grid">
-                    {results.map((result, index) => (
+                    {displayedResults.map((result, index) => (
                         <div className="result-item" key={index}>
                             <h3>{result.htsno}</h3>
                             <div className="description-chain">
