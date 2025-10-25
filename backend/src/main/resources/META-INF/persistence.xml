@@ -7,5 +7,6 @@
         <class>app.account.Account</class>
         <class>app.query.Query</class>
         <class>app.account.FavouriteHtsCodes</class>
+        <class>app.product.Product</class>
     </persistence-unit>
 </persistence>
