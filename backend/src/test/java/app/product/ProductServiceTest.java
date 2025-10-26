@@ -31,7 +31,7 @@ public class ProductServiceTest {
     @Mock
     private ProductRepository productRepository;
 
-    @InjectMocks 
+    @InjectMocks
     private ProductService productService;
 
     private Product existing;
@@ -39,7 +39,6 @@ public class ProductServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Initialize products used across tests
         existing = new Product();
         existing.setHtsCode("1704.90.35");
         existing.setFetchDate(LocalDate.of(2025, Month.APRIL, 1));
@@ -51,9 +50,12 @@ public class ProductServiceTest {
         response.setPrice(5.6);
     }
 
+    // -------------------------------------------------------------------
+    // --------------- testing fetchDaily() method -----------------------
+    // -------------------------------------------------------------------
+
     @Test
     void fetchDailyData_WhenNoExistingRecord_ShouldSaveData() {
-        // Arrange: API returns one entry for any keyword
         Map<String, Object> map = new HashMap<>();
         map.put("hts_code", "1704.90.35");
         map.put("general", 5.6);
@@ -61,14 +63,11 @@ public class ProductServiceTest {
         when(queryService.searchTariffArticles(any())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.empty());
 
-        // Act
         productService.fetchDaily();
 
-        // Assert: there are 5 keywords in the service list -> save called 5 times
         ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
         verify(productRepository, times(5)).save(captor.capture());
 
-        // Verify captured products have expected fields
         for (Product saved : captor.getAllValues()) {
             assertEquals("1704.90.35", saved.getHtsCode());
             assertEquals(5.6, saved.getPrice());
@@ -78,20 +77,16 @@ public class ProductServiceTest {
 
     @Test
     void fetchDailyData_WhenRecordUpdated_ShouldSaveData() {
-        // Arrange: API returns same hts code but different price than existing
         Map<String, Object> map = new HashMap<>();
         map.put("hts_code", "1704.90.35");
         map.put("general", 6.0);
 
         when(queryService.searchTariffArticles(any())).thenReturn(List.of(map));
 
-        // existing has price 5.6 (set in setUp)
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
 
-        // Act
         productService.fetchDaily();
 
-        // Assert: since price changed, save should be called for each keyword
         ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
         verify(productRepository, times(5)).save(captor.capture());
 
@@ -103,7 +98,6 @@ public class ProductServiceTest {
 
     @Test
     void fetchDailyData_WhenRecordIsSame_ShouldNotSaveData() {
-        // Arrange: API returns same hts code and same price as existing
         Map<String, Object> map = new HashMap<>();
         map.put("hts_code", "1704.90.35");
         map.put("general", 5.6);
@@ -111,10 +105,54 @@ public class ProductServiceTest {
         when(queryService.searchTariffArticles(any())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
 
-        // Act
         productService.fetchDaily();
 
-        // Assert: because latest record equals the new product (htsCode and price), save should not be called
         verify(productRepository, never()).save(any(Product.class));
+    }
+
+    // -------------------------------------------------------------------
+    // ------------- testing getProductPrice() method --------------------
+    // -------------------------------------------------------------------
+    @Test
+    void getProductPrice_WhenRecordExists_ShouldReturnValue() {
+        when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
+
+        Optional<Product> product = productService.getProductPrice("1704.90.35");
+
+        assertTrue(product.isPresent());
+        assertEquals(product.get().getPrice(), existing.getPrice());
+    }
+
+    @Test
+    void getProductPrice_WhenRecordDoesNotExists_ShouldNotReturnValue() {
+        when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.empty());
+
+        Optional<Product> product = productService.getProductPrice("1704.90.35");
+
+        assertFalse(product.isPresent());
+    }
+
+    // -------------------------------------------------------------------
+    // ---------- testing getProductPriceAtTime() method -----------------
+    // -------------------------------------------------------------------
+    @Test
+    void getProductPriceAtTime_WhenRecordExists_ShouldReturnValue() {
+        when(productRepository.findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(anyString(),
+                any(LocalDate.class))).thenReturn(Optional.of(existing));
+
+        Optional<Product> product = productService.getProductPriceAtTime("1704.90.35", LocalDate.now());
+
+        assertTrue(product.isPresent());
+        assertEquals(product.get().getPrice(), existing.getPrice());
+    }
+
+    @Test
+    void getProductPriceAtTime_WhenRecordDoesNotExists_ShouldNotReturnValue() {
+        when(productRepository.findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(anyString(),
+                any(LocalDate.class))).thenReturn(Optional.empty());
+
+        Optional<Product> product = productService.getProductPriceAtTime("1704.90.35", LocalDate.now());
+
+        assertFalse(product.isPresent());
     }
 }

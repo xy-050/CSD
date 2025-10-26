@@ -51,4 +51,12 @@ public class ProductService {
             System.out.println("Error fetching API: " + e.getMessage());
         }
     }
+
+    public Optional<Product> getProductPrice(String htsCode) {
+        return productRepository.findTopByHtsCodeOrderByFetchDateDesc(htsCode);
+    }
+
+    public Optional<Product> getProductPriceAtTime(String htsCode, LocalDate date) {
+        return productRepository.findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(htsCode, date);
+    }
 }
