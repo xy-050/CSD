@@ -3,11 +3,18 @@ package app.query;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import app.account.Account;
+import app.account.AccountRepository;
+
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class QueryService {
+
+    private final AccountRepository accountRepository;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String HTS_SEARCH_API = "https://hts.usitc.gov/reststop/search";
@@ -18,8 +25,9 @@ public class QueryService {
      * 
      * @param queryRepository The QueryRepository instance
      */
-    public QueryService(QueryRepository queryRepository) {
+    public QueryService(QueryRepository queryRepository, AccountRepository accountRepository) {
         this.queryRepository = queryRepository;
+        this.accountRepository = accountRepository;
     }
 
     /**
@@ -264,4 +272,33 @@ public class QueryService {
     public List<String> getMostQueried() {
         return queryRepository.findMostQueried();
     }
+	/**
+	 * Adds a new Query record to the database.
+	 * @param query The Query object to be saved
+	 * @return The saved Query object with generated ID
+	 */	public Query addQuery(Query query) {
+		return queryRepository.save(query);
+	 }
+
+	 public List<Query> getQueriesByUserId(Integer userID) {
+		Account user = accountRepository.findByUserID(userID);
+		if (user == null) {
+			throw new IllegalArgumentException("User with ID " + userID + " not found.");
+		}
+		return queryRepository.findByUserID(user);
+	 }
+
+	 public void deleteQuery(Long queryID) {
+		if (!queryRepository.existsById(queryID)) {
+			throw new IllegalArgumentException("Query with ID " + queryID + " not found.");	
+
+		} else {
+			queryRepository.deleteById(queryID);
+		}
+	}
+
+
+
+
+
 }

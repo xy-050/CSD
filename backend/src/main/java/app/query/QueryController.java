@@ -13,6 +13,7 @@ public class QueryController {
 
 	private final QueryService queryService;
 
+	@Autowired
 	public QueryController(QueryService queryService) {
 		this.queryService = queryService;
 	}
@@ -109,5 +110,56 @@ public class QueryController {
 	public ResponseEntity<List<String>> getMostQueriedHTSCodes() {
 		List<String> results = queryService.getMostQueried();
 		return ResponseEntity.ok(results);
+	}
+	
+	// 6. Add a new query record
+	@PostMapping("/queries")
+	public ResponseEntity<Query> addQuery(@RequestBody Query query) {
+		Query savedQuery = queryService.addQuery(query);
+		return ResponseEntity.ok(savedQuery);
+
+	}
+
+	// 7. Filter queries by user ID
+	@GetMapping("/queries")
+	public ResponseEntity<List<Query>> getQueriesByUserId(@RequestParam Integer userID) {
+		List<Query> queries = queryService.getQueriesByUserId(userID);
+		return ResponseEntity.ok(queries);
+	}
+
+	//8. Remove records from query database by queryID
+	@DeleteMapping("/queries/{queryID}")
+	public ResponseEntity<Void> deleteQuery(@PathVariable Long queryID) {
+		queryService.deleteQuery(queryID);
+		return ResponseEntity.noContent().build();
+	}
+
+	//9. Option to clear one query or all queries from the database from one user
+
+	@DeleteMapping("/queries/user/{userID}")
+	public ResponseEntity<Void> deleteQueriesByUserId(@PathVariable Integer userID) {
+		List<Query> queries = queryService.getQueriesByUserId(userID);
+		for (Query query : queries) {
+			queryService.deleteQuery(query.getQueryID());
+		}
+		return ResponseEntity.noContent().build();
+	}
+
+	//10. Clear one query from one user by queryID and userID
+	@DeleteMapping("/queries/user/{userID}/query/{queryID}")
+	public ResponseEntity<Void> deleteQueryByUserIdAndQueryId(@PathVariable Integer userID, @PathVariable Long queryID) {
+		List<Query> queries = queryService.getQueriesByUserId(userID);
+		boolean found = false;
+		for (Query query : queries) {
+			if (query.getQueryID().equals(queryID)) {
+				queryService.deleteQuery(queryID);
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			return ResponseEntity.notFound().build();
+		}
+		return ResponseEntity.noContent().build();
 	}
 }
