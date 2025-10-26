@@ -4,59 +4,26 @@ import NavBar from "./NavBar.jsx"
 import api from "../api/AxiosConfig.jsx";
 
 export default function ProfilePage({ }) {
-    // const [username, setUsername] = useState(null);
-    const [oldUsername, setOldUsername] = useState("");
+    const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [userID, setUserID] = useState("");
     const [msg, setMsg] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
-        const getUsername = async () => {
+        const getUserDetails = async () => {
             try {
-                const response = await api.get(`/authStatus`);
+                const response = await api.get("/currentUserDetails");
                 console.log(response);
-                setOldUsername(response.data);
+                setUsername(response.data.username);
+                setUserID(response.data.userId);
+                setEmail(response.data.email);
             } catch (error) {
                 console.log(error);
             }
         }
-        getUsername();
+        getUserDetails();
     }, []);
-
-    useEffect(() => {
-        if (oldUsername != "") {
-            const getUserID = async () => {
-                try {
-                    const response = await api.get(`/currentID`, {
-                        params: { username: oldUsername }
-                    });
-                    console.log(response);
-                    setUserID(response.data);
-                } catch (error) {
-                    console.log(error);
-                }
-            }
-            getUserID();
-        }
-    }, [oldUsername]);
-
-    useEffect(() => {
-        if (oldUsername != "" && userID != "") {
-            const getEmail = async () => {
-                try {
-                    const response = await api.get(`/currentEmail`, {
-                        params: { username: oldUsername }
-                    });
-                    console.log(response);
-                    setEmail(response.data);
-                } catch (error) {
-                    console.log(error);
-                }
-            }
-            getEmail();
-        }
-    }, [oldUsername, userID]);
 
     const handleUpdate = async (e) => {
         e.preventDefault();
@@ -79,7 +46,6 @@ export default function ProfilePage({ }) {
         } catch (error) {
             console.log("Error: " + error);
         }
-        console.log("test");
         navigate("/");
     }
 
