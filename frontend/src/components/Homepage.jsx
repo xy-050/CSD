@@ -1,12 +1,16 @@
 import { useState, useRef, useEffect } from "react";
 import NavBar from "./NavBar";
 import SearchBar from "./SearchBar";
+import axios from "../api/AxiosConfig";
 
 export default function HomePage({ onSearch, user, setUser, setCalcQuery }) {
     const [lastQuery, setLastQuery] = useState("");
     const menuRef = useRef(null)
     const [typedTitle, setTypedTitle] = useState("");
     const [doneTyping, setDoneTyping] = useState(false);
+    const [topProducts, setTopProducts] = useState([]);
+    const [topLoading, setTopLoading] = useState(false);
+    const [topError, setTopError] = useState(null);
 
     // typing effect for welcome message
     useEffect(() => {
@@ -21,6 +25,25 @@ export default function HomePage({ onSearch, user, setUser, setCalcQuery }) {
             }
         }, 60); // typing speed (ms per char)
         return () => clearInterval(id);
+    }, []);
+
+    // fetch top 10 most queried products from backend
+    useEffect(() => {
+        setTopLoading(true);
+        setTopError(null);
+        axios.get('/api/tariffs/most-queried')
+            .then(res => {
+                if (Array.isArray(res.data)) {
+                    setTopProducts(res.data.slice(0, 10)); // backend should already limit, but safe-guard here
+                } else {
+                    setTopProducts([]);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load top products', err);
+                setTopError('Could not load top products');
+            })
+            .finally(() => setTopLoading(false));
     }, []);
 
     // handle outside clicks and escape key
@@ -99,6 +122,20 @@ export default function HomePage({ onSearch, user, setUser, setCalcQuery }) {
                             <button className="feature-btn">Manage</button>
                         </article>
                     </section></>
+                {/* Top Products */}
+                <section className="top-products" style={{ marginTop: '1.25rem' }}>
+                    <h2 style={{ marginBottom: '0.5rem' }}>Top 10 Most Queried Products</h2>
+                    {topLoading && <p>Loading top products…</p>}
+                    {topError && <p style={{ color: 'red' }}>{topError}</p>}
+                    {!topLoading && !topError && (
+                        <ol>
+                            {topProducts.length === 0 && <li>No data</li>}
+                            {topProducts.map((code, idx) => (
+                                <li key={code + idx}>{code}</li>
+                            ))}
+                        </ol>
+                    )}
+                </section>
             </main>
         </div>
     )

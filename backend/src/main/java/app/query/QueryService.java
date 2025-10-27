@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import app.account.Account;
 import app.account.AccountRepository;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -270,7 +271,14 @@ public class QueryService {
      * @return List of most queried product codes (HTS codes)
      */
     public List<String> getMostQueried() {
-        return queryRepository.findMostQueried();
+        //return queryRepository.findMostQueried();
+
+        // Use the pageable repository method to get top 10 most frequent HTS codes.
+        java.util.List<java.lang.Object[]> rows = queryRepository.findTopHtsCodes(PageRequest.of(0, 10));
+        // Map Object[] -> String htsCode (index 0)
+        return rows.stream()
+                .map(r -> (String) r[0])
+                .toList();
     }
 	/**
 	 * Adds a new Query record to the database.
