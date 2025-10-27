@@ -32,9 +32,9 @@ export default function NavBar({ }) {
     useEffect(() => {
         const getUsername = async () => {
             try {
-                const response = await api.get("/authStatus");
+                const response = await api.get("/currentUserDetails");
                 console.log(response);
-                setUsername(response.data);
+                setUsername(response.data.username);
             } catch (error) {
                 console.log(error);
             }
@@ -48,14 +48,9 @@ export default function NavBar({ }) {
         }
     })
 
-    const handleLogout = async () => {
-        try {
-            const response = await api.get("/logout");
-            console.log(response);
-            navigate("/login");
-        } catch (error) {
-            console.log("Error: " + error);
-        }
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        navigate("/login");
     }
 
     return (

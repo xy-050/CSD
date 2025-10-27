@@ -15,18 +15,18 @@ export default function LoginPage() {
         setError('');
 
         try {
-            const params = new URLSearchParams();
-            params.append("username", username);
-            params.append("password", password);
-
-            const response = await api.post("/login", params, {
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            const response = await api.post("/login", {
+                username: username, 
+                password: password
             });
 
             console.log(response);
 
-            if (response.status == 200) {
+            if (response.status === 200 && response.data.token) {
+                localStorage.setItem('token', response.data.token);
                 navigate("/");
+            } else {
+                setError("Invalid response from server. PLease try again.");
             }
         } catch (error) {
             setError("Login failed. Please try again.");

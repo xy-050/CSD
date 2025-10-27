@@ -6,16 +6,29 @@ export default function PrivateRoute({ children }) {
     const [isAuth, setIsAuth] = useState(null);
 
     useEffect(() => {
-        api.get("/authStatus")
-            .then((res) => {
-                if (res.status == 200) {
-                    setIsAuth(true);
-                }
-            })
-            .catch(() => setIsAuth(false))
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setIsAuth(false);
+            return;
+        }
+
+        api.get("/verify-token", {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then((res) => {
+            if (res.status === 200) {
+                setIsAuth(true);
+            }
+        })
+        .catch(() => {
+            localStorage.removeItem('token'); // Clear invalid token
+            setIsAuth(false);
+        });
     }, []);
 
-    if (isAuth == null ) {
+    if (isAuth === null) {
         return <div>Loading...</div>;
     }
 
