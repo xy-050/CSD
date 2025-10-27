@@ -34,7 +34,9 @@ export default function HomePage({ onSearch, user, setUser, setCalcQuery }) {
         axios.get('/api/tariffs/most-queried')
             .then(res => {
                 if (Array.isArray(res.data)) {
-                    setTopProducts(res.data.slice(0, 10)); // backend should already limit, but safe-guard here
+                    // Filter out null, undefined, and empty strings
+                    const validProducts = res.data.filter(code => code && code.trim() !== '');
+                    setTopProducts(validProducts.slice(0, 10));
                 } else {
                     setTopProducts([]);
                 }
