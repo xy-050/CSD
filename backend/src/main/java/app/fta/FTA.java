@@ -1,8 +1,6 @@
 package app.fta;
 
 import java.time.LocalDate;
-import java.util.Map;
-import java.util.Objects;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -15,10 +13,22 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class FTA {
-    @Id 
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long ftaId;
+
     private String country;
 
-    // { htsCode -> { fetchDate, price } }
-    private Map<String, Map<LocalDate, Double>> prices;
+    private String htsCode;
+
+    private double price;
+
+    private LocalDate date;
+
+    public FTA(String country, String htsCode, double price, LocalDate date) {
+        this.country = country;
+        this.htsCode = htsCode;
+        this.price = price;
+        this.date = date;
+    }
 
 }
