@@ -3,15 +3,29 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import NavBar from "./NavBar";
 import api from '../api/AxiosConfig.jsx';
 
-export default function CalculatorPage({  }) {
+export default function CalculatorPage({ }) {
 
     const location = useLocation();
     const { result, keyword } = location.state || {};
+    const [userID, setUserID] = useState("");
     console.log(keyword);
     console.log(result);
     console.log('Full description chain:', result?.fullDescriptionChain);
     console.log('Single description:', result?.description);
-    
+
+    useEffect(() => {
+        const getUserDetails = async () => {
+            try {
+                const response = await api.get("/currentUserDetails");
+                console.log(response);
+                setUserID(response.data.userId);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        getUserDetails();
+    }, []);
+
     // Handle case where result is missing
     if (!result) {
         return (
@@ -47,31 +61,31 @@ export default function CalculatorPage({  }) {
     useEffect(() => {
         const fetchCountryTariffs = async () => {
             if (!result?.htsno) return;
-            
+
             setLoading(true);
             try {
                 const response = await api.get(`/api/tariffs/compare-countries`, {
                     params: { htsno: result.htsno }
                 });
-                
+
                 setCountryTariffs(response.data);
                 buildCountryList(response.data);
                 updateTariffRate(origin, response.data);
-                
+
             } catch (error) {
                 console.error('Error fetching country tariffs:', error);
             } finally {
                 setLoading(false);
             }
         };
-        
+
         fetchCountryTariffs();
     }, [result?.htsno]);
-    
+
     // Build country list from API response
     const buildCountryList = (tariffData) => {
         const countries = [];
-        
+
         // Add special countries with special rates
         if (tariffData['Special countries']) {
             tariffData['Special countries'].forEach(countryName => {
@@ -81,7 +95,7 @@ export default function CalculatorPage({  }) {
                 });
             });
         }
-        
+
         // Add common countries with general rate (only if not already in special list)
         const commonCountries = ['China', 'Germany', 'Japan', 'United Kingdom', 'France', 'Italy', 'India', 'Brazil', 'Mexico', 'Canada'];
         commonCountries.forEach(countryName => {
@@ -92,18 +106,18 @@ export default function CalculatorPage({  }) {
                 });
             }
         });
-        
+
         setAvailableCountries(countries);
     };
-    
+
     // Update tariff rate when origin changes
     const updateTariffRate = (selectedCountry, tariffData) => {
         if (!tariffData) return;
-        
+
         const country = availableCountries.find(c => c.name === selectedCountry);
         const newRate = country ? country.rate : tariffData['General rate'] || 'N/A';
         setCurrentTariffRate(newRate);
-        
+
         // Update the duty line percentage
         const numericRate = extractNumericRate(newRate);
         setLines(prevLines => [
@@ -111,14 +125,14 @@ export default function CalculatorPage({  }) {
             ...prevLines.slice(1)
         ]);
     };
-    
+
     // Helper to extract numeric rate from strings like "5.6%" or "Free"
     const extractNumericRate = (rateString) => {
         if (!rateString || rateString === 'Free' || rateString === 'N/A') return 0;
         const match = rateString.match(/([0-9.]+)/);
         return match ? parseFloat(match[1]) : 0;
     };
-    
+
     // Handle origin change
     const handleOriginChange = (newOrigin) => {
         setOrigin(newOrigin);
@@ -144,6 +158,58 @@ export default function CalculatorPage({  }) {
     //     setIsFav(v => !v);
     // };
 
+    // ⭐ favourites
+    const [isFav, setIsFav] = useState(false);
+    const [favLoading, setFavLoading] = useState(false);
+
+    // Check if item is favourited on mount
+    useEffect(() => {
+        const checkFavouriteStatus = async () => {
+            if (!hts) return;
+
+            try {
+                const response = await api.get(`/account/${userID}/favourites`);
+                console.log("HELLO");
+                console.log(response);
+                setIsFav(response.data.isFavourite || false);
+            } catch (error) {
+                console.error('Error checking favourite status:', error);
+            }
+        };
+
+        checkFavouriteStatus();
+    }, [userID, hts]);
+
+    // Toggle favourite status
+    const toggleFav = async () => {
+        if (!hts || favLoading) return;
+
+        setFavLoading(true);
+        try {
+            if (isFav) {
+                // Remove from favourites
+                await api.delete(`/account/${userID}/favourites`, null, {
+                    params: { htsCode: hts }
+                });
+                setIsFav(false);
+            } else {
+                // Add to favourites
+                await api.post(`/account/${userID}/favourites`, null,{
+                    params: {
+                        htsCode: hts
+                    }
+                });
+                setIsFav(true);
+            }
+        } catch (error) {
+            console.error('Error toggling favourite:', error);
+            // Optionally show error message to user
+            alert('Failed to update favourite. Please try again.');
+        } finally {
+            setFavLoading(false);
+        }
+    };
+
     // calc - Initialize with actual tariff rate
     const getInitialTariffRate = () => {
         if (result?.general) {
@@ -153,7 +219,7 @@ export default function CalculatorPage({  }) {
         }
         return 0;
     };
-    
+
     const [lines, setLines] = useState([
         { label: "Tariff Duty", base: value, ratePct: getInitialTariffRate() },
     ]);
@@ -187,25 +253,25 @@ export default function CalculatorPage({  }) {
                                 <div className="mini-label">Inputs</div>
                                 <h3 className="calc-title">{keyword}</h3>
                             </div>
-                            {/* <button
+                            <button
                                 type="button"
                                 className="star-btn"
                                 aria-pressed={isFav}
-                                title={isFav ? "Unfavorite" : "Favorite"}
+                                title={isFav ? "Unfavourite" : "Favourite"}
                                 onClick={toggleFav}
                             >
                                 ★
-                            </button> */}
+                            </button>
                         </div>
 
                         <div className="form-row">
                             <label>HTS Code</label>
-                            <input className="search-input" value={hts} readOnly style={{backgroundColor: '#f8f9fa', cursor: 'default'}} />
+                            <input className="search-input" value={hts} readOnly style={{ backgroundColor: '#f8f9fa', cursor: 'default' }} />
                         </div>
 
                         <div className="form-row">
                             <label>Commodity Description</label>
-                            <input className="search-input" value={desc} readOnly style={{backgroundColor: '#f8f9fa', cursor: 'default'}} />
+                            <input className="search-input" value={desc} readOnly style={{ backgroundColor: '#f8f9fa', cursor: 'default' }} />
                         </div>
 
                         <div className="form-row">
@@ -214,11 +280,11 @@ export default function CalculatorPage({  }) {
                                 onChange={e => {
                                     const inputValue = e.target.value;
                                     setValueInput(inputValue);
-                                    
+
                                     // Convert to number for calculations, default to 0 if empty or invalid
                                     const numericValue = inputValue === '' || isNaN(Number(inputValue)) ? 0 : Number(inputValue);
                                     setValue(numericValue);
-                                    
+
                                     // Update the first duty line base to match shipment value
                                     setLines(prevLines => [
                                         { ...prevLines[0], base: numericValue },
