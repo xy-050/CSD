@@ -1,4 +1,5 @@
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import NavBar from './NavBar.jsx';
 import api from '../api/AxiosConfig.jsx';
 
@@ -11,10 +12,79 @@ export default function SearchResults({ }) {
     const location = useLocation();
     const { results, keyword } = location.state || {};
     const navigate = useNavigate();
+    const [currentUserID, setCurrentUserID] = useState(null);
+
+    // Fetch current user ID on component mount (two-step: get username, then get ID)
+    useEffect(() => {
+        // Step 1: Get current username
+        api.get('/authStatus')
+            .then(res => {
+                const username = res.data;
+                console.log('Current username:', username);
+                
+                // Step 2: Get user ID using the username
+                return api.get('/currentID', { params: { username } });
+            })
+            .then(res => {
+                if (res.data) {
+                    const userId = parseInt(res.data, 10);
+                    setCurrentUserID(userId);
+                    console.log('Current user ID:', userId);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to fetch current user ID:', err);
+            });
+    }, []);
     
+    // map category keys to icons (keep in sync with SearchBar)
+    const categoryIcons = {
+        sugar: '🍬',
+        bread: '🍞',
+        milk: '🥛',
+        egg: '🥚',
+        rice: '🍚',
+    };
+
+    // determine icon for current keyword (if any) - case-insensitive
+    const currentCategoryIcon = keyword ? categoryIcons[String(keyword).toLowerCase()] : null;
+    
+    // show at most 8 results
+    const displayedResults = Array.isArray(results) ? results.slice(0, 8) : [];
+    
+    // Helper function to save query to database
+    const saveQuery = async (htsCode) => {
+        if (!currentUserID) {
+            console.warn('Cannot save query: user ID not available');
+            return;
+        }
+
+        try {
+            const queryData = {
+                userID: { userID: currentUserID }, // Account object reference
+                htsCode: htsCode,
+                originCountry: null,
+                modeOfTransport: null,
+                quantity: 0
+            };
+
+            console.log('Saving query:', queryData);
+            await api.post('/api/tariffs/queries', queryData);
+            console.log('Query saved successfully for HTS code:', htsCode);
+        } catch (error) {
+            console.error('Failed to save query:', error);
+            // Don't block user flow if save fails - just log it
+        }
+    };
+
     const handleShortlist = async (result) => {
         // If general tariff exists, go to calculator
         if (result.general && result.general.trim() !== '') {
+            // ONLY save query when going to calculator (not for "See More")
+            if (result.htsno) {
+                await saveQuery(result.htsno);
+            }
+
             const formattedResult = {
                 ...result,
                 // Create a single description from the description chain for backward compatibility
@@ -44,13 +114,13 @@ export default function SearchResults({ }) {
                 });
                 
                 console.log('HTS subcategory results:', response.data);
-                // Navigate to the same page with new results
+                // Navigate to the same page with new results (do NOT replace history)
                 navigate("/results", { 
                     state: { 
                         results: response.data, 
                         keyword: keyword
-                    },
-                    replace: true // Replace current history entry to avoid back button issues
+                    }
+                    // removed replace: true
                 });
             } catch (error) {
                 console.error('Error searching HTS subcategories:', error);
@@ -82,9 +152,18 @@ export default function SearchResults({ }) {
         <>
             <NavBar />
             <div className="search-results">
-                <h2>Search Results</h2>
+                {/* header now shows selected category icon when available */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    {currentCategoryIcon && (
+                        <span style={{ fontSize: '2rem', lineHeight: 1 }} aria-hidden="true">
+                            {currentCategoryIcon}
+                        </span>
+                    )}
+                    <h2 style={{ margin: 0 }}>Search Results{keyword ? ` — ${keyword}` : ''}</h2>
+                </div>
+
                 <div className="results-grid">
-                    {results.map((result, index) => (
+                    {displayedResults.map((result, index) => (
                         <div className="result-item" key={index}>
                             <h3>{result.htsno}</h3>
                             <div className="description-chain">
