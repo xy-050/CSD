@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.time.LocalDate;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, String> {
+public interface ProductRepository extends JpaRepository<Product, ProductId> {
     Optional<Product> findTopByHtsCodeOrderByFetchDateDesc(String htsCode); 
     Optional<Product> findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(String htsCode, LocalDate date);
 }
