@@ -145,7 +145,7 @@
                 <version>3.0.0-M5</version>
                 <configuration>
                     <includes>
-                        <include>src/test/*Test.java</include>
+                        <include>**/*Test.java</include>
                     </includes>
                 </configuration>
             </plugin>

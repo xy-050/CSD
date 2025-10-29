@@ -27,26 +27,24 @@ export default function ProfilePage({ }) {
 
     const handleUpdate = async (e) => {
         e.preventDefault();
-        // try {
-        //     const response = await api.post(`/updateUsername/${encodeURIComponent(userID)}`, {
-        //         "userID": userID,
-        //         "username": username
-        //     });
-        //     console.log(response);
-        // } catch (error) {
-        //     console.log("Error: " + error);
-        // }
-
+        
         try {
-            const response = await api.post(`/updateEmail/${encodeURIComponent(userID)}`, {
+            const response = await api.post(`/updateUser/${encodeURIComponent(userID)}`, {
                 "userID": userID,
+                "username": username,
                 "email": email
             });
             console.log(response);
         } catch (error) {
             console.log("Error: " + error);
+            setMsg(error.response.data);
+            return;
         }
-        navigate("/");
+
+        setMsg("Update complete! Re-directing you back to login...");
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        localStorage.removeItem("token");
+        navigate("/login");
     }
 
     const handleCancel = () => {
@@ -67,6 +65,15 @@ export default function ProfilePage({ }) {
                     <h2>Account</h2>
 
                     <form className="form-container mt-3" onSubmit={handleUpdate}>
+                        <div className="input-group">
+                            <label>Username</label>
+                            <input
+                                className="search-input"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                placeholder="name@example.com"
+                            />
+                        </div>
                         <div className="input-group">
                             <label>Email</label>
                             <input
