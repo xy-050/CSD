@@ -21,8 +21,8 @@ import lombok.ToString;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
-@ToString
+@EqualsAndHashCode(exclude = {"userID"})
+@ToString(exclude = {"userID"})
 public class Query {
 
     // Class implementation goes here

@@ -96,7 +96,7 @@ export default function CalculatorPage({ }) {
                 });
             });
         }
-        
+
         // Use country-list package for common countries instead of hardcoded list
         const commonCountries = getCountryNames(); // all standard country names
         commonCountries.forEach(countryName => {
@@ -189,13 +189,15 @@ export default function CalculatorPage({ }) {
         try {
             if (isFav) {
                 // Remove from favourites
-                await api.delete(`/account/${userID}/favourites`, null, {
-                    params: { htsCode: hts }
+                await api.delete(`/account/${userID}/favourites`, {
+                    params: {
+                        htsCode: hts
+                    }
                 });
                 setIsFav(false);
             } else {
                 // Add to favourites
-                await api.post(`/account/${userID}/favourites`, null,{
+                await api.post(`/account/${userID}/favourites`, null, {
                     params: {
                         htsCode: hts
                     }

@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import app.favourites.Favourites;
 import app.query.Query;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -27,8 +28,8 @@ import lombok.ToString;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
-@ToString
+@EqualsAndHashCode(exclude = {"queries", "favourites"})
+@ToString(exclude = {"queries", "favourites"})
 public class Account {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userID;
@@ -42,9 +43,9 @@ public class Account {
     // User favourited hts codes
     @ManyToMany
     @JoinTable(
-        name = "account_favourite_hts",
+        name = "account_favourites",
         joinColumns = @JoinColumn(name = "account_id"),
         inverseJoinColumns = @JoinColumn(name = "hts_code")
     )
-    private Set<FavouriteHtsCodes> favouriteHtsCodes = new HashSet<>();
+    private Set<Favourites> favourites = new HashSet<>();
 }

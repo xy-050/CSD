@@ -14,27 +14,17 @@ export default function SearchResults({ }) {
     const navigate = useNavigate();
     const [currentUserID, setCurrentUserID] = useState(null);
 
-    // Fetch current user ID on component mount (two-step: get username, then get ID)
     useEffect(() => {
-        // Step 1: Get current username
-        api.get('/authStatus')
-            .then(res => {
-                const username = res.data;
-                console.log('Current username:', username);
-                
-                // Step 2: Get user ID using the username
-                return api.get('/currentID', { params: { username } });
-            })
-            .then(res => {
-                if (res.data) {
-                    const userId = parseInt(res.data, 10);
-                    setCurrentUserID(userId);
-                    console.log('Current user ID:', userId);
-                }
-            })
-            .catch(err => {
-                console.error('Failed to fetch current user ID:', err);
-            });
+        const getUserDetails = async () => {
+            try {
+                const response = await api.get("/currentUserDetails");
+                console.log(response);
+                setCurrentUserID(response.data.userId);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        getUserDetails();
     }, []);
     
     // map category keys to icons (keep in sync with SearchBar)

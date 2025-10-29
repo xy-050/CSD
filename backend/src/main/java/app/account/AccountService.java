@@ -3,9 +3,8 @@ package app.account;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class AccountService {
@@ -116,34 +115,5 @@ public class AccountService {
 
         account.setPassword(passwordEncoder.encode(newPassword));
         accountRepository.save(account);
-    }
-
-    /*
-     * Saves the favourite hts code of user into their account
-     */
-    public void addFavouriteHtsCode(Integer userId, String htsCode) {
-        Account account = accountRepository.findById(userId).orElseThrow();
-        account.getFavouriteHtsCodes().add(new FavouriteHtsCodes());
-        accountRepository.save(account);
-    }
-
-    /*
-     * Removes the favourite hts code of user from their account
-     */
-    public void removeFavouriteHtsCode(Integer userId, String htsCode) {
-        Account account = accountRepository.findById(userId).orElseThrow();
-        account.getFavouriteHtsCodes().remove(new FavouriteHtsCodes());
-        accountRepository.save(account);
-    }
-
-    /*
-     * Retrieves the favourite hts codes of a user from their account
-     */
-    public Set<String> getFavouriteHtsCodes(Integer userId) {
-        Account account = accountRepository.findById(userId).orElseThrow();
-        return account.getFavouriteHtsCodes()
-                      .stream()
-                      .map(FavouriteHtsCodes::getHtsCode)
-                      .collect(Collectors.toSet());
     }
 }

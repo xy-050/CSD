@@ -6,7 +6,7 @@
     <persistence-unit name="default">
         <class>app.account.Account</class>
         <class>app.query.Query</class>
-        <class>app.account.FavouriteHtsCodes</class>
+        <class>app.favourites.Favourites</class>
         <class>app.product.Product</class>
         <class>app.fta.FTA</class>
     </persistence-unit>
