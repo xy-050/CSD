@@ -1,0 +1,61 @@
+### Test US HTS REST API search endpoint
+
+# Search for tariff articles containing the word "petroleum"
+# GET http://localhost:8080/api/tariffs/search?keyword=sugar
+
+
+# idk
+
+
+
+# Search for tariff articles containing the word "sugar" and compare countries
+GET http://localhost:8080/api/tariffs/compare-countries?htsno=0401.20.40.00
+
+Accept: application/json
+
+###
+GET http://localhost:8080/api/tariffs/most-queried
+Accept: application/json
+
+###
+GET http://localhost:8080/api/tariffs/search?keyword=1704
+Accept: application/json
+
+###
+POST http://localhost:8080/signup
+Content-Type: application/json
+
+{
+  "username": "restuser2",
+  "password": "P@ssw0rd",
+  "email": "restuser2@gmail.com"
+}
+
+###
+POST http://localhost:8080/login
+Content-Type: application/x-www-form-urlencoded
+
+username=restuser2&password=P@ssw0rd
+
+###
+GET http://localhost:8080/logout
+Content-Type: application/json
+
+
+### 
+POST http://localhost:8080/updateEmail/15
+Content-Type: application/json
+
+{
+  "userID": 15,
+  "email": "restuser3@gmail.com"
+}
+
+###
+POST http://localhost:8080/updateUsername/15
+Content-Type: application/json
+
+{
+  "userID": 15,
+  "username": "rest"
+}

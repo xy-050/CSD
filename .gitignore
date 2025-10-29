@@ -1,7 +1,15 @@
+###Link to report: https://docs.google.com/document/d/1ukuM8L_EXfrAi-lI4Plf6bmVU3XmJ5Pj4njt-qN8Y2w/edit?tab=t.0#heading=h.gv5h7kvbior9
+
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+data/
+
+### React Node Modules ###
+node_modules/
+frontend/node_modules/
+**/node_modules/
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
@@ -36,3 +44,4 @@ build/
 
 ### Mac OS ###
 .DS_Store
+src/test/java/test.http
