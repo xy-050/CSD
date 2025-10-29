@@ -76,7 +76,6 @@ public class AccountService {
 
     /**
      * Updates the password of an Account.
-     * TODO: update this method, will not work (see below)
      * 
      * @param userId           Target user ID.
      * @param previousPassword Original password.
@@ -89,9 +88,9 @@ public class AccountService {
         }
 
         String password = account.getPassword();
-        if (!password.equals(previousPassword)) { // always false because password is encoded
+        if (!passwordEncoder.matches(previousPassword, password)) { 
             throw new IllegalArgumentException("Previous password is incorrect.");
-        } else if (password.equals(newPassword)) {
+        } else if (passwordEncoder.matches(newPassword, password)) {
             throw new IllegalArgumentException("New password must be different from the previous password.");
         }
 

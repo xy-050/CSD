@@ -115,25 +115,14 @@ public class AccountController {
      * @return ResponseEntity with status and message.
      */
     @PostMapping("/updatePassword/{userID}")
-    public ResponseEntity<String> updatePassword(@PathVariable Integer userID, @RequestBody Account updateAccount) {
-        // perform authentication check
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Account currentUser = accountService.getAccountByUsername(auth.getName());
-        if (!currentUser.getUserID().equals(userID)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Access denied: You can only update your own account");
-        }
-
-        String newPassword = updateAccount.getPassword();
-
-        // check strength of new password
-        if (!PasswordChecker.isValidPassword(newPassword)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Password does not meet the minimum requirements");
-        }
-        currentUser.setPassword(newPassword);
-        accountService.updateAccount(currentUser);
-        return ResponseEntity.ok("Account updated for user: " + currentUser.getUserID());
+    public ResponseEntity<String> updatePassword(@PathVariable Integer userID, @RequestParam String previousPassword, @RequestParam String newPassword) {
+        try {
+            accountService.changePassword(userID, previousPassword, newPassword);
+        } catch (UserNotFoundException | IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } 
+        
+        return ResponseEntity.ok().body("Password successfully updated!");
     }
 
     /**

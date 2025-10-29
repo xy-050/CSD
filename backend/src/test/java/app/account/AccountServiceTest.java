@@ -7,14 +7,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import app.exception.UserConflictException;
 import app.exception.UserNotFoundException;
@@ -25,8 +28,15 @@ public class AccountServiceTest {
     @Mock
     AccountRepository accountRepository;
 
+    @Mock
+    BCryptPasswordEncoder passwordEncoder;
+
     @InjectMocks
     AccountService accountService;
+
+    // ----------------------------------------------------------------
+    // --------------------- updateDetails() -------------------------- 
+    // ----------------------------------------------------------------
 
     // Test 1: User does not exist
     @Test
@@ -217,5 +227,150 @@ public class AccountServiceTest {
 
         assertTrue(exception.getMessage().contains("Email taken@email.com already associated"));
         verify(accountRepository, never()).save(any(Account.class));
+    }
+
+    // ----------------------------------------------------------------
+    // ---------------------- changePassword() ------------------------ 
+    // ----------------------------------------------------------------
+
+    // Test 1: User does not exist
+    @Test
+    public void changePassword_WhenUserDoesNotExist_ShouldThrowUserNotFoundException() {
+        when(accountRepository.findByUserID(999)).thenReturn(null);
+
+        UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
+            accountService.changePassword(999, "oldPass123", "newPass456");
+        });
+
+        assertEquals("Account not found.", exception.getMessage());
+        verify(accountRepository, never()).save(any(Account.class));
+        verify(passwordEncoder, never()).encode(anyString());
+    }
+
+    // Test 2: Previous password is incorrect
+    @Test
+    public void changePassword_WhenPreviousPasswordIncorrect_ShouldThrowIllegalArgumentException() {
+        Account account = new Account();
+        account.setUserID(1);
+        account.setPassword("encodedPassword123");
+
+        when(accountRepository.findByUserID(1)).thenReturn(account);
+        when(passwordEncoder.matches("wrongPassword", "encodedPassword123")).thenReturn(false);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            accountService.changePassword(1, "wrongPassword", "newPass456");
+        });
+
+        assertEquals("Previous password is incorrect.", exception.getMessage());
+        verify(accountRepository, never()).save(any(Account.class));
+        verify(passwordEncoder, never()).encode(anyString());
+    }
+
+    // Test 3: New password is same as previous password
+    @Test
+    public void changePassword_WhenNewPasswordSameAsPrevious_ShouldThrowIllegalArgumentException() {
+        Account account = new Account();
+        account.setUserID(1);
+        account.setPassword("encodedPassword123");
+
+        when(accountRepository.findByUserID(1)).thenReturn(account);
+        when(passwordEncoder.matches("samePassword", "encodedPassword123")).thenReturn(true);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            accountService.changePassword(1, "samePassword", "samePassword");
+        });
+
+        assertEquals("New password must be different from the previous password.", exception.getMessage());
+        verify(accountRepository, never()).save(any(Account.class));
+    }
+
+    // Test 4: Successfully change password
+    @Test
+    public void changePassword_WhenValidPasswordChange_ShouldUpdatePassword() {
+        Account account = new Account();
+        account.setUserID(1);
+        account.setPassword("encodedOldPassword");
+
+        when(accountRepository.findByUserID(1)).thenReturn(account);
+        when(passwordEncoder.matches("oldPass123", "encodedOldPassword")).thenReturn(true);
+        when(passwordEncoder.matches("newPass456", "encodedOldPassword")).thenReturn(false);
+        when(passwordEncoder.encode("newPass456")).thenReturn("encodedNewPassword");
+
+        assertDoesNotThrow(() -> accountService.changePassword(1, "oldPass123", "newPass456"));
+
+        verify(passwordEncoder).matches("oldPass123", "encodedOldPassword");
+        verify(passwordEncoder).matches("newPass456", "encodedOldPassword");
+        verify(passwordEncoder).encode("newPass456");
+        verify(accountRepository).save(account);
+        assertEquals("encodedNewPassword", account.getPassword());
+    }
+
+    // Test 5: Password matches on first check but not second (edge case validation)
+    @Test
+    public void changePassword_WhenPreviousPasswordCorrectAndNewPasswordDifferent_ShouldSucceed() {
+        Account account = new Account();
+        account.setUserID(1);
+        account.setPassword("encodedCurrentPassword");
+
+        when(accountRepository.findByUserID(1)).thenReturn(account);
+        // First matches call - checking if previous password is correct
+        when(passwordEncoder.matches("correctOldPass", "encodedCurrentPassword")).thenReturn(true);
+        // Second matches call - checking if new password is different
+        when(passwordEncoder.matches("differentNewPass", "encodedCurrentPassword")).thenReturn(false);
+        when(passwordEncoder.encode("differentNewPass")).thenReturn("encodedDifferentNewPass");
+
+        assertDoesNotThrow(() -> accountService.changePassword(1, "correctOldPass", "differentNewPass"));
+
+        verify(passwordEncoder, times(1)).matches("correctOldPass", "encodedCurrentPassword");
+        verify(passwordEncoder, times(1)).matches("differentNewPass", "encodedCurrentPassword");
+        verify(passwordEncoder).encode("differentNewPass");
+        verify(accountRepository).save(account);
+    }
+
+    // Test 6: Verify the order of validation (previous password checked before new
+    // password)
+    @Test
+    public void changePassword_WhenPreviousPasswordWrong_ShouldNotCheckNewPassword() {
+        Account account = new Account();
+        account.setUserID(1);
+        account.setPassword("encodedPassword");
+
+        when(accountRepository.findByUserID(1)).thenReturn(account);
+        when(passwordEncoder.matches("wrongPrevious", "encodedPassword")).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            accountService.changePassword(1, "wrongPrevious", "anyNewPassword");
+        });
+
+        // Verify that we only checked the previous password, not the new one
+        verify(passwordEncoder, times(1)).matches("wrongPrevious", "encodedPassword");
+        verify(passwordEncoder, never()).matches("anyNewPassword", "encodedPassword");
+        verify(passwordEncoder, never()).encode(anyString());
+    }
+
+    // Test 7: Verify account is saved with updated password
+    @Test
+    public void changePassword_WhenSuccessful_ShouldSaveAccountWithEncodedPassword() {
+        Account account = new Account();
+        account.setUserID(1);
+        account.setUsername("testUser");
+        account.setEmail("test@email.com");
+        account.setPassword("oldEncodedPassword");
+
+        when(accountRepository.findByUserID(1)).thenReturn(account);
+        when(passwordEncoder.matches("oldPassword", "oldEncodedPassword")).thenReturn(true);
+        when(passwordEncoder.matches("newPassword", "oldEncodedPassword")).thenReturn(false);
+        when(passwordEncoder.encode("newPassword")).thenReturn("newEncodedPassword");
+
+        assertDoesNotThrow(() -> accountService.changePassword(1, "oldPassword", "newPassword"));
+
+        ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
+        verify(accountRepository).save(accountCaptor.capture());
+
+        Account savedAccount = accountCaptor.getValue();
+        assertEquals("newEncodedPassword", savedAccount.getPassword());
+        assertEquals(1, savedAccount.getUserID());
+        assertEquals("testUser", savedAccount.getUsername());
+        assertEquals("test@email.com", savedAccount.getEmail());
     }
 }
