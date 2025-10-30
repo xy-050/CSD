@@ -1,22 +1,16 @@
 package app.account;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import app.exception.UserConflictException;
 import app.exception.UserNotFoundException;
-import app.security.PasswordChecker;
 
 @RestController
 public class AccountController {
@@ -70,21 +64,13 @@ public class AccountController {
      */
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody Account signupAccount) {
-        Account existingAccount = accountService.getAccountByUsername(signupAccount.getUsername());
-
-        // check if account already exists
-        if (existingAccount != null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
-        }
-
-        // check strength of password
-        if (!PasswordChecker.isValidPassword(signupAccount.getPassword())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Password does not meet the minimum requirements");
-        }
-
-        // create account
-        accountService.createAccount(signupAccount);
+        try {
+            accountService.createAccount(signupAccount);
+        } catch (UserConflictException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } 
         return ResponseEntity.ok("Signup successful for user: " + signupAccount.getUsername());
     }
 
@@ -103,6 +89,8 @@ public class AccountController {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (UserConflictException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
         return ResponseEntity.ok().body("Successfully updated user!");
     }
@@ -115,9 +103,9 @@ public class AccountController {
      * @return ResponseEntity with status and message.
      */
     @PostMapping("/updatePassword/{userID}")
-    public ResponseEntity<String> updatePassword(@PathVariable Integer userID, @RequestParam String previousPassword, @RequestParam String newPassword) {
+    public ResponseEntity<String> updatePassword(@PathVariable Integer userID, @RequestBody PasswordUpdateRequest passwordRequest) {
         try {
-            accountService.changePassword(userID, previousPassword, newPassword);
+            accountService.changePassword(userID, passwordRequest.getOldPassword(), passwordRequest.getNewPassword());
         } catch (UserNotFoundException | IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } 
@@ -126,32 +114,19 @@ public class AccountController {
     }
 
     /**
-     * View account endpoint to serve a JavaScript resource.
+     * Deletes a user. 
      * 
-     * @param userID User ID from path variable.
-     * @param param  Optional query parameter.
-     * @return ResponseEntity with JavaScript content or error status.
+     * @param userID Target user ID. 
+     * @return ResponseEntity with status and message. 
      */
-    @GetMapping("/account/{userID}")
-    public ResponseEntity<String> viewAccount(@PathVariable Integer userID,
-            @RequestParam(required = false, defaultValue = "") String param) {
-        // perform authentication check
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Account currentUser = accountService.getAccountByUsername(auth.getName());
-        if (!currentUser.getUserID().equals(userID)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Access denied: You can only view your own account");
-        }
-
-        Resource resource = new ClassPathResource("static/viewAccount.js");
+    @DeleteMapping("/account/{userID}")
+    public ResponseEntity<String> deleteAccount(@PathVariable Integer userID) {
         try {
-            byte[] bytes = resource.getInputStream().readAllBytes();
-            return ResponseEntity.ok()
-                    .contentType(MediaType.valueOf("application/javascript"))
-                    .body(new String(bytes, StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "viewAccount.js not found", e);
+            accountService.deleteAccount(userID);
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
+        return ResponseEntity.ok().body("Successfully deleted user.");
     }
 
     /*

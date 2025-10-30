@@ -2,12 +2,14 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom";
 import NavBar from "./NavBar.jsx"
 import api from "../api/AxiosConfig.jsx";
+import Popup from "./Popup/Popup.jsx";
 
 export default function ProfilePage({ }) {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [userID, setUserID] = useState("");
     const [msg, setMsg] = useState("");
+    const [showPopup, setShowPopup] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -27,7 +29,7 @@ export default function ProfilePage({ }) {
 
     const handleUpdate = async (e) => {
         e.preventDefault();
-        
+
         try {
             const response = await api.post(`/updateUser/${encodeURIComponent(userID)}`, {
                 "userID": userID,
@@ -36,7 +38,15 @@ export default function ProfilePage({ }) {
             });
             console.log(response);
         } catch (error) {
-            console.log("Error: " + error);
+            console.log("Error: " + error.response.data);
+
+            if (error.response.data.trim() === "Nothing to update.") {
+                setMsg("Nothing to update. Redirecting to home...");
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                navigate("/");
+                return;
+            }
+
             setMsg(error.response.data);
             return;
         }
@@ -49,6 +59,34 @@ export default function ProfilePage({ }) {
 
     const handleCancel = () => {
         navigate("/");
+    }
+
+    const handleChangePassword = () => {
+        navigate("/change_password");
+    }
+
+    const handleDelete = () => {
+        setShowPopup(true);
+    }
+
+    const handleConfirmDelete = async (e) => {
+        e.preventDefault();
+        setShowPopup(false);
+
+        try {
+            const response = await api.delete(`/account/${encodeURIComponent(userID)}`);
+            console.log(response);
+            localStorage.removeItem("token");
+            navigate("/login");
+        } catch (error) {
+            console.log("Error " + error);
+            console.log(response.error.data);
+            setMsg("Error deleting account. Please try again.")
+        }
+    }
+
+    const handleCancelDelete = () => {
+        setShowPopup(false);
     }
 
     return (
@@ -84,6 +122,8 @@ export default function ProfilePage({ }) {
                             />
                         </div>
 
+                        {msg && <p className="mt-2" style={{ color: "var(--brand-ink)" }}>{msg}</p>}
+
                         <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
                             <button type="submit" className="feature-btn">Save changes</button>
                             <button
@@ -94,9 +134,48 @@ export default function ProfilePage({ }) {
                             >
                                 Cancel
                             </button>
-                        </div>
+                            <button
+                                type="button"
+                                className="feature-btn"
+                                style={{ background: "linear-gradient(135deg, var(--brand-strong), var(--brand-ink))" }}
+                                onClick={handleChangePassword}
+                            >
+                                Change Password
+                            </button>
+                            <button
+                                type="button"
+                                className="feature-btn"
+                                style={{ background: "linear-gradient(135deg, var(--brand-strong), var(--brand-ink))" }}
+                                onClick={handleDelete}
+                            >
+                                Delete Account
+                            </button>
 
-                        {msg && <p className="mt-2" style={{ color: "var(--brand-ink)" }}>{msg}</p>}
+                            {showPopup && (
+                                <Popup onClose={handleConfirmDelete}>
+                                    <h2>Confirmation</h2>
+                                    <p>This action is irreversible. Do you want to continue?</p>
+                                    <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                                        <button
+                                            type="button"
+                                            className="feature-btn"
+                                            style={{ background: "linear-gradient(135deg, var(--brand-strong), var(--brand-ink))" }}
+                                            onClick={handleConfirmDelete}
+                                        >
+                                            Yes, Delete
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="feature-btn"
+                                            style={{ background: "linear-gradient(135deg, var(--brand-strong), var(--brand-ink))" }}
+                                            onClick={handleCancelDelete}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </Popup>
+                            )}
+                        </div>
                     </form>
                 </section>
             </main>

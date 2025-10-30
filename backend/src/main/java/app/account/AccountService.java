@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import app.exception.UserConflictException;
 import app.exception.UserNotFoundException;
+import app.security.PasswordChecker;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,7 +31,21 @@ public class AccountService {
      * @param account Account object to save.
      * @return Account object that is saved.
      */
-    public Account createAccount(Account account) {
+    public Account createAccount(Account account) throws UserConflictException {
+        Account existing = accountRepository.findByUsername(account.getUsername());
+        if (existing != null) {
+            throw new UserConflictException("Username " + existing.getUsername() + " already exists!");
+        }
+
+        existing = accountRepository.findByEmail(account.getEmail());
+        if (existing != null) {
+            throw new UserConflictException("Email already associated with a different account!");
+        }
+
+        if (!PasswordChecker.isValidPassword(account.getPassword())) {
+            throw new IllegalArgumentException("Password does not meet the minimum requirements");
+        }
+
         account.setPassword(passwordEncoder.encode(account.getPassword()));
         return accountRepository.save(account);
     }
@@ -56,21 +71,16 @@ public class AccountService {
     }
 
     /**
-     * Updates an account.
-     * 
-     * @param account Target Account instance.
-     * @return Updated Account.
-     */
-    public Account updateAccount(Account account) {
-        return accountRepository.save(account);
-    }
-
-    /**
      * Deletes an Account by User ID.
      * 
      * @param userId Target User ID.
      */
-    public void deleteAccount(Integer userId) {
+    public void deleteAccount(Integer userId) throws UserNotFoundException {
+        Account existing = accountRepository.findByUserID(userId);
+        if (existing == null) {
+            throw new UserNotFoundException("Account not found.");
+        }
+
         accountRepository.deleteById(userId);
     }
 
@@ -81,17 +91,21 @@ public class AccountService {
      * @param previousPassword Original password.
      * @param newPassword      New password to update to.
      */
-    public void changePassword(Integer userId, String previousPassword, String newPassword) throws UserNotFoundException {
+    public void changePassword(Integer userId, String previousPassword, String newPassword)
+            throws UserNotFoundException {
         Account account = accountRepository.findByUserID(userId);
         if (account == null) {
             throw new UserNotFoundException("Account not found.");
         }
 
         String password = account.getPassword();
-        if (!passwordEncoder.matches(previousPassword, password)) { 
+        if (!passwordEncoder.matches(previousPassword, password)) {
             throw new IllegalArgumentException("Previous password is incorrect.");
         } else if (passwordEncoder.matches(newPassword, password)) {
             throw new IllegalArgumentException("New password must be different from the previous password.");
+        } else if (!PasswordChecker.isValidPassword(newPassword)) {
+            throw new IllegalArgumentException(
+                    "Password must be at least 8 characters long, containing a mix of uppercase letters, lowercase letters, and special symbols.");
         }
 
         account.setPassword(passwordEncoder.encode(newPassword));
@@ -114,12 +128,13 @@ public class AccountService {
 
         // check if username is being updated
         String newUsername = newAccount.getUsername();
-        if (!account.getUsername().equals(newUsername)) {
+        boolean usernameUpdated = !account.getUsername().equals(newUsername);
+        if (usernameUpdated) {
             // check if username already exists
             Account existing = accountRepository.findByUsername(newUsername);
             if (existing != null) {
                 throw new UserConflictException("Username " + newUsername + " already taken, please try another one!");
-            } 
+            }
 
             // update username
             account.setUsername(newUsername);
@@ -127,15 +142,21 @@ public class AccountService {
 
         // check if email is being updated
         String newEmail = newAccount.getEmail();
-        if (!account.getEmail().equals(newEmail)) {
+        boolean emailUpdated = !account.getEmail().equals(newEmail);
+        if (emailUpdated) {
             // check if email is already associated with another account
             Account existing = accountRepository.findByEmail(newEmail);
             if (existing != null) {
-                throw new UserConflictException("Email " + newEmail + " already associated with another account, please use another one!");
-            } 
+                throw new UserConflictException(
+                        "Email " + newEmail + " already associated with another account, please use another one!");
+            }
 
             // update email
             account.setEmail(newEmail);
+        }
+
+        if (!usernameUpdated && !emailUpdated) {
+            throw new IllegalArgumentException("Nothing to update.");
         }
 
         // save changes
