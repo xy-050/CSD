@@ -14,7 +14,7 @@ public class FTARepositoryTest {
     @Autowired
     private FTARepository ftaRepository;
 
-    // @Test
+    @Test
     void findByCountry_ShouldReturnMatchingFTAs() {
         FTA fta = new FTA();
         fta.setCountry("Singapore");
