@@ -97,10 +97,6 @@ export default function LoginPage() {
                         </Link>
                     </p>
                 </div>
-
-                <div className="demo-info">
-                    <p>Demo: <b>demo</b> / <b>password123</b></p>
-                </div>
             </div>
         </div>
     )
