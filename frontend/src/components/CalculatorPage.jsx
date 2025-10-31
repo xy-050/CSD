@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import NavBar from "./NavBar";
 import api from '../api/AxiosConfig.jsx';
+import { getNames as getCountryNames } from 'country-list'; // added import
 
 export default function CalculatorPage({  }) {
 
@@ -82,8 +83,8 @@ export default function CalculatorPage({  }) {
             });
         }
         
-        // Add common countries with general rate (only if not already in special list)
-        const commonCountries = ['China', 'Germany', 'Japan', 'United Kingdom', 'France', 'Italy', 'India', 'Brazil', 'Mexico', 'Canada'];
+        // Use country-list package for common countries instead of hardcoded list
+        const commonCountries = getCountryNames(); // all standard country names
         commonCountries.forEach(countryName => {
             if (!countries.find(c => c.name === countryName)) {
                 countries.push({
