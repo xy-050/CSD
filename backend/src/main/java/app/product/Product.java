@@ -26,33 +26,11 @@ public class Product {
     private LocalDate fetchDate;
 
     private double price;
-    private String description;
-    private String category;
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    public void setFetchDate(LocalDate fetchDate) {
-        this.fetchDate = fetchDate;
-    }
-
-    public void setHtsCode(String htsCode) {
-        this.htsCode = htsCode;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof Product p) {
-            return this.htsCode.equals(p.getHtsCode()) && this.price == p.getPrice() && this.description.equals(p.getDescription());
+            return this.htsCode.equals(p.getHtsCode()) && this.price == p.getPrice();
         }
         return false;
     }
