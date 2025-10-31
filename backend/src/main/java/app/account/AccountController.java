@@ -49,7 +49,7 @@ public class AccountController {
             "roles", auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList(),
-            "favouriteHtsCodesCount", currentUser.getFavouriteHtsCodes().size()
+            "favouriteHtsCodesCount", currentUser.getFavourites().size()
         );
         
         return ResponseEntity.ok(userDetails);
@@ -203,26 +203,6 @@ public class AccountController {
     @GetMapping("/account")
     public List<Account> getAccounts() {
         return accountService.getAllAccounts();
-    }
-
-    /*
-     * Managing favourite hts codes saved by users
-     */
-    @PostMapping("/account/{userID}/favourites")
-    public ResponseEntity<?> addFavourite(@PathVariable Integer userID, @RequestParam String htsCode) {
-        accountService.addFavouriteHtsCode(userID, htsCode);
-        return ResponseEntity.ok("Added favourite: " + htsCode);
-    }
-
-    @DeleteMapping("/account/{userID}/favourites")
-    public ResponseEntity<?> removeFavourite(@PathVariable Integer userID, @RequestParam String htsCode) {
-        accountService.removeFavouriteHtsCode(userID, htsCode);
-        return ResponseEntity.ok("Removed favourite: " + htsCode);
-    }
-
-    @GetMapping("/account/{userID}/favourites")
-    public ResponseEntity<Set<String>> getFavourites(@PathVariable Integer userID) {
-        return ResponseEntity.ok(accountService.getFavouriteHtsCodes(userID));
     }
 
 }

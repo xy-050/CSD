@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import NavBar from "./NavBar";
 import Sidebar from "./Sidebar";
 import api from '../api/AxiosConfig.jsx';
+import { getNames as getCountryNames } from 'country-list'; // added import
 
 export default function CalculatorPage() {
   const location = useLocation();
@@ -98,12 +99,56 @@ export default function CalculatorPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result?.htsno]);
 
-  // helper
-  const extractNumericRate = (rateString) => {
-    if (!rateString || rateString === 'Free' || rateString === 'N/A') return 0;
-    const match = rateString.match(/([0-9.]+)/);
-    return match ? parseFloat(match[1]) : 0;
-  };
+    // Build country list from API response
+    const buildCountryList = (tariffData) => {
+        const countries = [];
+
+        // Add special countries with special rates
+        if (tariffData['Special countries']) {
+            tariffData['Special countries'].forEach(countryName => {
+                countries.push({
+                    name: countryName,
+                    rate: tariffData['Special rate'] || 'N/A'
+                });
+            });
+        }
+
+        // Use country-list package for common countries instead of hardcoded list
+        const commonCountries = getCountryNames(); // all standard country names
+        commonCountries.forEach(countryName => {
+            if (!countries.find(c => c.name === countryName)) {
+                countries.push({
+                    name: countryName,
+                    rate: tariffData['General rate'] || 'N/A'
+                });
+            }
+        });
+
+        setAvailableCountries(countries);
+    };
+
+    // Update tariff rate when origin changes
+    const updateTariffRate = (selectedCountry, tariffData) => {
+        if (!tariffData) return;
+
+        const country = availableCountries.find(c => c.name === selectedCountry);
+        const newRate = country ? country.rate : tariffData['General rate'] || 'N/A';
+        setCurrentTariffRate(newRate);
+
+        // Update the duty line percentage
+        const numericRate = extractNumericRate(newRate);
+        setLines(prevLines => [
+            { ...prevLines[0], ratePct: numericRate },
+            ...prevLines.slice(1)
+        ]);
+    };
+
+    // Helper to extract numeric rate from strings like "5.6%" or "Free"
+    const extractNumericRate = (rateString) => {
+        if (!rateString || rateString === 'Free' || rateString === 'N/A') return 0;
+        const match = rateString.match(/([0-9.]+)/);
+        return match ? parseFloat(match[1]) : 0;
+    };
 
   // Update tariff rate when origin changes
   const handleOriginChange = (newOrigin) => {
@@ -133,26 +178,37 @@ export default function CalculatorPage() {
     })();
   }, [userID, hts]);
 
-  // Toggle favourite status
-  const toggleFav = async () => {
-    if (!hts || favLoading) return;
-    setFavLoading(true);
-    try {
-      if (isFav) {
-        // axios.delete signature: (url, config)
-        await api.delete(`/account/${userID}/favourites`, { params: { htsCode: hts } });
-        setIsFav(false);
-      } else {
-        await api.post(`/account/${userID}/favourites`, null, { params: { htsCode: hts } });
-        setIsFav(true);
-      }
-    } catch (error) {
-      console.error('Error toggling favourite:', error);
-      alert('Failed to update favourite. Please try again.');
-    } finally {
-      setFavLoading(false);
-    }
-  };
+    // Toggle favourite status
+    const toggleFav = async () => {
+        if (!hts || favLoading) return;
+
+        setFavLoading(true);
+        try {
+            if (isFav) {
+                // Remove from favourites
+                await api.delete(`/account/${userID}/favourites`, {
+                    params: {
+                        htsCode: hts
+                    }
+                });
+                setIsFav(false);
+            } else {
+                // Add to favourites
+                await api.post(`/account/${userID}/favourites`, null, {
+                    params: {
+                        htsCode: hts
+                    }
+                });
+                setIsFav(true);
+            }
+        } catch (error) {
+            console.error('Error toggling favourite:', error);
+            // Optionally show error message to user
+            alert('Failed to update favourite. Please try again.');
+        } finally {
+            setFavLoading(false);
+        }
+    };
 
   // calc
   const getInitialTariffRate = () => {
