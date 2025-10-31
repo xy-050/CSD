@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "./NavBar";
-import Sidebar from "./Sidebar";                  // <-- add
+import Sidebar from "./Sidebar";
 import api from "../api/AxiosConfig.jsx";
 
 export default function FavouritesPage() {
@@ -36,6 +36,8 @@ export default function FavouritesPage() {
         setLoading(true);
         const res = await api.get(`/account/${userID}/favourites`);
         const data = res.data;
+        console.log(data);
+        console.log(Array.isArray(data));
         setFavourites(Array.isArray(data) ? data : (data.items || data.favourites || []));
       } catch (err) {
         console.error("Error fetching favourites:", err);
@@ -45,11 +47,18 @@ export default function FavouritesPage() {
     })();
   }, [userID]);
 
+  useEffect(() => {
+    console.log("Favourites updated:", favourites);
+    favourites.map(fav => console.log(fav));
+  }, [favourites]);
+
   const handleUnfavourite = async (htsCode) => {
     try {
-      await api.delete(`/account/${userID}/favourites`, { params: { htsCode } });
+      const response = await api.delete(`/account/${userID}/favourites`, { params: { htsCode } });
+      console.log(htsCode);
       setFavourites(prev => prev.filter(item => item.htsno !== htsCode));
     } catch (err) {
+      console.log(response);
       console.error("Error removing favourite:", err);
       alert("Failed to remove favourite. Please try again.");
     }
@@ -91,13 +100,13 @@ export default function FavouritesPage() {
                   <div className="fav-card-header">
                     <div className="fav-info">
                       <h3>{fav.description || "No description"}</h3>
-                      <p className="muted">HTS: {fav.htsno}</p>
+                      <p className="muted">HTS: {fav}</p>
                     </div>
                     <button
                       type="button"
                       className="star-btn active"
                       title="Remove from favourites"
-                      onClick={(e) => { e.stopPropagation(); handleUnfavourite(fav.htsno); }}
+                      onClick={(e) => { e.stopPropagation(); handleUnfavourite(fav); }}
                     >
                       ★
                     </button>
