@@ -31,9 +31,13 @@ public class ProductService {
 
                 for (Map<String, Object> map : response) {
                     String htsCode = (String) map.get("hts_code");
+                    String description = (String) map.get("description");
+                    String category = keyword;
                     double price = (double) map.get("general");
 
                     Product product = new Product();
+                    product.setDescription(description);
+                    product.setCategory(category);
                     product.setFetchDate(LocalDate.now());
                     product.setHtsCode(htsCode);
                     product.setPrice(price);
@@ -54,6 +58,14 @@ public class ProductService {
 
     public Optional<Product> getProductPrice(String htsCode) {
         return productRepository.findTopByHtsCodeOrderByFetchDateDesc(htsCode);
+    }
+
+    public Optional<List<Product>> getProductsByCategory(String category) {
+        return productRepository.findByCategory(category);
+    }
+
+    public Optional<List<Product>> getProductsByHtsCode(String htsCode) {
+        return productRepository.findByHtsCode(htsCode);
     }
 
     public Optional<Product> getProductPriceAtTime(String htsCode, LocalDate date) {

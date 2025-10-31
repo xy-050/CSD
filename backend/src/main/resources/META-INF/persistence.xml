@@ -8,5 +8,6 @@
         <class>app.query.Query</class>
         <class>app.favourites.Favourites</class>
         <class>app.product.Product</class>
+        <class>app.fta.FTA</class>
     </persistence-unit>
 </persistence>

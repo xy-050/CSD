@@ -48,6 +48,13 @@ public class ProductServiceTest {
         response.setHtsCode("1704.90.35");
         response.setFetchDate(LocalDate.now());
         response.setPrice(5.6);
+
+        response = new Product();
+        response.setHtsCode("1704.90.35");
+        response.setFetchDate(LocalDate.now());
+        response.setPrice(6.0);
+        response.setCategory("sugar");
+        response.setDescription("Brown sugar");
     }
 
     // -------------------------------------------------------------------
@@ -155,4 +162,20 @@ public class ProductServiceTest {
 
         assertFalse(product.isPresent());
     }
+
+    @Test
+    void getProductPrice_WhenRecordExistsByCategory_ShouldReturnValue() {
+        when(productRepository.findByCategory(anyString())).thenReturn(Optional.of(List.of(existing)));
+
+        Optional<List<Product>> products = productService.getProductsByCategory("sugar");
+
+        assertTrue(products.isPresent());
+        assertEquals(1, products.get().size());
+        assertEquals(products.get().get(0).getPrice(), existing.getPrice());
+        assertEquals(products.get().get(0).getHtsCode(), existing.getHtsCode());
+        assertEquals(products.get().get(0).getFetchDate(), existing.getFetchDate());
+        assertEquals(products.get().get(0).getCategory(), existing.getCategory());
+    }
+
+
 }

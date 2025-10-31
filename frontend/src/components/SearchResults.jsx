@@ -77,9 +77,7 @@ export default function SearchResults() {
       });
     } else {
       try {
-        const response = await api.get(`/api/tariffs/search`, {
-          params: { keyword: result.htsno },
-        });
+        const response = await api.get(`/product/category/${result.htsno}`);
         navigate("/results", {
           state: { results: response.data, keyword },
         });

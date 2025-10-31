@@ -65,7 +65,7 @@ export default function SearchBar({ }) {
         try {
             console.log('Starting search for:', searchTerm);
 
-            const response = await api.get(`/api/tariffs/search`, {
+            const response = await api.get(`/product/category/${searchTerm}`, {
                 params: {
                     keyword: encodeURIComponent(searchTerm)
                 }

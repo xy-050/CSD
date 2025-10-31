@@ -24,7 +24,9 @@ public class Product {
 
     @Id
     private LocalDate fetchDate;
-
+    private String description;
+    private String category;
+    
     private double price;
 
     @Override
