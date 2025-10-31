@@ -16,7 +16,7 @@ import io.swagger.v3.oas.annotations.info.Info;
 )
 @SpringBootApplication
 @EnableScheduling
-@EntityScan(basePackages = {"app.account", "app.query", "app.product", "app.fta"})
+@EntityScan(basePackages = {"app.account", "app.query", "app.product"})
 public class RunApplication {
     public static void main(String[] args) {
         // configure and start the Spring Boot application
