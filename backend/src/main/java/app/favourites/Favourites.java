@@ -1,8 +1,9 @@
-package app.account;
+package app.favourites;
 
 import java.util.HashSet;
 import java.util.Set;
 
+import app.account.Account;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,13 +12,13 @@ import lombok.*;
 @Setter 
 @NoArgsConstructor 
 @AllArgsConstructor 
-@EqualsAndHashCode 
-@ToString
-public class FavouriteHtsCodes {
+@EqualsAndHashCode(exclude = {"accounts"})
+@ToString(exclude =  {"accounts"})
+public class Favourites {
     @Id
     private String htsCode;
 
-    @ManyToMany(mappedBy = "favouriteHtsCodes")
+    @ManyToMany(mappedBy = "favourites")
     private Set<Account> accounts = new HashSet<>();
 
 }

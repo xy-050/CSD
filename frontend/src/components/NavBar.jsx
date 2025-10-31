@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/AxiosConfig.jsx";
 import johnpork from "../assets/johnpork.png";
 
-export default function NavBar({ }) {
+export default function NavBar({ onToggleSidebar, sidebarOpen }) {
     const [menuOpen, setMenuOpen] = useState(false);
     const [username, setUsername] = useState(null);
     const [initials, setInitials] = useState(null);
@@ -56,16 +56,31 @@ export default function NavBar({ }) {
     return (
         <nav className="navbar">
             <div className="nav-container">
-                {/* Brand -> go home */}
-                <button
-                    className="nav-brand"
-                    style={{ background: "none", border: 0, cursor: "pointer" }}
-                    onClick={() => navigate("/")}
-                    aria-label="Go to dashboard"
-                >
-                    <span className="nav-icon">💵</span>
-                    <span className="nav-title">Tariff-ic!</span>
-                </button>
+                {/* Left side: Hamburger + Brand */}
+                <div className="nav-left">
+                    {/* Hamburger toggle - visible at all screen sizes */}
+                    <button 
+                        className={`hamburger-toggle ${sidebarOpen ? 'active' : ''}`}
+                        onClick={onToggleSidebar}
+                        aria-label="Toggle sidebar"
+                        aria-pressed={sidebarOpen}
+                    >
+                        <span className="hamburger-line"></span>
+                        <span className="hamburger-line"></span>
+                        <span className="hamburger-line"></span>
+                    </button>
+
+                    {/* Brand -> go home */}
+                    <button
+                        className="nav-brand"
+                        style={{ background: "none", border: 0, cursor: "pointer" }}
+                        onClick={() => navigate("/home")}
+                        aria-label="Go to dashboard"
+                    >
+                        <span className="nav-icon">💵</span>
+                        <span className="nav-title">Tariff-ic!</span>
+                    </button>
+                </div>
 
                 {/* Avatar + dropdown */}
                 <div className="nav-user" style={{ position: "relative" }}>

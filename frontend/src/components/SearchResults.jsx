@@ -1,213 +1,187 @@
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import NavBar from './NavBar.jsx';
+import Sidebar from './Sidebar.jsx';
 import api from '../api/AxiosConfig.jsx';
 
-export default function SearchResults({ }) {
-    // // Debug: Log the props to see what's being passed
-    // console.log("SearchResults component rendered");
-    // console.log("SearchResults user prop:", user);
-    // console.log("SearchResults results:", results);
+export default function SearchResults() {
+  const location = useLocation();
+  const { results, keyword } = location.state || {};
+  const navigate = useNavigate();
 
-    const location = useLocation();
-    const { results, keyword } = location.state || {};
-    const navigate = useNavigate();
-    const [currentUserID, setCurrentUserID] = useState(null);
+  // Sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const toggleSidebar = () => setSidebarOpen(v => !v);
+  const closeSidebar = () => setSidebarOpen(false);
 
-    // Fetch current user ID on component mount (two-step: get username, then get ID)
-    useEffect(() => {
-        // Step 1: Get current username
-        api.get('/authStatus')
-            .then(res => {
-                const username = res.data;
-                console.log('Current username:', username);
-                
-                // Step 2: Get user ID using the username
-                return api.get('/currentID', { params: { username } });
-            })
-            .then(res => {
-                if (res.data) {
-                    const userId = parseInt(res.data, 10);
-                    setCurrentUserID(userId);
-                    console.log('Current user ID:', userId);
-                }
-            })
-            .catch(err => {
-                console.error('Failed to fetch current user ID:', err);
-            });
-    }, []);
-    
-    // map category keys to icons (keep in sync with SearchBar)
-    const categoryIcons = {
-        sugar: '🍬',
-        bread: '🍞',
-        milk: '🥛',
-        egg: '🥚',
-        rice: '🍚',
+  // User state
+  const [currentUserID, setCurrentUserID] = useState(null);
+
+  // Fetch user details on mount
+  useEffect(() => {
+    const getUserDetails = async () => {
+      try {
+        const response = await api.get("/currentUserDetails");
+        setCurrentUserID(response.data.userId);
+      } catch (error) {
+        console.log(error);
+      }
     };
+    getUserDetails();
+  }, []);
 
-    // determine icon for current keyword (if any) - case-insensitive
-    const currentCategoryIcon = keyword ? categoryIcons[String(keyword).toLowerCase()] : null;
-    
-    // show at most 8 results
-    const displayedResults = Array.isArray(results) ? results.slice(0, 8) : [];
-    
-    // Helper function to save query to database
-    const saveQuery = async (htsCode) => {
-        if (!currentUserID) {
-            console.warn('Cannot save query: user ID not available');
-            return;
-        }
+  // Category icons
+  const categoryIcons = {
+    sugar: '🍬',
+    bread: '🍞',
+    milk: '🥛',
+    egg: '🥚',
+    rice: '🍚',
+  };
+  const currentCategoryIcon = keyword
+    ? categoryIcons[String(keyword).toLowerCase()]
+    : null;
 
-        try {
-            const queryData = {
-                userID: { userID: currentUserID }, // Account object reference
-                htsCode: htsCode,
-                originCountry: null,
-                modeOfTransport: null,
-                quantity: 0
-            };
-
-            console.log('Saving query:', queryData);
-            await api.post('/api/tariffs/queries', queryData);
-            console.log('Query saved successfully for HTS code:', htsCode);
-        } catch (error) {
-            console.error('Failed to save query:', error);
-            // Don't block user flow if save fails - just log it
-        }
-    };
-
-    const handleShortlist = async (result) => {
-        // If general tariff exists, go to calculator
-        if (result.general && result.general.trim() !== '') {
-            // ONLY save query when going to calculator (not for "See More")
-            if (result.htsno) {
-                await saveQuery(result.htsno);
-            }
-
-            const formattedResult = {
-                ...result,
-                // Create a single description from the description chain for backward compatibility
-                description: result.descriptionChain && result.descriptionChain.length > 0 
-                    ? result.descriptionChain[result.descriptionChain.length - 1] // Use the most specific description
-                    : 'No description available',
-                // Keep the full chain for detailed display if needed
-                fullDescriptionChain: result.descriptionChain
-            };
-            
-            console.log('Going to calculator with result:', formattedResult);
-            navigate("/calculator", { 
-                state: { 
-                    result: formattedResult, 
-                    keyword: keyword 
-                } 
-            });
-        } else {
-            // No general tariff, search for subcategories
-            try {
-                console.log('Searching for HTS code subcategories:', result.htsno);
-                
-                const response = await api.get(`/api/tariffs/search`, {
-                    params: {
-                        keyword: result.htsno
-                    }
-                });
-                
-                console.log('HTS subcategory results:', response.data);
-                // Navigate to the same page with new results (do NOT replace history)
-                navigate("/results", { 
-                    state: { 
-                        results: response.data, 
-                        keyword: keyword
-                    }
-                    // removed replace: true
-                });
-            } catch (error) {
-                console.error('Error searching HTS subcategories:', error);
-                alert('Failed to load subcategories. Please try again.');
-            }
-        }
+  // Helper to save query
+  const saveQuery = async (htsCode) => {
+    if (!currentUserID) return;
+    try {
+      const queryData = {
+        userID: { userID: currentUserID },
+        htsCode: htsCode,
+        originCountry: null,
+        modeOfTransport: null,
+        quantity: 0,
+      };
+      await api.post('/api/tariffs/queries', queryData);
+    } catch (error) {
+      console.error('Failed to save query:', error);
     }
+  };
 
+  // When user clicks a result
+  const handleShortlist = async (result) => {
+    if (result.general && result.general.trim() !== '') {
+      if (result.htsno) await saveQuery(result.htsno);
 
-
-    if (!results || results.length === 0) {
-        return (
-            <>
-                <NavBar />
-                <div className="search-results">
-                    <div className="no-results-container">
-                        <div className="no-results-icon">🔍</div>
-                        <h2 className="no-results-title">No Results Found</h2>
-                        <p className="no-results-message">
-                            We couldn't find any matches for your search. Try adjusting your filters or search terms.
-                        </p>
-                    </div>
-                </div>
-            </>
-        );
+      const formattedResult = {
+        ...result,
+        description:
+          result.descriptionChain?.length
+            ? result.descriptionChain[result.descriptionChain.length - 1]
+            : 'No description available',
+        fullDescriptionChain: result.descriptionChain,
+      };
+      navigate("/calculator", {
+        state: { result: formattedResult, keyword },
+      });
+    } else {
+      try {
+        const response = await api.get(`/api/tariffs/search`, {
+          params: { keyword: result.htsno },
+        });
+        navigate("/results", {
+          state: { results: response.data, keyword },
+        });
+      } catch (error) {
+        console.error('Error searching HTS subcategories:', error);
+        alert('Failed to load subcategories. Please try again.');
+      }
     }
+  };
 
+  // Show only first 8 results
+  const displayedResults = Array.isArray(results)
+    ? results.slice(0, 8)
+    : [];
+
+  // Handle empty results
+  if (!results || results.length === 0) {
     return (
-        <>
-            <NavBar />
+      <div className="homepage">
+        <NavBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
+        <div className="homepage-container">
+          <Sidebar isOpen={sidebarOpen} />
+          <main className="main-content" onClick={closeSidebar}>
             <div className="search-results">
-                {/* header now shows selected category icon when available */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                    {currentCategoryIcon && (
-                        <span style={{ fontSize: '2rem', lineHeight: 1 }} aria-hidden="true">
-                            {currentCategoryIcon}
-                        </span>
-                    )}
-                    <h2 style={{ margin: 0 }}>Search Results{keyword ? ` — ${keyword}` : ''}</h2>
-                </div>
-
-                <div className="results-grid">
-                    {displayedResults.map((result, index) => (
-                        <div className="result-item" key={index}>
-                            <h3>{result.htsno}</h3>
-                            <div className="description-chain">
-                                {result.descriptionChain && result.descriptionChain.length > 0 ? (
-                                    result.descriptionChain.map((desc, descIndex) => (
-                                        <p key={descIndex} className="description-level">
-                                            {"→ ".repeat(descIndex)}{desc}
-                                        </p>
-                                    ))
-                                ) : (
-                                    <p>No description available</p>
-                                )}
-                            </div>
-                            {result.general && (
-                                <p className="tariff-info">
-                                    <strong>General Tariff:</strong> {result.general}
-                                </p>
-                            )}
-                            {result.units && (
-                                <p className="units-info">
-                                    <strong>Units:</strong> {result.units}
-                                </p>
-                            )}
-                            <button onClick={() => handleShortlist(result)}>
-                                {result.general && result.general.trim() !== '' ? 'Calculate' : 'See More'}
-                            </button>
-                        </div>
-                    ))}
-                </div>
+              <div className="no-results-container">
+                <div className="no-results-icon">🔍</div>
+                <h2 className="no-results-title">No Results Found</h2>
+                <p className="no-results-message">
+                  We couldn't find any matches for your search. Try adjusting your filters or search terms.
+                </p>
+              </div>
             </div>
-        </>
+          </main>
+        </div>
+      </div>
     );
+  }
+
+  // ✅ Normal results render
+  return (
+    <div className="homepage">
+      <NavBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
+      <div className="homepage-container">
+        <Sidebar isOpen={sidebarOpen} />
+        <main className="main-content" onClick={closeSidebar}>
+          <div className="search-results">
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                marginBottom: '0.75rem',
+              }}
+            >
+              {currentCategoryIcon && (
+                <span
+                  style={{ fontSize: '2rem', lineHeight: 1 }}
+                  aria-hidden="true"
+                >
+                  {currentCategoryIcon}
+                </span>
+              )}
+              <h2 style={{ margin: 0 }}>
+                Search Results{keyword ? ` — ${keyword}` : ''}
+              </h2>
+            </div>
+
+            <div className="results-grid">
+              {displayedResults.map((result, index) => (
+                <div className="result-item" key={index}>
+                  <h3>{result.htsno}</h3>
+                  <div className="description-chain">
+                    {result.descriptionChain?.length ? (
+                      result.descriptionChain.map((desc, i) => (
+                        <p key={i} className="description-level">
+                          {'→ '.repeat(i)}
+                          {desc}
+                        </p>
+                      ))
+                    ) : (
+                      <p>No description available</p>
+                    )}
+                  </div>
+                  {result.general && (
+                    <p className="tariff-info">
+                      <strong>General Tariff:</strong> {result.general}
+                    </p>
+                  )}
+                  {result.units && (
+                    <p className="units-info">
+                      <strong>Units:</strong> {result.units}
+                    </p>
+                  )}
+                  <button onClick={() => handleShortlist(result)}>
+                    {result.general?.trim() ? 'Calculate' : 'See More'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
 }
-
-/* Notes:
-Steps to do top 10 queries:
-- put hyperlinks on all top 10 products such that they go to the calculater page itself
-- change the colour of the hyperlinks to the pretty blue used in the theme
-- centralise all of them
-- put in the pretty boxes
-- and then each box is 
-    - hts code
-    - description
-- hts code is clickable, got straight to calculator page
-
-- right now since idk about where to get product name from, just put hts code and desc first
-*/
