@@ -515,6 +515,8 @@ body {
   border: 1px solid rgba(144, 213, 255, 0.1);
 }
 
+
+
 .feature-card:hover {
   box-shadow: 0 20px 40px rgba(var(--shadow-clr) / 0.15);
   transform: translateY(-5px);
@@ -581,6 +583,110 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(87, 185, 255, 0.3);
 }
+
+/* ========================================
+   QUERY CARDS (Top 10 Most Queried)
+   ======================================== */
+.top-products {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+}
+
+.top-products h2 {
+  color: var(--brand-ink);
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.query-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.query-cards-row {
+  display: grid;
+  gap: 1.5rem;
+  align-items: end;
+}
+
+/* Top 3 row - 3 columns */
+.query-cards-row.top-three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Remaining 7 row - 7 columns */
+.query-cards-row.remaining {
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.query-card {
+  background: linear-gradient(135deg, var(--white), rgba(144, 213, 255, 0.03));
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(var(--shadow-clr) / 0.10);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(144, 213, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 120px;
+}
+
+.query-card.top-three {
+  min-height: 180px;
+  padding: 2rem;
+}
+
+/* Make #1 card taller and elevated */
+.query-card.rank-1 {
+  min-height: 220px;
+  padding: 2.5rem;
+}
+
+.query-card:hover {
+  box-shadow: 0 12px 30px rgba(var(--shadow-clr) / 0.15);
+  transform: translateY(-3px);
+  border-color: rgba(87, 185, 255, 0.25);
+}
+
+.query-rank {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--brand);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.query-card.top-three .query-rank {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.query-code {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--brand-ink);
+  word-break: break-word;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.query-code:hover {
+  color: var(--brand);
+  text-decoration: underline;
+}
+
+.query-card.top-three .query-code {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
 
 .account-info {
   background: linear-gradient(135deg, var(--white), rgba(144, 213, 255, 0.02));
@@ -1456,4 +1562,33 @@ body {
 
 .mt-4 {
   margin-top: 1rem;
+}
+
+/* ========================================
+   RESPONSIVE - Query Cards
+   ======================================== */
+@media (max-width: 1200px) {
+  .query-cards-row.remaining {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .query-cards-row.top-three {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  
+  .query-cards-row.remaining {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .query-card.top-three {
+    min-height: 140px;
+  }
+}
+
+@media (max-width: 480px) {
+  .query-cards-row.remaining {
+    grid-template-columns: repeat(1, 1fr);
+  }
 }

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "./NavBar";
 import SearchBar from "./SearchBar";
 import axios from "../api/AxiosConfig";
@@ -11,6 +12,7 @@ export default function HomePage({  }) {
     const [topProducts, setTopProducts] = useState([]);
     const [topLoading, setTopLoading] = useState(false);
     const [topError, setTopError] = useState(null);
+    const navigate = useNavigate();
 
     // typing effect for welcome message
     useEffect(() => {
@@ -58,8 +60,53 @@ export default function HomePage({  }) {
         document.addEventListener("mousedown", onDown)
         document.addEventListener("keydown", onKey)
         return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey) }
-    }, []);
+    }, [])
+
+    // Handle click on HTS code - fetch product details and navigate to calculator
+    const handleProductClick = async (htsCode) => {
+        try {
+            console.log('Fetching product details for:', htsCode);
+            
+            // Search for the specific HTS code to get full product details
+            const response = await axios.get('/api/tariffs/search', {
+                params: { keyword: htsCode }
+            });
+
+            console.log(response.data);
+
+            // Find the exact match for this HTS code
+            const product = response.data.find(item => item.htsno === htsCode);
+            
+            if (product && product.general && product.general.trim() !== '') {
+                // Format the result for calculator page
+                const formattedResult = {
+                    ...product,
+                    description: product.descriptionChain && product.descriptionChain.length > 0 
+                        ? product.descriptionChain[product.descriptionChain.length - 1]
+                        : 'No description available',
+                    fullDescriptionChain: product.descriptionChain
+                };
+                
+                // Navigate to calculator with the product details
+                navigate("/calculator", { 
+                    state: { 
+                        result: formattedResult, 
+                        keyword: htsCode 
+                    } 
+                });
+            } else {
+                console.warn('Product details not found or no general tariff for:', htsCode);
+                console.log(response.data);
+                // alert('Unable to load calculator for this product. Try searching for it first.');
+            }
+        } catch (error) {
+            console.error('Error fetching product details:', error);
+            alert('Failed to load product details. Please try again.');
+        }
+    };
+
     
+
     // display initials from user's name or email
     // const initials = (user?.username || user?.email || "U").split(/\s+/).map(s => s[0]).slice(0, 2).join("").toUpperCase()
 
@@ -123,17 +170,63 @@ export default function HomePage({  }) {
                         </article>
                     </section></>
                 {/* Top Products */}
-                <section className="top-products" style={{ marginTop: '1.25rem' }}>
-                    <h2 style={{ marginBottom: '0.5rem' }}>Top 10 Most Queried Products</h2>
+                <section className="top-products">
+                    <h2>Top 10 Most Queried Products</h2>
                     {topLoading && <p>Loading top products…</p>}
                     {topError && <p style={{ color: 'red' }}>{topError}</p>}
                     {!topLoading && !topError && (
-                        <ol>
-                            {topProducts.length === 0 && <li>No data</li>}
-                            {topProducts.map((code, idx) => (
-                                <li key={code + idx}>{code}</li>
-                            ))}
-                        </ol>
+                        <>
+                            {topProducts.length === 0 ? (
+                                <p style={{ color: 'var(--muted)', fontStyle: 'italic' }}>No queries yet. Start searching to see popular products!</p>
+                            ) : (
+                                <div className="query-cards-container">
+                                    {/* Top 3 Row */}
+                                    {topProducts.slice(0, 3).length > 0 && (
+                                        <div className="query-cards-row top-three">
+                                            {/* Reorder: #2, #1, #3 */}
+                                            {topProducts[1] && (
+                                                <div key={topProducts[1] + '1'} className="query-card top-three">
+                                                    <div className="query-rank">#2</div>
+                                                    <div className="query-code" onClick={() => handleProductClick(topProducts[1])}>
+                                                        {topProducts[1]}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {topProducts[0] && (
+                                                <div key={topProducts[0] + '0'} className="query-card top-three rank-1">
+                                                    <div className="query-rank">#1</div>
+                                                    <div className="query-code" onClick={() => handleProductClick(topProducts[0])}>
+                                                        {topProducts[0]}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {topProducts[2] && (
+                                                <div key={topProducts[2] + '2'} className="query-card top-three">
+                                                    <div className="query-rank">#3</div>
+                                                    <div className="query-code" onClick={() => handleProductClick(topProducts[2])}>
+                                                        {topProducts[2]}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    
+                                    {/* Remaining 7 Row */}
+                                    {topProducts.slice(3, 10).length > 0 && (
+                                        <div className="query-cards-row remaining">
+                                            {topProducts.slice(3, 10).map((code, idx) => (
+                                                <div key={code + idx} className="query-card remaining">
+                                                    <div className="query-rank">#{idx + 4}</div>
+                                                    <div className="query-code" onClick={() => handleProductClick(code)}>
+                                                        {code}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </>
                     )}
                 </section>
             </main>

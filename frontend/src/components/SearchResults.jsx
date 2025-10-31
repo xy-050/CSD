@@ -197,3 +197,17 @@ export default function SearchResults({ }) {
         </>
     );
 }
+
+/* Notes:
+Steps to do top 10 queries:
+- put hyperlinks on all top 10 products such that they go to the calculater page itself
+- change the colour of the hyperlinks to the pretty blue used in the theme
+- centralise all of them
+- put in the pretty boxes
+- and then each box is 
+    - hts code
+    - description
+- hts code is clickable, got straight to calculator page
+
+- right now since idk about where to get product name from, just put hts code and desc first
+*/
