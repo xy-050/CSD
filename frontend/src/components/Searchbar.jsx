@@ -28,6 +28,74 @@ export default function SearchBar({ }) {
         { key: 'Rice', label: 'Rice', icon: '🍚' },
     ];
 
+    // // Toggle to enable mock data locally (set to false to call real backend)
+    // const useMock = useMemo(() => true, []);
+
+    // // Small mock dataset shaped like backend results used by SearchResults
+    // const mockProducts = useMemo(() => ([
+    //     {
+    //         id: 'sugar-1',
+    //         name: 'White Sugar 1kg',
+    //         category: 'Sugar',
+    //         price: 2.5,
+    //         htsno: '1701.11',
+    //         // descriptionChain is an array of progressively specific descriptions
+    //         descriptionChain: ['Sugar and sugar substitutes', 'Refined white sugar', 'White Sugar 1kg package'],
+    //         general: '5%', // some tariff text the UI checks for
+    //         units: 'kg'
+    //     },
+    //     {
+    //         id: 'sugar-2',
+    //         name: 'Brown Sugar 500g',
+    //         category: 'Sugar',
+    //         price: 1.9,
+    //         htsno: '1701.19',
+    //         descriptionChain: ['Sugar and sugar substitutes', 'Brown sugar', 'Brown Sugar 500g pack'],
+    //         general: '', // simulate case with no general tariff (see more behavior)
+    //         units: 'pack'
+    //     },
+    //     {
+    //         id: 'bread-1',
+    //         name: 'Sourdough Loaf',
+    //         category: 'Bread',
+    //         price: 3.2,
+    //         htsno: '1905.31',
+    //         descriptionChain: ['Bakery products', 'Bread', 'Sourdough Loaf'],
+    //         general: '0%',
+    //         units: 'loaf'
+    //     },
+    //     {
+    //         id: 'milk-1',
+    //         name: 'Whole Milk 1L',
+    //         category: 'Milk',
+    //         price: 1.2,
+    //         htsno: '0401.20',
+    //         descriptionChain: ['Milk and cream', 'Milk, whole', 'Whole Milk 1L'],
+    //         general: '10%',
+    //         units: 'L'
+    //     },
+    //     {
+    //         id: 'egg-1',
+    //         name: 'Free Range Eggs 12pc',
+    //         category: 'Egg',
+    //         price: 2.8,
+    //         htsno: '0407.00',
+    //         descriptionChain: ['Eggs', 'Chicken eggs, in shell', 'Free Range Eggs 12pc'],
+    //         general: '',
+    //         units: 'dozen'
+    //     },
+    //     {
+    //         id: 'rice-1',
+    //         name: 'Basmati Rice 1kg',
+    //         category: 'Rice',
+    //         price: 4.5,
+    //         htsno: '1006.30',
+    //         descriptionChain: ['Rice', 'Basmati rice', 'Basmati Rice 1kg'],
+    //         general: '2%',
+    //         units: 'kg'
+    //     },
+    // ]), []);
+
     // // per-user storage key (commented out)
     // const storageKey = useMemo(
     //     () => `history:${user?.email || "anon"}`,
@@ -59,22 +127,39 @@ export default function SearchBar({ }) {
             return;
         }
 
+        // // Local mock mode: filter the mock dataset and return results (case-insensitive)
+        // if (useMock) {
+        //     // simulate network delay
+        //     await new Promise((r) => setTimeout(r, 200));
+        //     const filtered = mockProducts.filter(p =>
+        //         (p.category || '').toLowerCase() === searchTerm.toLowerCase()
+        //         || (p.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+        //         || (p.htsno || '').toLowerCase().includes(searchTerm.toLowerCase())
+        //     );
+        //     // mockProducts already follow the expected result shape so we can pass through
+        //     setResults(filtered);
+        //     navigate("/results", { state: { results: filtered, keyword: searchTerm } });
+        //     return;
+        // }
+
         // Clear any previous errors
         setError(null);
 
         try {
             console.log('Starting search for:', searchTerm);
 
-            const response = await api.get(`/api/tariffs/search`, {
-                params: {
-                    keyword: encodeURIComponent(searchTerm)
-                }
-            });
+            // Call the new category endpoint which returns HTS codes for the category.
+            // We use encodeURIComponent to safely place the category into the URL path.
+            const response = await api.get(`product/category/${encodeURIComponent(searchTerm)}`);
 
             console.log(response);
             console.log(response.data);
-            setResults(response.data);
-            navigate("/results", { state: { results: response.data, keyword: searchTerm } });
+
+            // backend may return { products: [...] } or the list directly — handle both.
+            const data = response.data?.products ?? response.data;
+
+            setResults(data || []);
+            navigate("/results", { state: { results: data || [], keyword: searchTerm } });
         } catch (error) {
             console.error('Error during search:', error);
             setError('Search failed. Please check your connection and try again.');

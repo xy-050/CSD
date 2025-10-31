@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.List;
 import java.time.LocalDate;
 
 @RestController
@@ -15,6 +16,20 @@ public class ProductController {
 
     public ProductController(ProductService productService) {
         this.productService = productService;
+    }
+
+    @GetMapping("/category/{category}")
+    public ResponseEntity<Map<String, Object>> getHtsCodesByCategory(@PathVariable String category) {
+        Optional<List<Product>> products = productService.getHtsCodes(category);
+        if (products.isPresent()) {
+            return ResponseEntity.ok(Map.of(
+                    "message", "Existing data for category " + category + " found",
+                    "products", products.get()));
+        } else {
+            return ResponseEntity.ok(Map.of(
+                    "message", "No existing data on category " + category,
+                    "products", null));
+        }
     }
 
     @GetMapping("/{htsCode}")

@@ -30,12 +30,16 @@ public class ProductService {
                 List<Map<String, Object>> response = queryService.searchTariffArticles(keyword);
 
                 for (Map<String, Object> map : response) {
+                    String category = keyword;
                     String htsCode = (String) map.get("hts_code");
+                    String description = (String) map.get("description");
                     double price = (double) map.get("general");
 
                     Product product = new Product();
+                    product.setCategory(category);
                     product.setFetchDate(LocalDate.now());
                     product.setHtsCode(htsCode);
+                    product.setDescription(description);
                     product.setPrice(price);
 
                     Optional<Product> latestRecord = productRepository.findTopByHtsCodeOrderByFetchDateDesc(htsCode);
@@ -52,7 +56,15 @@ public class ProductService {
         }
     }
 
+    public Optional<List<Product>> getHtsCodes(String category) {
+        return productRepository.findByCategory(category);
+    }
+
     public Optional<Product> getProductPrice(String htsCode) {
+        return productRepository.findTopByHtsCodeOrderByFetchDateDesc(htsCode);
+    }
+
+    public Optional<Product> getProductDescription(String htsCode) {
         return productRepository.findTopByHtsCodeOrderByFetchDateDesc(htsCode);
     }
 
