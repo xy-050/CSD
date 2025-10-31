@@ -63,6 +63,7 @@ export default function NavBar({ onToggleSidebar, sidebarOpen }) {
                         className={`hamburger-toggle ${sidebarOpen ? 'active' : ''}`}
                         onClick={onToggleSidebar}
                         aria-label="Toggle sidebar"
+                        aria-pressed={sidebarOpen}
                     >
                         <span className="hamburger-line"></span>
                         <span className="hamburger-line"></span>
@@ -73,7 +74,7 @@ export default function NavBar({ onToggleSidebar, sidebarOpen }) {
                     <button
                         className="nav-brand"
                         style={{ background: "none", border: 0, cursor: "pointer" }}
-                        onClick={() => navigate("/")}
+                        onClick={() => navigate("/home")}
                         aria-label="Go to dashboard"
                     >
                         <span className="nav-icon">💵</span>

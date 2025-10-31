@@ -1,98 +1,112 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import NavBar from "./NavBar.jsx"
+import NavBar from "./NavBar.jsx";
+import Sidebar from "./Sidebar.jsx";
 import api from "../api/AxiosConfig.jsx";
 
-export default function ProfilePage({ }) {
-    const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("");
-    const [userID, setUserID] = useState("");
-    const [msg, setMsg] = useState("");
-    const navigate = useNavigate();
+export default function ProfilePage() {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [userID, setUserID] = useState("");
+  const [msg, setMsg] = useState("");
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        const getUserDetails = async () => {
-            try {
-                const response = await api.get("/currentUserDetails");
-                console.log(response);
-                setUsername(response.data.username);
-                setUserID(response.data.userId);
-                setEmail(response.data.email);
-            } catch (error) {
-                console.log(error);
-            }
-        }
-        getUserDetails();
-    }, []);
+  // sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const toggleSidebar = () => setSidebarOpen(v => !v);
+  const closeSidebar = () => setSidebarOpen(false);
 
-    const handleUpdate = async (e) => {
-        e.preventDefault();
-        // try {
-        //     const response = await api.post(`/updateUsername/${encodeURIComponent(userID)}`, {
-        //         "userID": userID,
-        //         "username": username
-        //     });
-        //     console.log(response);
-        // } catch (error) {
-        //     console.log("Error: " + error);
-        // }
+  // fetch user details
+  useEffect(() => {
+    const getUserDetails = async () => {
+      try {
+        const response = await api.get("/currentUserDetails");
+        console.log(response);
+        setUsername(response.data.username);
+        setUserID(response.data.userId);
+        setEmail(response.data.email);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getUserDetails();
+  }, []);
 
-        try {
-            const response = await api.post(`/updateEmail/${encodeURIComponent(userID)}`, {
-                "userID": userID,
-                "email": email
-            });
-            console.log(response);
-        } catch (error) {
-            console.log("Error: " + error);
-        }
-        navigate("/");
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.post(`/updateEmail/${encodeURIComponent(userID)}`, {
+        userID,
+        email,
+      });
+      console.log(response);
+      setMsg("✅ Profile updated successfully!");
+      setTimeout(() => navigate("/"), 1000);
+    } catch (error) {
+      console.log("Error: " + error);
+      setMsg("❌ Failed to update. Please try again.");
     }
+  };
 
-    const handleCancel = () => {
-        navigate("/");
-    }
+  const handleCancel = () => {
+    navigate("/");
+  };
 
-    return (
-        <div className="homepage">
-            <NavBar />
+  return (
+    <div className="homepage">
+      {/* Navbar with sidebar toggle */}
+      <NavBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
 
-            <main className="main-content">
-                <section className="hero-section">
-                    <h1 className="hero-title">Your profile</h1>
-                    <p className="hero-subtitle">Update your account details.</p>
-                </section>
+      <div className="homepage-container">
+        {/* Sidebar */}
+        <Sidebar isOpen={sidebarOpen} />
 
-                <section className="account-info" id="account">
-                    <h2>Account</h2>
+        {/* Main Content */}
+        <main className="main-content" onClick={closeSidebar}>
+          <section className="hero-section">
+            <h1 className="hero-title">Your Profile</h1>
+            <p className="hero-subtitle">Update your account details.</p>
+          </section>
 
-                    <form className="form-container mt-3" onSubmit={handleUpdate}>
-                        <div className="input-group">
-                            <label>Email</label>
-                            <input
-                                className="search-input"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="name@example.com"
-                            />
-                        </div>
+          <section className="account-info" id="account">
+            <h2>Account</h2>
 
-                        <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
-                            <button type="submit" className="feature-btn">Save changes</button>
-                            <button
-                                type="button"
-                                className="feature-btn"
-                                style={{ background: "linear-gradient(135deg, var(--brand-strong), var(--brand-ink))" }}
-                                onClick={handleCancel}
-                            >
-                                Cancel
-                            </button>
-                        </div>
+            <form className="form-container mt-3" onSubmit={handleUpdate}>
+              <div className="input-group">
+                <label>Email</label>
+                <input
+                  className="search-input"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                />
+              </div>
 
-                        {msg && <p className="mt-2" style={{ color: "var(--brand-ink)" }}>{msg}</p>}
-                    </form>
-                </section>
-            </main>
-        </div>
-    )
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <button type="submit" className="feature-btn">
+                  Save changes
+                </button>
+                <button
+                  type="button"
+                  className="feature-btn"
+                  style={{
+                    background: "linear-gradient(135deg, var(--brand-strong), var(--brand-ink))",
+                  }}
+                  onClick={handleCancel}
+                >
+                  Cancel
+                </button>
+              </div>
+
+              {msg && (
+                <p className="mt-2" style={{ color: "var(--brand-ink)" }}>
+                  {msg}
+                </p>
+              )}
+            </form>
+          </section>
+        </main>
+      </div>
+    </div>
+  );
 }

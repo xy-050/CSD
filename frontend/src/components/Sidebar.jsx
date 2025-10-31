@@ -1,19 +1,12 @@
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export default function Sidebar({ isOpen, onToggle }) {
+export default function Sidebar({ isOpen }) {
+  const navigate = useNavigate();
+
   const menuItems = [
-    {
-      icon: '📈',
-      label: 'Insights'
-    },
-    {
-      icon: '⭐️',
-      label: 'Favourites'
-    },
-    {
-      icon: '⚙️',
-      label: 'Settings'
-    }
+    { icon: '📈', label: 'Insights', path: '/home' },
+    { icon: '⭐️', label: 'Favourites', path: '/favourites' },
+    { icon: '⚙️', label: 'Settings', path: '/profile' }
   ];
 
   return (
@@ -21,7 +14,11 @@ export default function Sidebar({ isOpen, onToggle }) {
       <nav className="sidebar-nav">
         {menuItems.map((item, index) => (
           <div key={index} className="sidebar-item">
-            <button className="sidebar-btn">
+            <button
+              type="button"
+              className="sidebar-btn"
+              onClick={() => navigate(item.path)}
+            >
               <div className="sidebar-icon-wrapper">
                 <span className="sidebar-icon">{item.icon}</span>
               </div>
