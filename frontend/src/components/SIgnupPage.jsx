@@ -37,19 +37,8 @@ export default function SignupPage() {
             navigate("/login");
         } catch (error) {
             if (error.response) {
-                const status = error.response.status;
-                switch (status) {
-                    case 409:
-                        setError("Username alreaedy exists! Please try again.")
-                        break;
-                    case 400:
-                        setError("Weak password! Please use password that is at least 8 characters long, including a mix of uppercase letters, lowercase letters, numbers, and special symbols.")
-                        break;
-                    default:
-                        setError("Account creation failed. Please try again.");
-                        console.log("Error: " + error);
-                        break;
-                }
+                setError(error.response.data);
+                console.log("Error: " + error);
             } else {
                 setError("Account creation failed. Please try again.");
                 console.log("Error: " + error);
