@@ -186,7 +186,7 @@ export default function ProfilePage({ }) {
 
                                 {
                                     showPopup && (
-                                        <Popup onClose={handleConfirmDelete}>
+                                        <Popup onClose={handleCancelDelete}>
                                             <h2>Confirmation</h2>
                                             <p>This action is irreversible. Do you want to continue?</p>
                                             <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
