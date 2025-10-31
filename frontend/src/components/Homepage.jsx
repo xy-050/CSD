@@ -3,7 +3,7 @@ import NavBar from "./NavBar";
 import SearchBar from "./SearchBar";
 import axios from "../api/AxiosConfig";
 
-export default function HomePage({ onSearch, user, setUser, setCalcQuery }) {
+export default function HomePage({  }) {
     const [lastQuery, setLastQuery] = useState("");
     const menuRef = useRef(null)
     const [typedTitle, setTypedTitle] = useState("");
@@ -58,8 +58,8 @@ export default function HomePage({ onSearch, user, setUser, setCalcQuery }) {
         document.addEventListener("mousedown", onDown)
         document.addEventListener("keydown", onKey)
         return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey) }
-    }, [])
-
+    }, []);
+    
     // display initials from user's name or email
     // const initials = (user?.username || user?.email || "U").split(/\s+/).map(s => s[0]).slice(0, 2).join("").toUpperCase()
 
@@ -88,9 +88,7 @@ export default function HomePage({ onSearch, user, setUser, setCalcQuery }) {
                         {!doneTyping && <span className="caret" aria-hidden="true" />}
                     </h1>
                     {/* SearchBar */}
-                    <SearchBar
-                        user={user}
-                    />
+                    <SearchBar />
                     {lastQuery && (
                         <p className="hero-subtitle" style={{ marginTop: "0.75rem" }}>
                             Showing results for: <b>{lastQuery}</b>
