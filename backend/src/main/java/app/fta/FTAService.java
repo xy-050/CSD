@@ -2,7 +2,6 @@ package app.fta;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import app.exception.FTANotFoundException;
@@ -16,12 +15,13 @@ public class FTAService {
     }
 
     /**
-     * Saves a new FTA into the database.
+     * Creates a new FTA with a certain country.
      * 
-     * @param newFTA New FTA to save.
+     * @param country Target country
+     * @param prices  Updated prices
      */
-    public void newFTA(FTA newFTA) {
-        ftaRepository.save(newFTA);
+    public void createFTA(String country, String htsCode, double price, LocalDate date) {
+        ftaRepository.save(new FTA(country, htsCode, price, date));
     }
 
     /**
@@ -34,36 +34,21 @@ public class FTAService {
     }
 
     /**
-     * Returns the FTA with a certain country. If there isn't an existing FTA with
+     * Returns all the FTAs with a certain country. If there isn't an existing FTA
+     * with
      * the country, an FTANotFoundException is thrown.
      * 
      * @param country Target county
      * @return FTA instance
      */
-    public FTA getFTAGivenCountry(String country) {
-        Optional<FTA> curr = ftaRepository.findById(country);
+    public List<FTA> getFTAGivenCountry(String country) {
+        Optional<List<FTA>> ftas = ftaRepository.findByCountry(country);
 
-        if (curr == null || !curr.isPresent()) {
-            throw new FTANotFoundException("Error! FTA with " + country + " does not exist.");
+        if (ftas == null || !ftas.isPresent()) {
+            throw new FTANotFoundException("FTA with " + country + " does not exist");
         }
 
-        return curr.get();
-    }
-
-    /**
-     * Updates the FTA with a certain country. 
-     * 
-     * @param country Target country
-     * @param prices Updated prices
-     */
-    public void updateFTA(String country, Map<String, Map<LocalDate, Double>> prices) {
-        try {
-            FTA curr = getFTAGivenCountry(country);
-            curr.setPrices(prices);
-            ftaRepository.save(curr);
-        } catch (FTANotFoundException e) {
-            System.out.println(e.getMessage());
-        }
+        return ftas.get();
     }
 
 }
