@@ -8,6 +8,7 @@ import ProfilePage from './components/ProfilePage.jsx';
 import SearchResults from './components/SearchResults.jsx';
 import CalculatorPage from "./components/CalculatorPage.jsx";
 import FavouritesPage from './components/FavouritesPage.jsx';
+import ChangePasswordPage from './components/ChangePasswordPage.jsx';
 import './App.css';
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
                 <Route path="/calculator" element={<ProtectedRoute><CalculatorPage /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/favourites" element={<ProtectedRoute><FavouritesPage /></ProtectedRoute>} />
+                <Route path="/change_password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </Router>
