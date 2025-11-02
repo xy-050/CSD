@@ -24,21 +24,31 @@ public class Product {
 
     @Id
     private LocalDate fetchDate;
+
+    @Lob
     private String description;
+    
+    @Column(nullable = true)
+    private String general;
+
+    @Column(nullable = true)
+    private String special;
+
     private String category;
     
-    private double price;
-
     @Override
     public boolean equals(Object o) {
         if (o instanceof Product p) {
-            return this.htsCode.equals(p.getHtsCode()) && this.price == p.getPrice();
+            boolean htsCodeEqual = htsCode.equals(p.getHtsCode());
+            boolean generalEqual = general == null ? p.getGeneral() == null : general.equals(p.getGeneral());
+            boolean specialEqual = special == null ? p.getSpecial() == null : special.equals(p.getSpecial());
+            return htsCodeEqual && generalEqual && specialEqual;
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(htsCode, price);
+        return Objects.hash(htsCode, description, general, special, category);
     }
 }

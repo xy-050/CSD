@@ -75,11 +75,13 @@ public class ProductController {
         if (latest.isPresent()) {
             return ResponseEntity.ok(Map.of(
                     "message", "Existing data for product " + htsCode + " found",
-                    "price", latest.get().getPrice()));
+                    "general", latest.get().getGeneral(),
+                    "special", latest.get().getSpecial()));
         } else {
             return ResponseEntity.ok(Map.of(
                     "message", "No existing data on product with HTS code " + htsCode,
-                    "price", null));
+                    "general", null, 
+                    "special", null));
         }
     }
 
@@ -96,11 +98,13 @@ public class ProductController {
         if (record.isPresent()) {
             return ResponseEntity.ok(Map.of(
                     "message", "Existing data for product " + htsCode + " found",
-                    "price", record.get().getPrice()));
+                    "general", record.get().getGeneral(),
+                    "special", record.get().getSpecial()));
         } else {
             return ResponseEntity.ok(Map.of(
                     "message", "No existing data on product with HTS code " + htsCode,
-                    "price", null));
+                    "general", null, 
+                    "special", null));
         }
     }
 }
