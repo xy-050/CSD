@@ -17,44 +17,38 @@ import java.util.HashMap;
 import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.*;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import app.query.QueryService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 public class ProductServiceTest {
+
     @Mock
     private QueryService queryService;
 
     @Mock
     private ProductRepository productRepository;
 
+    @Mock
+    private ObjectMapper objectMapper;
+
     @InjectMocks
     private ProductService productService;
 
     private Product existing;
-    private Product response;
 
     @BeforeEach
     void setUp() {
-        existing = new Product();
-        existing.setHtsCode("1704.90.35");
-        existing.setFetchDate(LocalDate.of(2025, Month.APRIL, 1));
-        existing.setPrice(5.6);
-
-        response = new Product();
-        response.setHtsCode("1704.90.35");
-        response.setFetchDate(LocalDate.now());
-        response.setPrice(5.6);
-
-        response = new Product();
-        response.setHtsCode("1704.90.35");
-        response.setFetchDate(LocalDate.now());
-        response.setPrice(6.0);
-        response.setCategory("sugar");
-        response.setDescription("Brown sugar");
+        existing = new Product(
+                "1704.90.35",
+                LocalDate.of(2025, Month.APRIL, 1),
+                "Brown sugar",
+                "5.5¢/t",
+                "(AU, SG)",
+                "sugar");
     }
 
     // -------------------------------------------------------------------
@@ -63,119 +57,179 @@ public class ProductServiceTest {
 
     @Test
     void fetchDailyData_WhenNoExistingRecord_ShouldSaveData() {
+        // Arrange
         Map<String, Object> map = new HashMap<>();
-        map.put("hts_code", "1704.90.35");
-        map.put("general", 5.6);
+        map.put("htsno", "1704.90.35");
+        map.put("description", "Brown sugar");
+        map.put("general", "5.5¢/t");
+        map.put("special", "(AU, SG)");
 
-        when(queryService.searchTariffArticles(any())).thenReturn(List.of(map));
+        when(queryService.searchTariffArticles(anyString())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.empty());
 
+        // Act
         productService.fetchDaily();
 
+        // Assert
         ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
         verify(productRepository, times(5)).save(captor.capture());
 
         for (Product saved : captor.getAllValues()) {
             assertEquals("1704.90.35", saved.getHtsCode());
-            assertEquals(5.6, saved.getPrice());
+            assertEquals("Brown sugar", saved.getDescription());
+            assertEquals("5.5¢/t", saved.getGeneral());
+            assertEquals("(AU, SG)", saved.getSpecial());
             assertNotNull(saved.getFetchDate());
+            assertNotNull(saved.getCategory());
         }
     }
 
     @Test
     void fetchDailyData_WhenRecordUpdated_ShouldSaveData() {
+        // Arrange
         Map<String, Object> map = new HashMap<>();
-        map.put("hts_code", "1704.90.35");
-        map.put("general", 6.0);
+        map.put("htsno", "1704.90.35");
+        map.put("description", "Brown sugar - Updated");
+        map.put("general", "6.0¢/t");
+        map.put("special", "(AU, SG, NZ)");
 
-        when(queryService.searchTariffArticles(any())).thenReturn(List.of(map));
-
+        when(queryService.searchTariffArticles(anyString())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
 
+        // Act
         productService.fetchDaily();
 
+        // Assert
         ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
         verify(productRepository, times(5)).save(captor.capture());
 
         for (Product saved : captor.getAllValues()) {
             assertEquals("1704.90.35", saved.getHtsCode());
-            assertEquals(6.0, saved.getPrice());
+            assertEquals("Brown sugar - Updated", saved.getDescription());
+            assertEquals("6.0¢/t", saved.getGeneral());
+            assertEquals("(AU, SG, NZ)", saved.getSpecial());
         }
     }
 
     @Test
     void fetchDailyData_WhenRecordIsSame_ShouldNotSaveData() {
+        // Arrange
         Map<String, Object> map = new HashMap<>();
-        map.put("hts_code", "1704.90.35");
-        map.put("general", 5.6);
+        map.put("htsno", "1704.90.35");
+        map.put("description", "Brown sugar");
+        map.put("general", "5.5¢/t");
+        map.put("special", "(AU, SG)");
 
-        when(queryService.searchTariffArticles(any())).thenReturn(List.of(map));
+        when(queryService.searchTariffArticles(anyString())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
 
+        // Act
         productService.fetchDaily();
 
+        // Assert
         verify(productRepository, never()).save(any(Product.class));
     }
 
     // -------------------------------------------------------------------
     // ------------- testing getProductPrice() method --------------------
     // -------------------------------------------------------------------
+
     @Test
     void getProductPrice_WhenRecordExists_ShouldReturnValue() {
-        when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
+        // Arrange
+        when(productRepository.findTopByHtsCodeOrderByFetchDateDesc("1704.90.35"))
+                .thenReturn(Optional.of(existing));
 
-        Optional<Product> product = productService.getProductPrice("1704.90.35");
+        // Act
+        Optional<Product> result = productService.getProductPrice("1704.90.35");
 
-        assertTrue(product.isPresent());
-        assertEquals(product.get().getPrice(), existing.getPrice());
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals("1704.90.35", result.get().getHtsCode());
+        assertEquals("Brown sugar", result.get().getDescription());
+        assertEquals("5.5¢/t", result.get().getGeneral());
+        assertEquals("(AU, SG)", result.get().getSpecial());
+        assertEquals("sugar", result.get().getCategory());
+        verify(productRepository, times(1)).findTopByHtsCodeOrderByFetchDateDesc("1704.90.35");
     }
 
     @Test
     void getProductPrice_WhenRecordDoesNotExists_ShouldNotReturnValue() {
-        when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.empty());
+        // Arrange
+        when(productRepository.findTopByHtsCodeOrderByFetchDateDesc("9999.99.99"))
+                .thenReturn(Optional.empty());
 
-        Optional<Product> product = productService.getProductPrice("1704.90.35");
+        // Act
+        Optional<Product> result = productService.getProductPrice("9999.99.99");
 
-        assertFalse(product.isPresent());
+        // Assert
+        assertFalse(result.isPresent());
+        verify(productRepository, times(1)).findTopByHtsCodeOrderByFetchDateDesc("9999.99.99");
     }
 
     // -------------------------------------------------------------------
     // ---------- testing getProductPriceAtTime() method -----------------
     // -------------------------------------------------------------------
+
     @Test
     void getProductPriceAtTime_WhenRecordExists_ShouldReturnValue() {
-        when(productRepository.findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(anyString(),
-                any(LocalDate.class))).thenReturn(Optional.of(existing));
+        // Arrange
+        LocalDate queryDate = LocalDate.of(2025, Month.MAY, 1);
+        when(productRepository.findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(
+                "1704.90.35", queryDate)).thenReturn(Optional.of(existing));
 
-        Optional<Product> product = productService.getProductPriceAtTime("1704.90.35", LocalDate.now());
+        // Act
+        Optional<Product> result = productService.getProductPriceAtTime("1704.90.35", queryDate);
 
-        assertTrue(product.isPresent());
-        assertEquals(product.get().getPrice(), existing.getPrice());
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals("1704.90.35", result.get().getHtsCode());
+        assertEquals("Brown sugar", result.get().getDescription());
+        assertEquals("5.5¢/t", result.get().getGeneral());
+        verify(productRepository, times(1))
+                .findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc("1704.90.35", queryDate);
     }
 
     @Test
     void getProductPriceAtTime_WhenRecordDoesNotExists_ShouldNotReturnValue() {
-        when(productRepository.findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(anyString(),
-                any(LocalDate.class))).thenReturn(Optional.empty());
+        // Arrange
+        LocalDate queryDate = LocalDate.of(2025, Month.JANUARY, 1);
+        when(productRepository.findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(
+                "1704.90.35", queryDate)).thenReturn(Optional.empty());
 
-        Optional<Product> product = productService.getProductPriceAtTime("1704.90.35", LocalDate.now());
+        // Act
+        Optional<Product> result = productService.getProductPriceAtTime("1704.90.35", queryDate);
 
-        assertFalse(product.isPresent());
+        // Assert
+        assertFalse(result.isPresent());
+        verify(productRepository, times(1))
+                .findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc("1704.90.35", queryDate);
     }
 
     @Test
     void getProductPrice_WhenRecordExistsByCategory_ShouldReturnValue() {
-        when(productRepository.findByCategory(anyString())).thenReturn(Optional.of(List.of(existing)));
+        // Arrange
+        Product product2 = new Product(
+                "1704.90.40",
+                LocalDate.of(2025, Month.APRIL, 1),
+                "White sugar",
+                "4.5¢/t",
+                "(CA)",
+                "sugar");
 
-        Optional<List<Product>> products = productService.getProductsByCategory("sugar");
+        List<Product> products = List.of(existing, product2);
+        when(productRepository.findByCategory("sugar")).thenReturn(Optional.of(products));
 
-        assertTrue(products.isPresent());
-        assertEquals(1, products.get().size());
-        assertEquals(products.get().get(0).getPrice(), existing.getPrice());
-        assertEquals(products.get().get(0).getHtsCode(), existing.getHtsCode());
-        assertEquals(products.get().get(0).getFetchDate(), existing.getFetchDate());
-        assertEquals(products.get().get(0).getCategory(), existing.getCategory());
+        // Act
+        Optional<List<Product>> result = productService.getProductsByCategory("sugar");
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(2, result.get().size());
+        assertEquals("1704.90.35", result.get().get(0).getHtsCode());
+        assertEquals("1704.90.40", result.get().get(1).getHtsCode());
+        assertEquals("sugar", result.get().get(0).getCategory());
+        assertEquals("sugar", result.get().get(1).getCategory());
+        verify(productRepository, times(1)).findByCategory("sugar");
     }
-
-
 }
