@@ -1,0 +1,20 @@
+#list of services Docker compose will manage
+services:
+  #Name of the service
+  csd: 
+    #build docker image in current directory
+    build: .
+    #map port 5173 of host machine to port 5173 of container 
+    ports:
+      - "5173:5173"
+    volumes:
+      #mount current directory to /app in container
+      - .:/app
+      #mount node_modules to avoid overwriting
+      - /app/node_modules
+    #set environment variable to enable polling
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+
+
+  
