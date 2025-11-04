@@ -1,10 +1,12 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useTour } from './Tour/TourContext.jsx';
 import NavBar from './NavBar.jsx';
 import Sidebar from './Sidebar.jsx';
 import api from '../api/AxiosConfig.jsx';
 
 export default function SearchResults() {
+  const { tourState } = useTour();
   const location = useLocation();
   const { results, keyword } = location.state || {};
   const navigate = useNavigate();
@@ -62,6 +64,7 @@ export default function SearchResults() {
   // When user clicks a result
   const handleShortlist = async (result) => {
     if (result.general && result.general.trim() !== '') {
+      
       if (result.htsno) await saveQuery(result.htsno);
 
       const formattedResult = {
@@ -125,6 +128,7 @@ export default function SearchResults() {
         <main className="main-content" onClick={closeSidebar}>
           <div className="search-results">
             <div
+              data-tour="search-results-header"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -147,7 +151,17 @@ export default function SearchResults() {
 
             <div className="results-grid">
               {displayedResults.map((result, index) => (
-                <div className="result-item" key={index}>
+                <div 
+                  className="result-item" 
+                  key={index}
+                  // Add data attribute to the first item with a general tariff for tour targeting
+                  data-tour={
+                    tourState.isActive && 
+                    index === displayedResults.findIndex(r => r.general && r.general.trim() !== '') 
+                      ? 'result-item' 
+                      : undefined
+                  }
+                >
                   <h3>{result.htsno}</h3>
                   <div className="description-chain">
                     {result.descriptionChain?.length ? (

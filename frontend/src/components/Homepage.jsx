@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTour } from "./Tour/TourContext.jsx";
 import NavBar from "./NavBar";
 import SearchBar from "./SearchBar";
 import Sidebar from "./Sidebar";
 import api from "../api/AxiosConfig.jsx";
 
 export default function HomePage() {
+  const { tourState } = useTour();
   const navigate = useNavigate();
 
   const [lastQuery, setLastQuery] = useState("");
@@ -21,6 +23,19 @@ export default function HomePage() {
   const toggleSidebar = () => setSidebarOpen(v => !v);
   const closeSidebarOnMobile = () => {
     if (window.innerWidth <= 768) setSidebarOpen(false);
+  };
+
+  // Handle product click from top products
+  const handleProductClick = async (htsCode) => {
+    try {
+      const response = await api.get(`/product/category/${htsCode}`);
+      navigate("/results", {
+        state: { results: response.data, keyword: htsCode },
+      });
+    } catch (error) {
+      console.error('Error searching HTS code:', error);
+      alert('Failed to load product details. Please try again.');
+    }
   };
 
   // Open by default on desktop, closed on mobile
@@ -55,7 +70,7 @@ export default function HomePage() {
     return () => clearInterval(id);
   }, []);
 
-  // Fetch top queried products (single effect; your duplicate removed)
+  // Fetch top queried products
   useEffect(() => {
     (async () => {
       try {
@@ -74,6 +89,11 @@ export default function HomePage() {
     })();
   }, []);
 
+  useEffect(() => {
+    console.log('Milk button exists?', document.querySelector('[data-tour="category-milk"]'));
+    console.log('Category buttons exists?', document.querySelector('[data-tour="category-buttons"]'));
+}, []);
+
   return (
     <div className="homepage">
       <NavBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
@@ -85,7 +105,7 @@ export default function HomePage() {
         {/* Main */}
         <main className="main-content" onClick={closeSidebarOnMobile}>
           <section className="hero-section">
-            <h1 className="hero-title">
+            <h1 className="hero-title" data-tour="hero-title">
               {typedTitle}
               {!doneTyping && <span className="caret" aria-hidden="true" />}
             </h1>
@@ -100,7 +120,7 @@ export default function HomePage() {
             )}
           </section>
 
-          {/* These feature cards are fine; wired to routes for convenience */}
+          {/* Feature cards */}
           <section className="features-grid">
             <article className="feature-card">
               <div className="feature-header">
@@ -112,7 +132,7 @@ export default function HomePage() {
                 View reports
               </button>
             </article>
-			<article className="feature-card">
+            <article className="feature-card">
               <div className="feature-header">
                 <div className="feature-icon green">⭐️</div>
                 <h3>Favourites</h3>
@@ -134,6 +154,7 @@ export default function HomePage() {
               </button>
             </article>
           </section>
+
           {/* Top Products */}
           <section className="top-products">
             <h2>Top 10 Most Queried Products</h2>

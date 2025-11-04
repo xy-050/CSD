@@ -21,11 +21,11 @@ export default function SearchBar({ }) {
 
     // add category definitions
     const categories = [
-        { key: 'Sugar', label: 'Sugar', icon: '🍬' },
-        { key: 'Bread', label: 'Bread', icon: '🍞' },
-        { key: 'Milk', label: 'Milk', icon: '🥛' },
-        { key: 'Egg', label: 'Egg', icon: '🥚' },
-        { key: 'Rice', label: 'Rice', icon: '🍚' },
+        { key: 'Sugar', label: 'Sugar', icon: '🍬', dataTour: null},
+        { key: 'Bread', label: 'Bread', icon: '🍞', dataTour: null},
+        { key: 'Milk', label: 'Milk', icon: '🥛', dataTour: 'category-milk'},
+        { key: 'Egg', label: 'Egg', icon: '🥚', dataTour: null},
+        { key: 'Rice', label: 'Rice', icon: '🍚', dataTour: null},
     ];
 
     // // per-user storage key (commented out)
@@ -89,17 +89,18 @@ export default function SearchBar({ }) {
                 role="search"
                 aria-label="Site search"
             >
-                {/* Replaced input + generic button with 5 category buttons */}
+                {/* Category buttons with data-tour attributes */}
                 <div
+                    data-tour="category-buttons"
                     style={{
                         display: 'flex',
-                        justifyContent: 'space-evenly', // spread across the screen
+                        justifyContent: 'space-evenly',
                         gap: '1.25rem',
                         padding: '2rem 1rem',
                         flexWrap: 'wrap',
                         width: '100%',
                         maxWidth: 1100,
-                        margin: '0 auto' // center the whole block
+                        margin: '0 auto'
                     }}
                 >
                     {categories.map(cat => (
@@ -109,6 +110,7 @@ export default function SearchBar({ }) {
                             className="btn-primary search-btn"
                             onClick={() => handleSearch(cat.key)}
                             aria-label={`Search ${cat.label}`}
+                            {...(cat.dataTour && { 'data-tour': cat.dataTour })}
                             style={{
                                 minWidth: 140,           // larger buttons
                                 padding: '1rem 1.25rem',
