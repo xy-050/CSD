@@ -1,7 +1,7 @@
 #list of services Docker compose will manage
 services:
   #Name of the service
-  csd: 
+  tariffic.org: 
     #build docker image in current directory
     build: .
     #map port 5173 of host machine to port 5173 of container 
