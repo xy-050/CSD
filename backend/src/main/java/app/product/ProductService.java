@@ -63,8 +63,9 @@ public class ProductService {
         return productRepository.findTopByHtsCodeOrderByFetchDateDesc(htsCode);
     }
 
-    public Optional<List<Product>> getProductsByCategory(String category) {
-        return productRepository.findByCategory(category);
+    public Optional<List<Product>> getProductsByCategory(String keyword) {
+        return Optional.of(productRepository.findByCategoryIgnoreCaseOrHtsCodeStartingWith(keyword, keyword)
+                .orElse(List.of()));
     }
 
     public Optional<List<Product>> getProductsByHtsCode(String htsCode) {

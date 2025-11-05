@@ -6,8 +6,46 @@ import api from '../api/AxiosConfig.jsx';
 
 export default function SearchResults() {
   const location = useLocation();
-  const { results, keyword } = location.state || {};
+  const { keyword } = location.state || {};
   const navigate = useNavigate();
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch results when keyword changes
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (!keyword) {
+        setResults([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await api.get(`/product/category/search/${encodeURIComponent(keyword)}`);
+        if (response.data.categories) {
+          // Transform the categories into a format matching our results structure
+          const formattedResults = Array.from(response.data.categories).map(htsCode => ({
+            htsno: htsCode,
+            descriptionChain: [htsCode], // Using the code as description for now
+            general: "", // Empty because these are category codes
+          }));
+          setResults(formattedResults);
+        } else {
+          setResults([]);
+        }
+      } catch (err) {
+        console.error('Error fetching results:', err);
+        setError('Failed to fetch results. Please try again.');
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    setLoading(true);
+    fetchResults();
+  }, [keyword]);
 
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -92,6 +130,47 @@ export default function SearchResults() {
   const displayedResults = Array.isArray(results)
     ? results.slice(0, 8)
     : [];
+
+  // Handle loading state
+  if (loading) {
+    return (
+      <div className="homepage">
+        <NavBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
+        <div className="homepage-container">
+          <Sidebar isOpen={sidebarOpen} />
+          <main className="main-content" onClick={closeSidebar}>
+            <div className="search-results">
+              <div className="loading-container">
+                <div className="loading-icon">⌛</div>
+                <h2 className="loading-title">Loading Results...</h2>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="homepage">
+        <NavBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
+        <div className="homepage-container">
+          <Sidebar isOpen={sidebarOpen} />
+          <main className="main-content" onClick={closeSidebar}>
+            <div className="search-results">
+              <div className="error-container">
+                <div className="error-icon">⚠️</div>
+                <h2 className="error-title">Error</h2>
+                <p className="error-message">{error}</p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   // Handle empty results
   if (!results || results.length === 0) {

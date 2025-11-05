@@ -11,15 +11,14 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@IdClass(ProductId.class)
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@IdClass(ProductId.class)
 public class Product {
-
-    @Id
+     @Id
     private String htsCode;
 
     @Id

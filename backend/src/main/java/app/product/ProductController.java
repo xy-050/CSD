@@ -23,14 +23,22 @@ public class ProductController {
 
     @GetMapping("/category/search/{keyword}")
     public ResponseEntity<Map<String, Object>> searchCategories(@PathVariable String keyword) {
+        System.out.println("Searching for keyword: " + keyword);
         Optional<List<Product>> products = productService.getProductsByCategory(keyword);
 
         if (products.isPresent()) {
-            Set<String> categories = products.get().stream()
-                .map(p -> {
-                    String code = p.getHtsCode();
-                    int idx = code.indexOf('.');
-                    return idx == -1 ? code : code.substring(0, idx);
+            List<Product> productList = products.get();
+            System.out.println("Found " + productList.size() + " products");
+            
+            // Get unique base HTS codes
+            Set<String> categories = productList.stream()
+                .peek(p -> System.out.println("Found product: " + p.toString()))
+                .map(Product::getHtsCode)
+                .map(code -> {
+                    int dotIndex = code.indexOf('.');
+                    String baseCode = dotIndex == -1 ? code : code.substring(0, dotIndex);
+                    System.out.println("Extracted base category: " + baseCode + " from code: " + code);
+                    return baseCode;
                 })
                 .collect(Collectors.toCollection(TreeSet::new)); // deduplicate & sort
 
@@ -45,17 +53,17 @@ public class ProductController {
 
     @GetMapping("/category/{htsCode}")
     public ResponseEntity<Map<String, Object>> getProductsByCategory(@PathVariable String htsCode) {
-        Optional<List<Product>> products = productService.getProductsByCategory(htsCode);
+        Optional<List<Product>> products = productService.getProductsByHtsCode(htsCode);
 
         if (products.isPresent()) {
             Set<String> subcodes = products.get().stream()
-                .map(Product::getHtsCode)
+                .map(p -> p.getHtsCode())
                 .filter(code -> code.equals(htsCode) || code.startsWith(htsCode + ".") || code.startsWith(htsCode))
                 .map(code -> {
-                    int firstDot = code.indexOf('.');
-                    if (firstDot == -1) return code;
-                    int secondDot = code.indexOf('.', firstDot + 1);
-                    return secondDot == -1 ? code : code.substring(0, secondDot);
+                    // For any HTS code, get up to the next level of categorization
+                    String[] parts = code.split("\\.");
+                    if (parts.length <= 1) return code;
+                    return parts[0] + "." + parts[1]; // Return first two parts only
                 })
                 .collect(Collectors.toCollection(TreeSet::new)); // deduplicate & sort
 

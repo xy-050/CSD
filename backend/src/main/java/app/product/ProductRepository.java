@@ -13,4 +13,5 @@ public interface ProductRepository extends JpaRepository<Product, ProductId> {
     Optional<Product> findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(String htsCode, LocalDate date);
     Optional<List<Product>> findByCategory(String category);
     Optional<List<Product>> findByHtsCode(String htsCode);
+    Optional<List<Product>> findByCategoryIgnoreCaseOrHtsCodeStartingWith(String category, String htsCodePrefix);
 }

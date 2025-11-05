@@ -33,9 +33,12 @@ Content-Type: application/json
 
 ###
 POST http://localhost:8080/login
-Content-Type: application/x-www-form-urlencoded
+Content-Type: application/json
 
-username=restuser2&password=P@ssw0rd
+{
+  "username": "demo2",
+  "password": "Password123#"
+}
 
 ###
 GET http://localhost:8080/logout
@@ -59,3 +62,8 @@ Content-Type: application/json
   "userID": 15,
   "username": "rest"
 }
+
+###
+GET http://localhost:8080/product/category/search/sugar
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJjc2Qtc2VjdXJpdHktYXBwIiwic3ViIjoiZGVtbzIiLCJleHAiOjE3NjI0MjQ1MzUsImlhdCI6MTc2MjMzODEzNSwic2NvcGUiOiJST0xFX1VTRVIifQ.ZXOFfDCPmPix05GHUmAZKlXf7ouKBEJLLVMXXN3DD9nS0XB4YeTdnz3FdGsjlhLeYEEadozLwM2yVT7wp7QhZA
