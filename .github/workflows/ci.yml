@@ -1,0 +1,34 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+
+      # Build frontend image
+      - name: Build frontend image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/tariffic-frontend:latest ./frontend
+
+      # Push frontend image
+      - name: Push frontend image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/tariffic-frontend:latest
+
+      # Build backend image
+      - name: Build backend image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/tariffic-backend:latest ./backend
+
+      # Push backend image
+      - name: Push backend image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/tariffic-backend:latest
+
