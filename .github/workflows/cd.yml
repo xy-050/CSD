@@ -1,0 +1,47 @@
+name: CD Pipeline
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pull image from DockerHub
+      - run: 
+          docker pull ${{ secrets.DOCKER_USERNAME }}/tariffic-frontend:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/tariffic-backend:latest 
+      - name: Delete old docker containers 
+      - run: 
+          docker rm -f tariffic-frontend-container || true
+          docker rm -f tariffic-backend-container || true
+      - name: Run new docker containers
+      - run: 
+          docker run -d -p 80:5173 --name tariffic-frontend-container ${{ secrets.DOCKER_USERNAME }}/tariffic-frontend:latest
+          docker run -d -p 8080:8080 --name tariffic-backend-container ${{ secrets.DOCKER_USERNAME }}/tariffic-backend:latest
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # Build frontend image
+      - name: Build frontend image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/tariffic-frontend:latest ./frontend
+
+      # Push frontend image
+      - name: Push frontend image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/tariffic-frontend:latest
+
+      # Build backend image
+      - name: Build backend image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/tariffic-backend:latest ./backend
+
+      # Push backend image
+      - name: Push backend image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/tariffic-backend:latest
