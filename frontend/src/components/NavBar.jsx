@@ -118,7 +118,7 @@ export default function NavBar({ onToggleSidebar, sidebarOpen }) {
                     )}
                 </div>
             </div>
-            <button 
+            {/* <button 
                 onClick={startTour} 
                 data-tour="tour-button"
                 style={{
@@ -132,7 +132,7 @@ export default function NavBar({ onToggleSidebar, sidebarOpen }) {
                 }}
             >
                 🎯 Take Tour
-            </button>
+            </button> */}
         </nav>
     );
 }
