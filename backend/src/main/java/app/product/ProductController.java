@@ -30,17 +30,11 @@ public class ProductController {
             List<Product> productList = products.get();
             System.out.println("Found " + productList.size() + " products");
             
-            // Get unique base HTS codes
-            Set<String> categories = productList.stream()
+            // Get only the top-level categories (no dots in HTS code)
+            Set<Product> categories = productList.stream()
                 .peek(p -> System.out.println("Found product: " + p.toString()))
-                .map(Product::getHtsCode)
-                .map(code -> {
-                    int dotIndex = code.indexOf('.');
-                    String baseCode = dotIndex == -1 ? code : code.substring(0, dotIndex);
-                    System.out.println("Extracted base category: " + baseCode + " from code: " + code);
-                    return baseCode;
-                })
-                .collect(Collectors.toCollection(TreeSet::new)); // deduplicate & sort
+                .filter(p -> !p.getHtsCode().contains(".")) // Only include products with no dots in HTS code
+                .collect(Collectors.toCollection(TreeSet::new)); // Use natural ordering from Product
 
             return ResponseEntity.ok(Map.of(
                     "message", "Categories for keyword " + keyword + " fetched successfully",
@@ -56,20 +50,30 @@ public class ProductController {
         Optional<List<Product>> products = productService.getProductsByHtsCode(htsCode);
 
         if (products.isPresent()) {
-            Set<String> subcodes = products.get().stream()
-                .map(p -> p.getHtsCode())
-                .filter(code -> code.equals(htsCode) || code.startsWith(htsCode + ".") || code.startsWith(htsCode))
-                .map(code -> {
-                    // For any HTS code, get up to the next level of categorization
-                    String[] parts = code.split("\\.");
-                    if (parts.length <= 1) return code;
-                    return parts[0] + "." + parts[1]; // Return first two parts only
+            // Get unique products for the next level of categorization
+            Set<Product> subcategories = products.get().stream()
+                .filter(p -> {
+                    String code = p.getHtsCode();
+                    return code.equals(htsCode) || code.startsWith(htsCode + ".") || code.startsWith(htsCode);
                 })
-                .collect(Collectors.toCollection(TreeSet::new)); // deduplicate & sort
+                .map(p -> {
+                    String code = p.getHtsCode();
+                    String[] parts = code.split("\\.");
+                    // If this is already a leaf node or has no further subcategories, return as is
+                    if (parts.length <= 1) return p;
+                    
+                    // For parent categories, get the next level down
+                    String nextLevel = parts[0] + (parts.length > 1 ? "." + parts[1] : "");
+                    return products.get().stream()
+                        .filter(sub -> sub.getHtsCode().equals(nextLevel))
+                        .findFirst()
+                        .orElse(p);
+                })
+                .collect(Collectors.toCollection(TreeSet::new)); // Use natural ordering from Product
 
             return ResponseEntity.ok(Map.of(
                     "message", "Subcategories for HTS " + htsCode + " fetched successfully",
-                    "categories", subcodes));
+                    "categories", subcategories));
         } else {
             return ResponseEntity.ok(Map.of(
                     "message", "Failed to fetch subcategories for HTS " + htsCode));

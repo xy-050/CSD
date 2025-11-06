@@ -69,7 +69,7 @@ public class ProductService {
     }
 
     public Optional<List<Product>> getProductsByHtsCode(String htsCode) {
-        return productRepository.findByHtsCode(htsCode);
+        return productRepository.findByHtsCodeStartingWith(htsCode);
     }
 
     public Optional<Product> getProductPriceAtTime(String htsCode, LocalDate date) {
