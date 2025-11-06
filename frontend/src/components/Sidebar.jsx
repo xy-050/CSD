@@ -44,7 +44,7 @@ export default function Sidebar({ isOpen }) {
         ))}
         
         {/* Tour button */}
-        <div className="sidebar-item" style={{ marginTop: 'auto' }}>
+        {/* <div className="sidebar-item" style={{ marginTop: 'auto' }}>
           <button
             type="button"
             className="sidebar-btn"
@@ -58,7 +58,7 @@ export default function Sidebar({ isOpen }) {
               <h3>Take Tour</h3>
             </div>
           </button>
-        </div>
+        </div> */}
       </nav>
     </aside>
   );

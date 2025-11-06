@@ -38,6 +38,18 @@ export default function HomePage() {
     }
   };
 
+  // Handle tour start button click
+  const handleTourStart = () => {
+    // Close sidebar if on mobile
+    if (window.innerWidth <= 768) {
+      setSidebarOpen(false);
+    }
+    // Small delay to let sidebar close
+    setTimeout(() => {
+      startTour();
+    }, 300);
+  };
+
   // Open by default on desktop, closed on mobile
   useEffect(() => {
     const isMobile = window.innerWidth <= 768;
@@ -109,6 +121,12 @@ export default function HomePage() {
               {typedTitle}
               {!doneTyping && <span className="caret" aria-hidden="true" />}
             </h1>
+
+            {/* Tour Start Button */}
+            <button className="tour-start-btn" onClick={handleTourStart}>
+              <span className="tour-btn-icon">🎓</span>
+              Take a Quick Tour
+            </button>
 
             {/* SearchBar */}
             <SearchBar />

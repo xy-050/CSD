@@ -118,21 +118,6 @@ export default function NavBar({ onToggleSidebar, sidebarOpen }) {
                     )}
                 </div>
             </div>
-            {/* <button 
-                onClick={startTour} 
-                data-tour="tour-button"
-                style={{
-                    background: '#4F46E5',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '8px 16px',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                }}
-            >
-                🎯 Take Tour
-            </button> */}
         </nav>
     );
 }

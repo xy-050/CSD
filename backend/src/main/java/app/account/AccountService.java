@@ -162,4 +162,30 @@ public class AccountService {
         // save changes
         accountRepository.save(account);
     }
+
+    // /** 
+    //  * Sets that the user has taken the tour.
+    //  */
+    // public void setHasTakenTour(Integer userId) throws UserNotFoundException {
+    //     Account account = accountRepository.findByUserID(userId);
+    //     if (account == null) {
+    //         throw new UserNotFoundException("Account not found.");
+    //     }
+
+    //     account.setHasTakenTour(!account.getHasTakenTour());
+    //     accountRepository.save(account);
+    
+    // }
+
+    // /** 
+    //  * Checks if the user has taken the tour.
+    //  */
+    // public boolean hasTakenTour(Integer userId) throws UserNotFoundException {
+    //     Account account = accountRepository.findByUserID(userId);
+    //     if (account == null) {
+    //         throw new UserNotFoundException("Account not found.");
+    //     }
+
+    //     return account.getHasTakenTour();
+    // }
 }
