@@ -130,4 +130,28 @@ public class AccountController {
         return ResponseEntity.ok().body("Successfully deleted user.");
     }
 
+    // /**
+    //  * hasTakenTour setter endpoint.
+    //  */
+    // @PostMapping("/account/{userID}/hasTakenTour")
+    // public ResponseEntity<String> setHasTakenTour(@PathVariable Integer userID) {
+    //     try {
+    //         accountService.setHasTakenTour(userID);
+    //     } catch (UserNotFoundException e) {
+    //         return ResponseEntity.badRequest().body(e.getMessage());
+    //     }
+    //     return ResponseEntity.ok().body("Successfully updated hasTakenTour status.");
+    // }
+
+    // /** hasTakenTour getter endpoint. */
+    // @GetMapping("/account/{userID}/hasTakenTour")
+    // public ResponseEntity<Boolean> hasTakenTour(@PathVariable Integer userID) {
+    //     try {
+    //         boolean hasTakenTour = accountService.hasTakenTour(userID);
+    //         return ResponseEntity.ok().body(hasTakenTour);
+    //     } catch (UserNotFoundException e) {
+    //         return ResponseEntity.badRequest().body(null);
+    //     }
+    // }
+
 }
