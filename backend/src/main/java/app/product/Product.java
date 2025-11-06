@@ -11,19 +11,25 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@IdClass(ProductId.class)
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class Product {
-
-    @Id
+@IdClass(ProductId.class)
+public class Product implements Comparable<Product> {
+     @Id
     private String htsCode;
 
     @Id
     private LocalDate fetchDate;
+
+    @Override
+    public int compareTo(Product other) {
+        int htsCodeComparison = htsCode.compareTo(other.htsCode);
+        if (htsCodeComparison != 0) return htsCodeComparison;
+        return fetchDate.compareTo(other.fetchDate);
+    }
 
     @Lob
     private String description;
