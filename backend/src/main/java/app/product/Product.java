@@ -26,6 +26,7 @@ public class Product {
     private LocalDate fetchDate;
 
     @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String description;
     
     @Column(nullable = true)
