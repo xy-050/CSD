@@ -1,6 +1,9 @@
 package app.product;
 
 import org.springframework.web.bind.annotation.*;
+
+import app.exception.FTANotFoundException;
+
 import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
@@ -117,6 +120,17 @@ public class ProductController {
                     "message", "No existing data on product with HTS code " + htsCode,
                     "general", null, 
                     "special", null));
+        }
+    }
+
+    @GetMapping("/price/{htsCode}/{country}")
+    public ResponseEntity<?> getHistoricalPrices(@PathVariable String htsCode, @PathVariable String country) {
+        try {
+            Map<LocalDate, String> prices = productService.getHistoricalPrices(htsCode, country);
+            return ResponseEntity.ok().body(prices);
+        } catch (FTANotFoundException e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

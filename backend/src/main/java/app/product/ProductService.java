@@ -8,7 +8,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import app.exception.HTSCodeNotFoundException;
 import app.query.QueryService;
 
 @Service
@@ -74,5 +76,31 @@ public class ProductService {
 
     public Optional<Product> getProductPriceAtTime(String htsCode, LocalDate date) {
         return productRepository.findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(htsCode, date);
+    }
+
+    public String selectPrice(Product product, String country) {
+        String special = product.getSpecial();
+        String general = product.getGeneral();
+
+        if (special != null && special.contains(country)) {
+            return special.split(" ")[0];
+        }
+
+        return general != null ? general : "";
+    }
+
+    public Map<LocalDate, String> getHistoricalPrices(String htsCode, String country) {
+        Optional<List<Product>> products = productRepository.findByHtsCode(htsCode);
+        
+        if (!products.isPresent()) {
+            throw new HTSCodeNotFoundException("Error: Product wsith HTS Code " + htsCode + " not found!");
+        }
+
+        return products.get().stream().collect(
+            Collectors.toMap(
+                Product::getFetchDate,
+                product -> selectPrice(product, country)
+            )
+        );
     }
 }
