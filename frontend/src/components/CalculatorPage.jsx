@@ -4,8 +4,8 @@ import NavBar from "./NavBar";
 import Sidebar from "./Sidebar";
 import api from '../api/AxiosConfig.jsx';
 import { getNames as getCountryNames } from 'country-list'; // added import
-import LineChart from './LineChart/LineChart.jsx';
 import PriceHistoryChart from "./LineChart/LineChart.jsx";
+import PriceWorldmap from "./WorldMap/WorldMap.jsx";
 
 export default function CalculatorPage() {
     const location = useLocation();
@@ -83,7 +83,7 @@ export default function CalculatorPage() {
                 const allCountries = getCountryNames();
                 allCountries.forEach(name => {
                     if (!countries.find(c => c.name === name)) {
-                        countries.push({name, rate: data['General rate'] || 'N/A'});
+                        countries.push({ name, rate: data['General rate'] || 'N/A' });
                     }
                 })
                 setAvailableCountries(countries);
@@ -395,9 +395,16 @@ export default function CalculatorPage() {
                             </div>
                         </aside>
                     </div>
-                    <div className="line-chart">
-                        <PriceHistoryChart hts={hts} origin={origin} />
-                    </div>
+                    <section className="charts">
+                        <h1>Data Visualizations</h1>
+                        <div>
+                            <PriceHistoryChart hts={hts} origin={origin} />
+                        </div>
+                        <div>
+                            <PriceWorldmap htsCode={hts} />
+                        </div>
+
+                    </section>
                 </main>
             </div>
         </div>

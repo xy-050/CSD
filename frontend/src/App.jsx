@@ -10,6 +10,7 @@ import CalculatorPage from "./components/CalculatorPage.jsx";
 import FavouritesPage from './components/FavouritesPage.jsx';
 import ChangePasswordPage from './components/ChangePasswordPage.jsx';
 import './App.css';
+import 'leaflet/dist/leaflet.css';
 
 export default function App() {
     return (

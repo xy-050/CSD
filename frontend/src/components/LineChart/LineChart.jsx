@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getCode } from 'country-list'; 
 import {
     LineChart,
     Line,
@@ -26,10 +27,10 @@ function PriceHistoryChart({ hts, origin }) {
             setError(null);
 
             try {
-                console.log("Origin: " + origin);
+                const countryCode = getCode(origin);
 
                 // Call backend API
-                const response = await api.get(`/product/price/${hts}/${origin}`);
+                const response = await api.get(`/product/price/${hts}/${countryCode}`);
                 console.log("Line chart data:", response.data);
 
                 // Format data: Convert Map to Array of objects
@@ -89,7 +90,7 @@ function PriceHistoryChart({ hts, origin }) {
 
     return (
         <div style={{ width: '100%', height: '500px' }}>
-            <h3>Price History: ({origin})</h3>
+            <h3>Price History for {origin}</h3>
             <ResponsiveContainer width="100%" height={400}>
                 <LineChart
                     data={chartData}

@@ -2,18 +2,19 @@ package app.product;
 
 import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Scheduled;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import app.exception.HTSCodeNotFoundException;
-import app.query.CountryCodes;
 import app.query.QueryService;
 
 @Service
@@ -94,22 +95,20 @@ public class ProductService {
 
     public Map<LocalDate, String> getHistoricalPrices(String htsCode, String country) {
         Optional<List<Product>> products = productRepository.findByHtsCode(htsCode);
-        
+
         if (!products.isPresent()) {
             throw new HTSCodeNotFoundException("Error: Product with HTS Code " + htsCode + " not found!");
         }
 
         return products.get().stream().collect(
-            Collectors.toMap(
-                Product::getFetchDate,
-                product -> selectPrice(product, CountryCodes.isoCountryMap.get(country))
-            )
-        );
+                Collectors.toMap(
+                        Product::getFetchDate,
+                        product -> selectPrice(product, country)));
     }
 
     public Map<String, String> mapCountryToPrice(String htsCode) {
         Optional<Product> product = productRepository.findTopByHtsCodeOrderByFetchDateDesc(htsCode);
-        Set<String> countries = CountryCodes.isoCountryMap.keySet();
+        String[] countries = Locale.getISOCountries();
 
         System.out.println(product);
 
@@ -123,6 +122,11 @@ public class ProductService {
             pricesByCountry.put(country, selectPrice(product.get(), country));
         }
 
+        try {
+            System.out.println("Prices By Country:\n" + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pricesByCountry));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         return pricesByCountry;
     }
 }

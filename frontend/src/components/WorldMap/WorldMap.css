@@ -1,0 +1,16 @@
+.leaflet-container {
+    font-family: 'Segeo UI', sans-serif;
+}
+
+.leaflet-popup-content {
+    margin: 8px;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+}
+
+.leaflet-popup-content strong {
+    color: #333;
+    font-size: 14px;
+}
