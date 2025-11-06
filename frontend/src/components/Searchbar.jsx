@@ -50,36 +50,17 @@ export default function SearchBar({ }) {
     // const removeOne = (term) => saveHistory(history.filter(x => x !== term));
     // const clearAll = () => saveHistory([]);
 
-    const handleSearch = async (term) => {
+    const handleSearch = (term) => {
         const searchTerm = (term ?? q).trim();
 
-        // If no search term, go directly to the results page (no API call)
+        // If no search term, go directly to the results page with empty results
         if (!searchTerm) {
             navigate("/results", { state: { results: [], keyword: "" } });
             return;
         }
 
-        // Clear any previous errors
-        setError(null);
-
-        try {
-            console.log('Starting search for:', searchTerm);
-
-            const response = await api.get(`/product/category/${searchTerm}`, {
-                params: {
-                    keyword: encodeURIComponent(searchTerm)
-                }
-            });
-
-            console.log(response);
-            console.log(response.data);
-            setResults(response.data);
-            navigate("/results", { state: { results: response.data, keyword: searchTerm } });
-        } catch (error) {
-            console.error('Error during search:', error);
-            setError('Search failed. Please check your connection and try again.');
-            setResults([]); // Clear results on error
-        }
+        // Navigate directly to results page with the search term
+        navigate("/results", { state: { keyword: searchTerm } });
     };
 
     return (
