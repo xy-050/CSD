@@ -25,6 +25,19 @@ export default function HomePage() {
     if (window.innerWidth <= 768) setSidebarOpen(false);
   };
 
+  // Handle product click from top products
+  const handleProductClick = async (htsCode) => {
+    try {
+      const response = await api.get(`/product/category/${htsCode}`);
+      navigate("/results", {
+        state: { results: response.data, keyword: htsCode },
+      });
+    } catch (error) {
+      console.error('Error searching HTS code:', error);
+      alert('Failed to load product details. Please try again.');
+    }
+  };
+
   // Handle tour start button click
   const handleTourStart = () => {
     // Close sidebar if on mobile

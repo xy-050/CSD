@@ -14,4 +14,5 @@ public interface ProductRepository extends JpaRepository<Product, ProductId> {
     Optional<List<Product>> findByCategory(String category);
     Optional<List<Product>> findByHtsCodeStartingWith(String htsCode);
     Optional<List<Product>> findByCategoryIgnoreCaseOrHtsCodeStartingWith(String category, String htsCodePrefix);
+    Optional<List<Product>> findByHtsCode(String htsCode);
 }
