@@ -18,7 +18,7 @@ import lombok.ToString;
 @ToString
 @IdClass(ProductId.class)
 public class Product implements Comparable<Product> {
-     @Id
+    @Id
     private String htsCode;
 
     @Id

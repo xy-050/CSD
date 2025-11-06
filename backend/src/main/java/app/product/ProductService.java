@@ -5,12 +5,15 @@ import org.springframework.scheduling.annotation.Scheduled;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import app.exception.HTSCodeNotFoundException;
+import app.query.CountryCodes;
 import app.query.QueryService;
 
 @Service
@@ -93,14 +96,33 @@ public class ProductService {
         Optional<List<Product>> products = productRepository.findByHtsCode(htsCode);
         
         if (!products.isPresent()) {
-            throw new HTSCodeNotFoundException("Error: Product wsith HTS Code " + htsCode + " not found!");
+            throw new HTSCodeNotFoundException("Error: Product with HTS Code " + htsCode + " not found!");
         }
 
         return products.get().stream().collect(
             Collectors.toMap(
                 Product::getFetchDate,
-                product -> selectPrice(product, country)
+                product -> selectPrice(product, CountryCodes.isoCountryMap.get(country))
             )
         );
+    }
+
+    public Map<String, String> mapCountryToPrice(String htsCode) {
+        Optional<Product> product = productRepository.findTopByHtsCodeOrderByFetchDateDesc(htsCode);
+        Set<String> countries = CountryCodes.isoCountryMap.keySet();
+
+        System.out.println(product);
+
+        if (!product.isPresent() || product == null) {
+            throw new HTSCodeNotFoundException("Product with HTS code " + htsCode + " not found!");
+        }
+
+        Map<String, String> pricesByCountry = new HashMap<>();
+
+        for (String country : countries) {
+            pricesByCountry.put(country, selectPrice(product.get(), country));
+        }
+
+        return pricesByCountry;
     }
 }
