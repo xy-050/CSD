@@ -18,6 +18,7 @@ import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import app.query.QueryService;
@@ -40,6 +41,8 @@ public class ProductServiceTest {
 
     private Product existing;
 
+    private List<Product> products;
+
     @BeforeEach
     void setUp() {
         existing = new Product(
@@ -47,8 +50,16 @@ public class ProductServiceTest {
                 LocalDate.of(2025, Month.APRIL, 1),
                 "Brown sugar",
                 "5.5¢/t",
-                "(AU, SG)",
+                "Free (AU, SG)",
                 "sugar");
+
+        products = List.of(existing, new Product(
+                "1704.90.35",
+                LocalDate.of(2025, Month.DECEMBER, 1),
+                "Brown sugar",
+                "5.5¢/t",
+                "Free (AU, SG, NZ)",
+                "sugar"));
     }
 
     // -------------------------------------------------------------------
@@ -62,7 +73,7 @@ public class ProductServiceTest {
         map.put("htsno", "1704.90.35");
         map.put("description", "Brown sugar");
         map.put("general", "5.5¢/t");
-        map.put("special", "(AU, SG)");
+        map.put("special", "Free (AU, SG)");
 
         when(queryService.searchTariffArticles(anyString())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.empty());
@@ -78,7 +89,7 @@ public class ProductServiceTest {
             assertEquals("1704.90.35", saved.getHtsCode());
             assertEquals("Brown sugar", saved.getDescription());
             assertEquals("5.5¢/t", saved.getGeneral());
-            assertEquals("(AU, SG)", saved.getSpecial());
+            assertEquals("Free (AU, SG)", saved.getSpecial());
             assertNotNull(saved.getFetchDate());
             assertNotNull(saved.getCategory());
         }
@@ -91,7 +102,7 @@ public class ProductServiceTest {
         map.put("htsno", "1704.90.35");
         map.put("description", "Brown sugar - Updated");
         map.put("general", "6.0¢/t");
-        map.put("special", "(AU, SG, NZ)");
+        map.put("special", "Free (AU, SG, NZ)");
 
         when(queryService.searchTariffArticles(anyString())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
@@ -107,7 +118,7 @@ public class ProductServiceTest {
             assertEquals("1704.90.35", saved.getHtsCode());
             assertEquals("Brown sugar - Updated", saved.getDescription());
             assertEquals("6.0¢/t", saved.getGeneral());
-            assertEquals("(AU, SG, NZ)", saved.getSpecial());
+            assertEquals("Free (AU, SG, NZ)", saved.getSpecial());
         }
     }
 
@@ -118,7 +129,7 @@ public class ProductServiceTest {
         map.put("htsno", "1704.90.35");
         map.put("description", "Brown sugar");
         map.put("general", "5.5¢/t");
-        map.put("special", "(AU, SG)");
+        map.put("special", "Free (AU, SG)");
 
         when(queryService.searchTariffArticles(anyString())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
@@ -148,7 +159,7 @@ public class ProductServiceTest {
         assertEquals("1704.90.35", result.get().getHtsCode());
         assertEquals("Brown sugar", result.get().getDescription());
         assertEquals("5.5¢/t", result.get().getGeneral());
-        assertEquals("(AU, SG)", result.get().getSpecial());
+        assertEquals("Free (AU, SG)", result.get().getSpecial());
         assertEquals("sugar", result.get().getCategory());
         verify(productRepository, times(1)).findTopByHtsCodeOrderByFetchDateDesc("1704.90.35");
     }
@@ -214,7 +225,7 @@ public class ProductServiceTest {
                 LocalDate.of(2025, Month.APRIL, 1),
                 "White sugar",
                 "4.5¢/t",
-                "(CA)",
+                "Free (CA)",
                 "sugar");
 
         List<Product> products = List.of(existing, product2);
@@ -231,5 +242,76 @@ public class ProductServiceTest {
         assertEquals("sugar", result.get().get(0).getCategory());
         assertEquals("sugar", result.get().get(1).getCategory());
         verify(productRepository, times(1)).findByCategory("sugar");
+    }
+
+    // -------------------------------------------------------------------
+    // ---------------- testing selectPrice() method ---------------------
+    // -------------------------------------------------------------------
+
+    @Test
+    void selectPrice_WhenCountryInSpecial_ShouldReturnSpeicalPrice() {
+        // Act
+        String result = productService.selectPrice(existing, "SG");
+
+        // Assert
+        assertEquals(result, "Free");
+    }
+
+    @Test
+    void selectPrice_WhenCountryNotInSpecial_ShouldReturnGeneralPrice() {
+        // Act
+        String result = productService.selectPrice(existing, "NZ");
+
+        // Assert
+        assertEquals(result, "5.5¢/t");
+    }
+
+    // -------------------------------------------------------------------
+    // ------------ testing getHistoricalPrices() method -----------------
+    // -------------------------------------------------------------------
+
+    @Test
+    void getHistoricalPrices_WhenAllSpecial_ShouldReturnAllSpecial() {
+        // Arrange
+        when(productRepository.findByHtsCode(anyString())).thenReturn(Optional.of(products));
+
+        // Act
+        Map<LocalDate, String> result = productService.getHistoricalPrices("1704.90.35", "SG");
+
+        // Assert
+        assertEquals(result, Map.of(
+                LocalDate.of(2025, Month.APRIL, 1), "Free", 
+                LocalDate.of(2025, Month.DECEMBER, 1), "Free"
+        ));
+    }
+
+    @Test
+    void getHistoricalPrices_WhenAllGeneral_ShouldReturnAllGeneral() {
+        // Arrange
+        when(productRepository.findByHtsCode(anyString())).thenReturn(Optional.of(products));
+
+        // Act
+        Map<LocalDate, String> result = productService.getHistoricalPrices("1704.90.35", "AF");
+
+        // Assert
+        assertEquals(result, Map.of(
+                LocalDate.of(2025, Month.APRIL, 1), "5.5¢/t", 
+                LocalDate.of(2025, Month.DECEMBER, 1), "5.5¢/t"
+        ));
+    }
+
+    @Test
+    void getHistoricalPrices_WhenMixed_ShouldReturnMixed() {
+        // Arrange
+        when(productRepository.findByHtsCode(anyString())).thenReturn(Optional.of(products));
+
+        // Act
+        Map<LocalDate, String> result = productService.getHistoricalPrices("1704.90.35", "NZ");
+
+        // Assert
+        assertEquals(result, Map.of(
+                LocalDate.of(2025, Month.APRIL, 1), "5.5¢/t", 
+                LocalDate.of(2025, Month.DECEMBER, 1), "Free"
+        ));
     }
 }
