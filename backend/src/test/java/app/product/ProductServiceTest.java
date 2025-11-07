@@ -23,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+import app.exception.HTSCodeNotFoundException;
 import app.exception.ProductNotFoundException;
 import app.query.QueryService;
 
@@ -337,8 +338,8 @@ public class ProductServiceTest {
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.empty());
 
         // Act & Assert
-        ProductNotFoundException exception = assertThrows(
-                ProductNotFoundException.class,
+        HTSCodeNotFoundException exception = assertThrows(
+                HTSCodeNotFoundException.class,
                 () -> productService.mapCountryToPrice("67"));
         assertEquals(exception.getMessage(), "Product with HTS code 67 not found!");
     }
@@ -367,7 +368,7 @@ public class ProductServiceTest {
         Set<Product> actualResults = productService.getNextLevelCategory("1704");
 
         // Assert
-        assertEquals(Set.of(existing, product2, product3), actualResults);
+        assertEquals(Set.of(product2, product3), actualResults);
     }
 
     @Test
