@@ -6,9 +6,13 @@ import java.util.Optional;
 
 import app.exception.FTANotFoundException;
 
+@Service
 public class FTAService {
 
     private final FTARepository ftaRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate; 
 
     public FTAService(FTARepository ftaRepository) {
         this.ftaRepository = ftaRepository;
@@ -51,4 +55,17 @@ public class FTAService {
         return ftas.get();
     }
 
+    /*Prepared statement: remove if fta isnt linked to account -> remove in FTAController too*/
+    public String searchFTA(String query) {
+        // Only allow alphanumeric and space characters (adjust for your use case)
+        if (!query.matches("^[a-zA-Z0-9\\s]+$")) {
+            throw new IllegalArgumentException("Invalid characters in query");
+        }
+
+        // Use parameterized (prepared) query — NEVER concatenate strings
+        String sql = "SELECT name FROM fta_table WHERE name LIKE ?";
+        List<String> results = jdbcTemplate.queryForList(sql, new Object[]{"%" + query + "%"}, String.class);
+
+        return String.join(", ", results);
+    }
 }
