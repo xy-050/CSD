@@ -7,7 +7,7 @@ import Sidebar from "./Sidebar";
 import api from "../api/AxiosConfig.jsx";
 
 export default function HomePage() {
-  const { tourState } = useTour();
+  const { tourState, startTour } = useTour();
   const navigate = useNavigate();
 
   const [lastQuery, setLastQuery] = useState("");
@@ -90,10 +90,6 @@ export default function HomePage() {
     })();
   }, []);
 
-  useEffect(() => {
-    console.log('Milk button exists?', document.querySelector('[data-tour="category-milk"]'));
-    console.log('Category buttons exists?', document.querySelector('[data-tour="category-buttons"]'));
-}, []);
   // Fetch current user details (used when saving queries)
   useEffect(() => {
     (async () => {
@@ -132,9 +128,9 @@ export default function HomePage() {
       // Fetch product details using the new ProductController endpoint
       console.log('Fetching from:', `/product/hts/${encodeURIComponent(htsCode)}`);
       const response = await api.get(`/product/hts/${encodeURIComponent(htsCode)}`);
-      
+
       console.log('Response received:', response.data);
-      
+
       if (!response.data || !response.data.htsCode) {
         console.error('Product not found in response:', response.data);
         alert('Product details not found');
@@ -158,8 +154,8 @@ export default function HomePage() {
       console.log('Navigating to calculator with:', formattedResult);
 
       // Navigate to calculator
-      navigate('/calculator', { 
-        state: { result: formattedResult, keyword: htsCode } 
+      navigate('/calculator', {
+        state: { result: formattedResult, keyword: htsCode }
       });
     } catch (error) {
       console.error('Error fetching product details for', htsCode, error);

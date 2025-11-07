@@ -258,11 +258,12 @@ export default function CalculatorPage() {
                             <div className="calc-card-head">
                                 <div className="calc-title-wrap">
                                     <div className="mini-label">Inputs</div>
-                                    <h3 className="calc-title">{keyword}</h3>
+                                    <h3 className="calc-title" data-tour="calc-title">{keyword}</h3>
                                 </div>
                                 <button
                                     type="button"
                                     className="star-btn"
+                                    data-tour="star-button"
                                     aria-pressed={isFav}
                                     title={isFav ? "Unfavourite" : "Favourite"}
                                     onClick={toggleFav}
@@ -282,7 +283,7 @@ export default function CalculatorPage() {
                                 <input className="search-input" value={desc} readOnly style={{ backgroundColor: '#f8f9fa', cursor: 'default' }} />
                             </div>
 
-                            <div className="form-row">
+                            <div className="form-row" data-tour="shipment-value">
                                 <label>Shipment Value (USD)</label>
                                 <input
                                     type="number"
@@ -298,13 +299,16 @@ export default function CalculatorPage() {
                                 />
                             </div>
 
-                            <div className="form-row two">
+                            <div className="form-row two" data-tour="country-origin">
                                 <div>
                                     <label>Country of Origin</label>
                                     {loading ? (
                                         <div className="search-input">Loading countries...</div>
                                     ) : (
-                                        <select className="search-input" value={origin} onChange={e => handleOriginChange(e.target.value)}>
+                                        <select
+                                        className="search-input"
+                                        value={origin}
+                                        onChange={e => handleOriginChange(e.target.value)}>
                                             {availableCountries.map((c, i) => (
                                                 <option key={i} value={c.name}>
                                                     {c.name} - {c.rate}
@@ -314,72 +318,22 @@ export default function CalculatorPage() {
                                         </select>
                                     )}
                                 </div>
-                                <div>
-                                    <label>Import Programs</label>
-                                    <select className="search-input" value={program} onChange={e => setProgram(e.target.value)}>
-                                        <option value="none">None</option>
-                                        <option value="ieepa25">IEEPA 25%</option>
-                                        <option value="ieepa50">IEEPA 50%</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="form-row two">
-                                <div>
-                                    <label>Mode of Transport</label>
-                                    <select className="search-input" value={transport} onChange={e => setTransport(e.target.value)}>
-                                        <option value="OCEAN">🚢 Ocean</option>
-                                        <option value="AIR">✈️ Air</option>
-                                        <option value="TRUCK">🚚 Truck</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Entry Date</label>
-                                    <input type="date" className="search-input" value={entryDate} onChange={e => setEntryDate(e.target.value)} />
-                                </div>
-                            </div>
-
-                            <div className="form-row two">
-                                <div>
-                                    <label>Date of Loading</label>
-                                    <input type="date" className="search-input" value={loadDate} onChange={e => setLoadDate(e.target.value)} />
-                                </div>
-                            </div>
-
-                            <div className="form-row">
-                                <div className="lines-header">
-                                    <label>Duty Lines</label>
-                                    <button type="button" className="feature-btn" onClick={addLine}>Add line</button>
-                                </div>
-                                <div className="lines-list">
-                                    {lines.map((l, i) => (
-                                        <div key={i} className="line-item">
-                                            <input className="search-input" value={l.label} onChange={e => updateLine(i, { label: e.target.value })} />
-                                            <input type="number" className="search-input" value={l.base} onChange={e => updateLine(i, { base: Number(e.target.value) || 0 })} placeholder="Value (USD)" />
-                                            <div className="inline">
-                                                <input type="number" className="search-input" value={l.ratePct} onChange={e => updateLine(i, { ratePct: Number(e.target.value) || 0 })} />
-                                                <span className="pct">%</span>
-                                            </div>
-                                            <button type="button" className="chip danger" onClick={() => removeLine(i)}>✕</button>
-                                        </div>
-                                    ))}
-                                </div>
                             </div>
                         </section>
 
                         {/* RIGHT: Results */}
                         <aside className="calc-card">
-                            <h3 className="calc-title">Calculation Results</h3>
-                            <div className="results-top">
+                            <h3 className="calc-title" data-tour="calc-results-title">Calculation Results</h3>
+                            <div className="results-top" data-tour="calc-results">
                                 <div>
                                     <div className="muted">DUTY RATE</div>
-                                    <div className="duty-rate">{dutyRatePct.toFixed(2)}%</div>
+                                    <div className="duty-rate" data-tour="duty-rate">{dutyRatePct.toFixed(2)}%</div>
                                 </div>
                                 <div className="breakdown">
                                     <div className="muted">COST BREAKDOWN</div>
                                     <div className="row"><span>Base Cost</span><b>${value.toLocaleString()}</b></div>
                                     <div className="row"><span>Total Duties</span><b>${dutyTotal.toLocaleString()}</b></div>
-                                    <div className="row total"><span>Landed Cost</span><b>${landedCost.toLocaleString()}</b></div>
+                                    <div className="row total" data-tour="landed-cost"><span>Landed Cost</span><b>${landedCost.toLocaleString()}</b></div>
                                 </div>
                             </div>
 

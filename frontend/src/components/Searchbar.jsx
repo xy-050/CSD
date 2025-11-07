@@ -22,8 +22,8 @@ export default function SearchBar({ }) {
     // add category definitions
     const categories = [
         { key: 'Sugar', label: 'Sugar', icon: '🍬', dataTour: null},
-        { key: 'Bread', label: 'Bread', icon: '🍞', dataTour: null},
-        { key: 'Milk', label: 'Milk', icon: '🥛', dataTour: 'category-milk'},
+        { key: 'Bread', label: 'Bread', icon: '🍞', dataTour: 'category-bread'},
+        { key: 'Milk', label: 'Milk', icon: '🥛', dataTour: null},
         { key: 'Egg', label: 'Egg', icon: '🥚', dataTour: null},
         { key: 'Rice', label: 'Rice', icon: '🍚', dataTour: null},
     ];
