@@ -3,6 +3,7 @@ package app.product;
 import org.springframework.web.bind.annotation.*;
 
 import app.exception.FTANotFoundException;
+import app.exception.HTSCodeNotFoundException;
 
 import org.springframework.http.ResponseEntity;
 
@@ -36,12 +37,12 @@ public class ProductController {
         if (products.isPresent()) {
             List<Product> productList = products.get();
             System.out.println("Found " + productList.size() + " products");
-            
+
             // Get only the top-level categories (no dots in HTS code)
             Set<Product> categories = productList.stream()
-                .peek(p -> System.out.println("Found product: " + p.toString()))
-                .filter(p -> !p.getHtsCode().contains(".")) // Only include products with no dots in HTS code
-                .collect(Collectors.toCollection(TreeSet::new)); // Use natural ordering from Product
+                    .peek(p -> System.out.println("Found product: " + p.toString()))
+                    .filter(p -> !p.getHtsCode().contains(".")) // Only include products with no dots in HTS code
+                    .collect(Collectors.toCollection(TreeSet::new)); // Use natural ordering from Product
 
             return ResponseEntity.ok(Map.of(
                     "message", "Categories for keyword " + keyword + " fetched successfully",
@@ -59,24 +60,25 @@ public class ProductController {
         if (products.isPresent()) {
             // Get unique products for the next level of categorization
             Set<Product> subcategories = products.get().stream()
-                .filter(p -> {
-                    String code = p.getHtsCode();
-                    return code.equals(htsCode) || code.startsWith(htsCode + ".") || code.startsWith(htsCode);
-                })
-                .map(p -> {
-                    String code = p.getHtsCode();
-                    String[] parts = code.split("\\.");
-                    // If this is already a leaf node or has no further subcategories, return as is
-                    if (parts.length <= 1) return p;
-                    
-                    // For parent categories, get the next level down
-                    String nextLevel = parts[0] + (parts.length > 1 ? "." + parts[1] : "");
-                    return products.get().stream()
-                        .filter(sub -> sub.getHtsCode().equals(nextLevel))
-                        .findFirst()
-                        .orElse(p);
-                })
-                .collect(Collectors.toCollection(TreeSet::new)); // Use natural ordering from Product
+                    .filter(p -> {
+                        String code = p.getHtsCode();
+                        return code.equals(htsCode) || code.startsWith(htsCode + ".") || code.startsWith(htsCode);
+                    })
+                    .map(p -> {
+                        String code = p.getHtsCode();
+                        String[] parts = code.split("\\.");
+                        // If this is already a leaf node or has no further subcategories, return as is
+                        if (parts.length <= 1)
+                            return p;
+
+                        // For parent categories, get the next level down
+                        String nextLevel = parts[0] + (parts.length > 1 ? "." + parts[1] : "");
+                        return products.get().stream()
+                                .filter(sub -> sub.getHtsCode().equals(nextLevel))
+                                .findFirst()
+                                .orElse(p);
+                    })
+                    .collect(Collectors.toCollection(TreeSet::new)); // Use natural ordering from Product
 
             return ResponseEntity.ok(Map.of(
                     "message", "Subcategories for HTS " + htsCode + " fetched successfully",
@@ -168,7 +170,7 @@ public class ProductController {
         } else {
             return ResponseEntity.ok(Map.of(
                     "message", "No existing data on product with HTS code " + htsCode,
-                    "general", null, 
+                    "general", null,
                     "special", null));
         }
     }
@@ -191,7 +193,7 @@ public class ProductController {
         } else {
             return ResponseEntity.ok(Map.of(
                     "message", "No existing data on product with HTS code " + htsCode,
-                    "general", null, 
+                    "general", null,
                     "special", null));
         }
     }
@@ -202,6 +204,17 @@ public class ProductController {
             Map<LocalDate, String> prices = productService.getHistoricalPrices(htsCode, country);
             return ResponseEntity.ok().body(prices);
         } catch (FTANotFoundException e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/price/map/{htsCode}")
+    public ResponseEntity<?> getMapCountryToPrice(@PathVariable String htsCode) {
+        try {
+            Map<String, String> result = productService.mapCountryToPrice(htsCode);
+            return ResponseEntity.ok().body(result);
+        } catch (HTSCodeNotFoundException e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(e.getMessage());
         }

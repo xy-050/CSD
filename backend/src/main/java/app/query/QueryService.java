@@ -65,68 +65,79 @@ public class QueryService {
         }
     }
 
-        /**
+    /**
      * Returns only the next level of HTS codes for a given keyword or HTS code.
      * If the query is a keyword, returns main categories (codes with no dots).
-     * If the query is an HTS code, returns codes that start with the code + '.' and have exactly one more dot than the query.
+     * If the query is an HTS code, returns codes that start with the code + '.' and
+     * have exactly one more dot than the query.
+     * 
      * @param query The keyword or HTS code
      * @return List of next-level HTS code articles
      */
     public List<Map<String, Object>> getNextLevelHtsCodes(String query) {
         List<Map<String, Object>> rawResults = searchTariffArticles(query);
-        // If query is a keyword (not a code), return only codes with no dots (main categories)
+        // If query is a keyword (not a code), return only codes with no dots (main
+        // categories)
         if (!query.matches("\\d+(\\.\\d+)*")) {
             return rawResults.stream()
-                .filter(item -> {
-                    Object htsno = item.get("htsno");
-                    return htsno != null && htsno.toString().indexOf('.') == -1;
-                })
-                .toList();
+                    .filter(item -> {
+                        Object htsno = item.get("htsno");
+                        return htsno != null && htsno.toString().indexOf('.') == -1;
+                    })
+                    .toList();
         }
-        // If query is a code, return only codes that start with query + '.' and have exactly one more dot (subcategory),
-        // or exactly two more dots where the last part is a two-digit stat suffix (e.g., 0401.20.20.00)
+        // If query is a code, return only codes that start with query + '.' and have
+        // exactly one more dot (subcategory),
+        // or exactly two more dots where the last part is a two-digit stat suffix
+        // (e.g., 0401.20.20.00)
         int dotCount = countDots(query);
         String prefix = query + ".";
         return rawResults.stream()
-            .filter(item -> {
-                Object htsno = item.get("htsno");
-                if (htsno == null) return false;
-                String code = htsno.toString();
-                int codeDotCount = countDots(code);
-                if (!code.startsWith(prefix)) return false;
-                if (codeDotCount == dotCount + 1) {
-                    return true; // direct subcategory
-                }
-                // If code has two more dots, check if last part is a two-digit stat suffix
-                if (codeDotCount == dotCount + 2) {
-                    String[] parts = code.split("\\.");
-                    if (parts.length > 0) {
-                        String last = parts[parts.length - 1];
-                        return last.matches("\\d{2}");
+                .filter(item -> {
+                    Object htsno = item.get("htsno");
+                    if (htsno == null)
+                        return false;
+                    String code = htsno.toString();
+                    int codeDotCount = countDots(code);
+                    if (!code.startsWith(prefix))
+                        return false;
+                    if (codeDotCount == dotCount + 1) {
+                        return true; // direct subcategory
                     }
-                }
-                return false;
-            })
-            .toList();
+                    // If code has two more dots, check if last part is a two-digit stat suffix
+                    if (codeDotCount == dotCount + 2) {
+                        String[] parts = code.split("\\.");
+                        if (parts.length > 0) {
+                            String last = parts[parts.length - 1];
+                            return last.matches("\\d{2}");
+                        }
+                    }
+                    return false;
+                })
+                .toList();
     }
 
     // Helper to count dots in a string
     private static int countDots(String s) {
         int count = 0;
         for (char c : s.toCharArray()) {
-            if (c == '.') count++;
+            if (c == '.')
+                count++;
         }
         return count;
     }
 
     /**
-     * Extracts only the relevant fields (htsno, description, units, general) from the raw tariff articles.
+     * Extracts only the relevant fields (htsno, description, units, general) from
+     * the raw tariff articles.
+     * 
      * @param keyword The word or phrase to search for
      * @return List of simplified tariff articles
      */
     public List<Map<String, Object>> extractTariffSummary(String keyword) {
         List<Map<String, Object>> rawResults = getNextLevelHtsCodes(keyword);
-        // Build a map from htsno to description for fast lookup, including all parent codes
+        // Build a map from htsno to description for fast lookup, including all parent
+        // codes
         java.util.Map<String, String> codeToDescription = new java.util.HashMap<>();
         java.util.Set<String> searchedCodes = new java.util.HashSet<>();
         // Add all codes from the current search
@@ -140,11 +151,13 @@ public class QueryService {
         // For each result, walk up the hierarchy and fetch missing parent descriptions
         for (Map<String, Object> item : rawResults) {
             String code = item.get("htsno") != null ? item.get("htsno").toString() : null;
-            if (code == null) continue;
+            if (code == null)
+                continue;
             String[] parts = code.split("\\.");
             StringBuilder parent = new StringBuilder();
             for (int i = 0; i < parts.length - 1; i++) {
-                if (i > 0) parent.append(".");
+                if (i > 0)
+                    parent.append(".");
                 parent.append(parts[i]);
                 String parentCode = parent.toString();
                 if (!codeToDescription.containsKey(parentCode) && searchedCodes.add(parentCode)) {
@@ -173,7 +186,8 @@ public class QueryService {
                 String[] parts = code.split("\\.");
                 StringBuilder parent = new StringBuilder();
                 for (int i = 0; i < parts.length; i++) {
-                    if (i > 0) parent.append(".");
+                    if (i > 0)
+                        parent.append(".");
                     parent.append(parts[i]);
                     String parentCode = parent.toString();
                     String desc = codeToDescription.get(parentCode);
@@ -188,37 +202,50 @@ public class QueryService {
         // Sort by 'general' tariff value descending
         String keywordLower = keyword == null ? "" : keyword.toLowerCase();
         List<Map<String, Object>> sorted = filteredList.stream()
-            .sorted((a, b) -> {
-                // Sort by position of keyword in description (earlier is higher)
-                String descA = a.get("descriptionChain") instanceof java.util.List<?> && !((java.util.List<?>)a.get("descriptionChain")).isEmpty()
-                    ? ((java.util.List<?>)a.get("descriptionChain")).get(((java.util.List<?>)a.get("descriptionChain")).size()-1).toString().toLowerCase() : "";
-                String descB = b.get("descriptionChain") instanceof java.util.List<?> && !((java.util.List<?>)b.get("descriptionChain")).isEmpty()
-                    ? ((java.util.List<?>)b.get("descriptionChain")).get(((java.util.List<?>)b.get("descriptionChain")).size()-1).toString().toLowerCase() : "";
-                int idxA = descA.indexOf(keywordLower);
-                int idxB = descB.indexOf(keywordLower);
-                if (idxA == -1) idxA = Integer.MAX_VALUE;
-                if (idxB == -1) idxB = Integer.MAX_VALUE;
-                if (idxA != idxB) return Integer.compare(idxA, idxB);
-                // If same, sort by general tariff value descending
-                double valA = parseTariffValue(a.get("general"));
-                double valB = parseTariffValue(b.get("general"));
-                return Double.compare(valB, valA);
-            })
-            .toList();
+                .sorted((a, b) -> {
+                    // Sort by position of keyword in description (earlier is higher)
+                    String descA = a.get("descriptionChain") instanceof java.util.List<?>
+                            && !((java.util.List<?>) a.get("descriptionChain")).isEmpty()
+                                    ? ((java.util.List<?>) a.get("descriptionChain"))
+                                            .get(((java.util.List<?>) a.get("descriptionChain")).size() - 1).toString()
+                                            .toLowerCase()
+                                    : "";
+                    String descB = b.get("descriptionChain") instanceof java.util.List<?>
+                            && !((java.util.List<?>) b.get("descriptionChain")).isEmpty()
+                                    ? ((java.util.List<?>) b.get("descriptionChain"))
+                                            .get(((java.util.List<?>) b.get("descriptionChain")).size() - 1).toString()
+                                            .toLowerCase()
+                                    : "";
+                    int idxA = descA.indexOf(keywordLower);
+                    int idxB = descB.indexOf(keywordLower);
+                    if (idxA == -1)
+                        idxA = Integer.MAX_VALUE;
+                    if (idxB == -1)
+                        idxB = Integer.MAX_VALUE;
+                    if (idxA != idxB)
+                        return Integer.compare(idxA, idxB);
+                    // If same, sort by general tariff value descending
+                    double valA = parseTariffValue(a.get("general"));
+                    double valB = parseTariffValue(b.get("general"));
+                    return Double.compare(valB, valA);
+                })
+                .toList();
         // // Return only the first item (highest tariff), or empty list if none
         // if (!sorted.isEmpty()) {
-        //     return List.of(sorted.get(0));
+        // return List.of(sorted.get(0));
         // } else {
-        //     return List.of();
+        // return List.of();
         // }
         return sorted;
     }
 
     // Helper to parse tariff value from Object (String or null)
     private static double parseTariffValue(Object value) {
-        if (value == null) return Double.NEGATIVE_INFINITY;
+        if (value == null)
+            return Double.NEGATIVE_INFINITY;
         String str = value.toString().replaceAll("[^0-9.]+", "");
-        if (str.isEmpty()) return Double.NEGATIVE_INFINITY;
+        if (str.isEmpty())
+            return Double.NEGATIVE_INFINITY;
         try {
             return Double.parseDouble(str);
         } catch (NumberFormatException e) {
@@ -226,8 +253,9 @@ public class QueryService {
         }
     }
 
-        /**
-     * Given a tariff article (as a Map), returns a map of country names to their special tariff rate.
+    /**
+     * Given a tariff article (as a Map), returns a map of country names to their
+     * special tariff rate.
      * Countries not listed in 'special' get the 'general' or 'other' rate.
      * 
      * @param item The tariff article map (from the API)
@@ -266,12 +294,11 @@ public class QueryService {
 
     /**
      * Returns the most queried product.
-     * TODO: currently returns HTS codes, should we change to the name of the product? if so, need to map HTS codes to product names
      * 
      * @return List of most queried product codes (HTS codes)
      */
     public List<String> getMostQueried() {
-        //return queryRepository.findMostQueried();
+        // return queryRepository.findMostQueried();
 
         // Use the pageable repository method to get top 10 most frequent HTS codes.
         java.util.List<java.lang.Object[]> rows = queryRepository.findTopHtsCodes(PageRequest.of(0, 10));
@@ -280,33 +307,32 @@ public class QueryService {
                 .map(r -> (String) r[0])
                 .toList();
     }
-	/**
-	 * Adds a new Query record to the database.
-	 * @param query The Query object to be saved
-	 * @return The saved Query object with generated ID
-	 */	public Query addQuery(Query query) {
-		return queryRepository.save(query);
-	 }
 
-	 public List<Query> getQueriesByUserId(Integer userID) {
-		Account user = accountRepository.findByUserID(userID);
-		if (user == null) {
-			throw new IllegalArgumentException("User with ID " + userID + " not found.");
-		}
-		return queryRepository.findByUserID(user);
-	 }
+    /**
+     * Adds a new Query record to the database.
+     * 
+     * @param query The Query object to be saved
+     * @return The saved Query object with generated ID
+     */
+    public Query addQuery(Query query) {
+        return queryRepository.save(query);
+    }
 
-	 public void deleteQuery(Long queryID) {
-		if (!queryRepository.existsById(queryID)) {
-			throw new IllegalArgumentException("Query with ID " + queryID + " not found.");	
+    public List<Query> getQueriesByUserId(Integer userID) {
+        Account user = accountRepository.findByUserID(userID);
+        if (user == null) {
+            throw new IllegalArgumentException("User with ID " + userID + " not found.");
+        }
+        return queryRepository.findByUserID(user);
+    }
 
-		} else {
-			queryRepository.deleteById(queryID);
-		}
-	}
+    public void deleteQuery(Long queryID) {
+        if (!queryRepository.existsById(queryID)) {
+            throw new IllegalArgumentException("Query with ID " + queryID + " not found.");
 
-
-
-
+        } else {
+            queryRepository.deleteById(queryID);
+        }
+    }
 
 }

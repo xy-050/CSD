@@ -1549,6 +1549,10 @@ body {
   gap: 1.5rem;
 }
 
+.charts {
+  margin-top: 40px;
+}
+
 @media (max-width: 1024px) {
   .calc-grid {
     grid-template-columns: 1fr;
