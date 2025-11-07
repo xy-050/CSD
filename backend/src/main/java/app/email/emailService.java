@@ -1,15 +1,27 @@
 package app.email;
+
+import security.JwtUtils; 
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+
 @Service
 public class emailService {
-
+    private String htscode;
     private final JavaMailSender mailSender;
     private String fromAddress = "no-reply@tariffics.org";
-    
+    private String PasswordResetSubject = "Password Reset Request";
+    private String PasswordResetBody = "Click the link below to reset your password:\n\n" +
+            "http://your-frontend-url/reset-password?email=%s";
+    private String NotificationSubject = "Notification from Tariffics";
+    private String NotificationBody = "Hello! The item" + htscode + "This is a notification email from Tariffics.\n\n%s";
 
+    /**
+    * Constructor-based injection.
+    * 
+    * @param mailSender JavaMailSender dependency.
+    */
     public emailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
@@ -27,10 +39,13 @@ public class emailService {
 
     public void sendPasswordResetEmail(String userEmail) {
         String to = userEmail;
-        String subject = "Password Reset Request";
-        String body = "Click the link to reset your password: [reset link here]";
+        emailService.sendEmail(to, PasswordResetSubject, PasswordResetBody.formatted(userEmail));
+    }
+
+    public void sendNotificationEmail(String to, String subject, String body) {
         emailService.sendEmail(to, subject, body);
     }
+
 }
 
 
