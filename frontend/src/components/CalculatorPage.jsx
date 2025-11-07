@@ -4,8 +4,8 @@ import NavBar from "./NavBar";
 import Sidebar from "./Sidebar";
 import api from '../api/AxiosConfig.jsx';
 import { getNames as getCountryNames } from 'country-list'; // added import
-import LineChart from './LineChart/LineChart.jsx';
 import PriceHistoryChart from "./LineChart/LineChart.jsx";
+import PriceWorldmap from "./WorldMap/WorldMap.jsx";
 
 export default function CalculatorPage() {
     const location = useLocation();
@@ -79,12 +79,13 @@ export default function CalculatorPage() {
                         countries.push({ name, rate: data['Special rate'] || 'N/A' });
                     });
                 }
-                const common = ['China', 'Germany', 'Japan', 'United Kingdom', 'France', 'Italy', 'India', 'Brazil', 'Mexico', 'Canada'];
-                common.forEach(name => {
+
+                const allCountries = getCountryNames();
+                allCountries.forEach(name => {
                     if (!countries.find(c => c.name === name)) {
                         countries.push({ name, rate: data['General rate'] || 'N/A' });
                     }
-                });
+                })
                 setAvailableCountries(countries);
                 // set rate for default origin
                 const found = countries.find(c => c.name === origin);
@@ -393,11 +394,17 @@ export default function CalculatorPage() {
                                 ))}
                             </div>
                         </aside>
-
-                        <div className="line-chart">
-                                <PriceHistoryChart hts={hts} origin={origin} />
-                        </div>
                     </div>
+                    <section className="charts">
+                        <h1>Data Visualizations</h1>
+                        <div>
+                            <PriceHistoryChart hts={hts} origin={origin} />
+                        </div>
+                        <div>
+                            <PriceWorldmap htsCode={hts} />
+                        </div>
+
+                    </section>
                 </main>
             </div>
         </div>
