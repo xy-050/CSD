@@ -23,6 +23,12 @@ public class emailService {
         System.out.println("Email sent via SES SMTP!");
     }
 
+    public void sendPasswordResetEmail(String userEmail) {
+    String to = 
+        String subject = "Password Reset Request";
+        String body = "Click the link to reset your password: [reset link here]";
+        emailService.sendEmail(to, subject, body);
+    }
 }
 
 
