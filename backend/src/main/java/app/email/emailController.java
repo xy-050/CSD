@@ -1,6 +1,8 @@
 package app.email; 
 
 import javax.mail.MessagingException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 @RestController
 public class emailController {
     private emailService emailService;
@@ -23,12 +25,12 @@ public class emailController {
     public void sendPasswordReset(@RequestParam String to) {
         try {
             emailService.sendEmail(to, subject, body);
-        } catch (InvalidEmail e) {
+        } catch (MessagingException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
         return ResponseEntity.ok().body("Email sent successfully! Please check your inbox and click on the link within ");
     }
 
-    
+
 
 }

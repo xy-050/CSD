@@ -25,7 +25,7 @@ public class emailService {
     public emailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
-
+    /*helper methods*/
     public void sendEmail(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromAddress);
@@ -37,11 +37,13 @@ public class emailService {
         System.out.println("Email sent via SES SMTP!");
     }
 
+    /*send Password reset emails*/
     public void sendPasswordResetEmail(String userEmail) {
         String to = userEmail;
         emailService.sendEmail(to, PasswordResetSubject, PasswordResetBody.formatted(userEmail));
     }
 
+    /*send Password reset emails*/
     public void sendNotificationEmail(String to, String subject, String body) {
         emailService.sendEmail(to, subject, body);
     }
