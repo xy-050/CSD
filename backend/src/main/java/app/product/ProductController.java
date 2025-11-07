@@ -2,7 +2,6 @@ package app.product;
 
 import org.springframework.web.bind.annotation.*;
 
-import app.exception.FTANotFoundException;
 import app.exception.HTSCodeNotFoundException;
 
 import org.springframework.http.ResponseEntity;
@@ -201,9 +200,9 @@ public class ProductController {
     @GetMapping("/price/{htsCode}/{country}")
     public ResponseEntity<?> getHistoricalPrices(@PathVariable String htsCode, @PathVariable String country) {
         try {
-            Map<LocalDate, String> prices = productService.getHistoricalPrices(htsCode, country);
+            Map<LocalDate, String> prices = productService.getPrices(htsCode, country);
             return ResponseEntity.ok().body(prices);
-        } catch (FTANotFoundException e) {
+        } catch (HTSCodeNotFoundException e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(e.getMessage());
         }

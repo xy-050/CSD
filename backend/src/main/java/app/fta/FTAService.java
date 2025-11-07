@@ -1,9 +1,12 @@
 package app.fta;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import java.util.stream.Collectors;
 
 import app.exception.FTANotFoundException;
 
@@ -22,7 +25,7 @@ public class FTAService {
      * @param country Target country
      * @param prices  Updated prices
      */
-    public void createFTA(String country, String htsCode, double price, LocalDate date) {
+    public void createFTA(String country, String htsCode, String price, LocalDate date) {
         ftaRepository.save(new FTA(country, htsCode, price, date));
     }
 
@@ -60,36 +63,35 @@ public class FTAService {
      * @param newData New FTA data in comma-separated format: id,country,htsCode,price,date
      * @return void
     */
-    public void updateFTAData(String newData) {
-        try {
-            String[] parts = newData.split(",");
-            if (parts.length != 5) {
-                throw new IllegalArgumentException("Invalid update format. Expected: id,country,htsCode,price,date");
-            }
+    // public void updateFTAData(String newData) {
+    //     try {
+    //         String[] parts = newData.split(",");
+    //         if (parts.length != 5) {
+    //             throw new IllegalArgumentException("Invalid update format. Expected: id,country,htsCode,price,date");
+    //         }
             
-            Long id = Long.parseLong(parts[0].trim());
-            String country = parts[1].trim();
-            String htsCode = parts[2].trim();
-            double price = Double.parseDouble(parts[3].trim());
-            LocalDate date = LocalDate.parse(parts[4].trim());
+    //         Long id = Long.parseLong(parts[0].trim());
+    //         String country = parts[1].trim();
+    //         String htsCode = parts[2].trim();
+    //         double price = Double.parseDouble(parts[3].trim());
+    //         LocalDate date = LocalDate.parse(parts[4].trim());
             
-            FTA fta = ftaRepository.findById(id)
-                .orElseThrow(() -> new FTANotFoundException("FTA with id " + id + " does not exist"));
+    //         FTA fta = ftaRepository.findById(id)
+    //             .orElseThrow(() -> new FTANotFoundException("FTA with id " + id + " does not exist"));
             
-            // Update fields
-            fta.setCountry(country);
-            fta.setHtsCode(htsCode);
-            fta.setPrice(price);
-            fta.setDate(date);
+    //         // Update fields
+    //         fta.setCountry(country);
+    //         fta.setHtsCode(htsCode);
+    //         fta.setPrice(price);
+    //         fta.setDate(date);
             
-            ftaRepository.save(fta);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid number format in update data");
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Failed to update FTA data: " + e.getMessage());
-        }
-
-    }
+    //         ftaRepository.save(fta);
+    //     } catch (NumberFormatException e) {
+    //         throw new IllegalArgumentException("Invalid number format in update data");
+    //     } catch (Exception e) {
+    //         throw new IllegalArgumentException("Failed to update FTA data: " + e.getMessage());
+    //     }
+    // }
 
     /**
      * Deletes FTA data by ID.
@@ -104,4 +106,16 @@ public class FTAService {
     }
 
 
+    public Map<LocalDate, String> getFuturePrices(String country, String htsCode) {
+        try {
+            List<FTA> ftas = getFTAGivenCountry(country);
+            return ftas.stream()
+                    .filter(fta -> fta.getDate().isAfter(LocalDate.now()))
+                    .collect(Collectors.toMap(
+                            FTA::getDate,
+                            FTA::getPrice));
+        } catch (FTANotFoundException e) {
+            return new HashMap<>();
+        }
+    }
 }

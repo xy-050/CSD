@@ -121,6 +121,12 @@ public class ProductService {
                         product -> selectPrice(product, country)));
     }
 
+    public Map<LocalDate, String> getPrices(String htsCode, String country) {
+        Map<LocalDate, String> historicalPrices = getHistoricalPrices(htsCode, country);
+
+        return historicalPrices;
+    }
+
     public Map<String, String> mapCountryToPrice(String htsCode) {
         Optional<Product> product = productRepository.findTopByHtsCodeOrderByFetchDateDesc(htsCode);
         String[] countries = Locale.getISOCountries();
