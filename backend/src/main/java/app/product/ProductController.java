@@ -198,7 +198,7 @@ public class ProductController {
     }
 
     @GetMapping("/price/{htsCode}/{country}")
-    public ResponseEntity<?> getHistoricalPrices(@PathVariable String htsCode, @PathVariable String country) {
+    public ResponseEntity<?> getPrices(@PathVariable String htsCode, @PathVariable String country) {
         try {
             Map<LocalDate, String> prices = productService.getPrices(htsCode, country);
             return ResponseEntity.ok().body(prices);

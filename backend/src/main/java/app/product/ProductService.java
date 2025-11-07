@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import app.exception.HTSCodeNotFoundException;
+import app.fta.FTAService;
 import app.query.QueryService;
 
 @Service
@@ -22,12 +23,14 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final QueryService queryService;
+    private final FTAService ftaService;
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    public ProductService(ProductRepository productRepository, QueryService queryService) {
+    public ProductService(ProductRepository productRepository, QueryService queryService, FTAService ftaService) {
         this.productRepository = productRepository;
         this.queryService = queryService;
+        this.ftaService = ftaService;
     }
 
     @Scheduled(cron = "0 0 0 * * MON")
@@ -123,7 +126,8 @@ public class ProductService {
 
     public Map<LocalDate, String> getPrices(String htsCode, String country) {
         Map<LocalDate, String> historicalPrices = getHistoricalPrices(htsCode, country);
-
+        Map<LocalDate, String> futurePrices = ftaService.getFuturePrices(country, htsCode);
+        historicalPrices.putAll(futurePrices);
         return historicalPrices;
     }
 

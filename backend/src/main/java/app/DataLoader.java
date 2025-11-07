@@ -8,9 +8,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
-import app.product.Product;
-import app.product.ProductRepository;
-import app.product.ProductService;
+import app.fta.*;
+import app.product.*;
 
 /**
  * This class runs fetchDaily() when the app is run.
@@ -24,6 +23,9 @@ public class DataLoader implements ApplicationRunner {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private FTARepository ftaRepository;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -47,7 +49,7 @@ public class DataLoader implements ApplicationRunner {
                         LocalDate.of(2024, 1, 1),
                         "Of fowls of the species <i>Gallus domesticus</i>",
                         "2.6¢/doz",
-                        "Free (AU, SG,  NZ)",
+                        "Free (AU, SG, NZ)",
                         "Egg"));
 
         for (Product product : products) {
@@ -55,5 +57,13 @@ public class DataLoader implements ApplicationRunner {
         }
 
         productService.fetchDaily();
+
+        List<FTA> ftas = List.of(
+            new FTA("NZ", "0407.11.00.00", "Free", LocalDate.of(2026, 1, 1)), 
+            new FTA("NZ", "0407.11.00.00", "Free", LocalDate.of(2028, 1, 1)));
+
+        for (FTA fta : ftas) {
+            ftaRepository.save(fta);
+        }
     }
 }
