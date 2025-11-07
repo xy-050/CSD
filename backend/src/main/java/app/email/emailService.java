@@ -14,7 +14,7 @@ public class emailService {
 
     public void sendEmail(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("test@tariffics.org"); // Must be verified in SES
+        message.setFrom("no-reply@tariffics.org"); 
         message.setTo(to);
         message.setSubject(subject);
         message.setText(body);
@@ -22,6 +22,7 @@ public class emailService {
         mailSender.send(message);
         System.out.println("Email sent via SES SMTP!");
     }
+
 }
 
 
