@@ -6,7 +6,9 @@ import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +36,7 @@ public class FTAServiceTest {
         // Arrange
         String country = "Singapore";
         String htsCode = "123456";
-        double price = 10.0;
+        String price = "$10.0";
         LocalDate date = LocalDate.now();
         
         // Act
@@ -47,8 +49,8 @@ public class FTAServiceTest {
     @Test
     void getAllFTAs_ShouldReturnAllFTAs() {
         // Arrange
-        FTA fta1 = new FTA("Singapore", "123", 10.0, LocalDate.now());
-        FTA fta2 = new FTA("Malaysia", "456", 20.0, LocalDate.now());
+        FTA fta1 = new FTA("Singapore", "123", "$10.0", LocalDate.now());
+        FTA fta2 = new FTA("Malaysia", "456", "$20.0", LocalDate.now());
         List<FTA> expectedFTAs = Arrays.asList(fta1, fta2);
         
         when(ftaRepository.findAll()).thenReturn(expectedFTAs);
@@ -65,7 +67,7 @@ public class FTAServiceTest {
     void getFTAGivenCountry_WithExistingCountry_ShouldReturnFTAs() {
         // Arrange
         String country = "Singapore";
-        FTA fta = new FTA(country, "123", 10.0, LocalDate.now());
+        FTA fta = new FTA(country, "123", "$10.0", LocalDate.now());
         List<FTA> expectedFTAs = Arrays.asList(fta);
         
         when(ftaRepository.findByCountry(country)).thenReturn(Optional.of(expectedFTAs));
@@ -89,5 +91,54 @@ public class FTAServiceTest {
             ftaService.getFTAGivenCountry(country);
         });
         verify(ftaRepository).findByCountry(country);
+    }
+
+    @Test
+    void getFuturePrices_CountryFoundAndHaveFuturePrices_ShouldReturnMapWithPrice() {
+        // Arrange
+        String country = "Singapore";
+        String htsCode = "1234.56";
+        FTA fta1 = new FTA(1L, country, htsCode, "$2.30", LocalDate.of(2026, 1, 1));
+        FTA fta2 = new FTA(2L, country, htsCode, "$2.10", LocalDate.of(2028, 1, 1));
+        when(ftaRepository.findByCountryAndHtsCode(anyString(), anyString())).thenReturn(Optional.of(List.of(fta1, fta2)));
+
+        // Act
+        Map<LocalDate, String> prices = ftaService.getFuturePrices(country, htsCode);
+
+        // Assert
+        assertEquals(Map.of(fta1.getDate(), fta1.getPrice(), fta2.getDate(), fta2.getPrice()), prices);
+    }
+
+    @Test
+    void getFuturePrices_CountryFoundAndNoFuturePrices_ShouldReturnEmptyMap() {
+        // Arrange
+        String country = "Singapore";
+        String htsCode = "1234.56";
+        FTA fta1 = new FTA(1L, country, htsCode, "$2.30", LocalDate.of(2022, 1, 1));
+        FTA fta2 = new FTA(2L, country, htsCode, "$2.10", LocalDate.of(2024, 1, 1));
+        when(ftaRepository.findByCountryAndHtsCode(anyString(), anyString())).thenReturn(Optional.of(List.of(fta1, fta2)));
+
+        // Act
+        Map<LocalDate, String> prices = ftaService.getFuturePrices(country, htsCode);
+
+        // Assert
+        assertEquals(new HashMap<>(), prices);
+    }
+
+
+    @Test
+    void getFuturePrices_CountryNotFound_ShouldReturnEmptyMap() {
+        // Arrange
+        String country = "Singapore";
+        String htsCode = "1234.56";
+        FTA fta1 = new FTA(1L, country, htsCode, "$2.30", LocalDate.of(2022, 1, 1));
+        FTA fta2 = new FTA(2L, country, htsCode, "$2.10", LocalDate.of(2024, 1, 1));
+        when(ftaRepository.findByCountryAndHtsCode(anyString(), anyString())).thenReturn(Optional.of(List.of(fta1, fta2)));
+
+        // Act
+        Map<LocalDate, String> prices = ftaService.getFuturePrices("Other country", htsCode);
+
+        // Assert
+        assertEquals(new HashMap<>(), prices);
     }
 }

@@ -336,9 +336,8 @@ public class ProductServiceTest {
 
         // Act & Assert
         HTSCodeNotFoundException exception = assertThrows(
-            HTSCodeNotFoundException.class,
-            () -> productService.mapCountryToPrice("67")
-        );
+                HTSCodeNotFoundException.class,
+                () -> productService.mapCountryToPrice("67"));
         assertEquals(exception.getMessage(), "Product with HTS code 67 not found!");
     }
 }

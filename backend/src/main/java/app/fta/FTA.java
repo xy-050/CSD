@@ -3,7 +3,6 @@ package app.fta;
 import java.time.LocalDate;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -27,13 +26,12 @@ public class FTA {
     @NotBlank(message = "HTS Code cannot be blank")
     private String htsCode;
 
-    @Min(value = 0, message = "Price cannot be negative")
-    private double price;
+    private String price;
 
     @NotNull(message = "Date cannot be null")
     private LocalDate date;
 
-    public FTA(String country, String htsCode, double price, LocalDate date) {
+    public FTA(String country, String htsCode, String price, LocalDate date) {
         this.country = country;
         this.htsCode = htsCode;
         this.price = price;
