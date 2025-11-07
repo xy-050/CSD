@@ -31,11 +31,13 @@ export default function SearchResults() {
         }
         getUserDetails();
     }, []);
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     // Fetch results when keyword changes or when receiving new results from navigation
     const [results, setResults] = useState(null);
+
     useEffect(() => {
         const fetchResults = async () => {
             console.log("location state:", location.state);
@@ -84,19 +86,6 @@ export default function SearchResults() {
         setLoading(true);
         fetchResults();
     }, [keyword]);
-
-    // Fetch user details on mount
-    useEffect(() => {
-        const getUserDetails = async () => {
-            try {
-                const response = await api.get("/currentUserDetails");
-                setCurrentUserID(response.data.userId);
-            } catch (error) {
-                console.log(error);
-            }
-        };
-        getUserDetails();
-    }, []);
 
     // Category icons
     const categoryIcons = {
@@ -153,12 +142,14 @@ export default function SearchResults() {
 
                 // Transform the subcategories data similar to the initial search
                 const subcategories = response.data.categories || [];
-                const formattedResults = Array.from(subcategories).map(product => ({
-                    htsno: product.htsCode,
-                    descriptionChain: [product.description || product.htsCode],
-                    general: product.general || "",
-                    category: product.category
-                }));
+                const formattedResults = Array.from(subcategories)
+                    .filter(product => product.general && product.general.trim() !== "")
+                    .map(product => ({
+                        htsno: product.htsCode,
+                        descriptionChain: [product.description || product.htsCode],
+                        general: product.general,
+                        category: product.category
+                    }));
                 console.log('Formatted subcategory results:', formattedResults);
                 console.log('Subcategories data:', subcategories);
 
@@ -201,6 +192,25 @@ export default function SearchResults() {
                 </div>
             </div>
         );
+    }
+
+    // Handle no products to show
+    if (displayedResults.length == 0) {
+        return (
+            <div className="homepage">
+                <NavBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
+                <div className="homepage-container">
+                    <Sidebar isOpen={sidebarOpen} />
+                    <main className="main-content" onClick={closeSidebar}>
+                        <div className="search-results">
+                            <div className="loading-container">
+                                <h2 className="loading-title">🔎Nothing to Show</h2>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        )
     }
 
     // ✅ Normal results render
