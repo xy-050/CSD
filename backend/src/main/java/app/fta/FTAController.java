@@ -15,6 +15,7 @@ public class FTAController {
     public FTAController(FTAService ftaService) {
         this.ftaService = ftaService;
     }
+
     // Logic to update FTA data
     // For example, save newData to the database
     @PostMapping("/fta/update")
@@ -32,15 +33,19 @@ public class FTAController {
         if (id == null || id <= 0) {
             return ResponseEntity.badRequest().body("Invalid FTA ID");
         }
-        ftaService.deleteFTAData(id);
-        return ResponseEntity.ok("FTA data with id " + id + " deleted successfully");
+        try {
+            ftaService.deleteFTAData(id);
+            return ResponseEntity.ok("FTA data with id " + id + " deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Delete failed: " + e.getMessage());
+        }
     }
     
     // Logic to list all FTA entries
     /*NEED TO UPDATE THE ftaENTRIES*/
     @GetMapping("/fta/list")
-    public ResponseEntity<List<String>> listAllFTAEntries() {
-        List<String> ftaEntries = ftaService.getAllFTAs();
+    public ResponseEntity<List<FTA>> listAllFTAEntries() {
+        List<FTA> ftaEntries = ftaService.getAllFTAs();
         if (ftaEntries == null || ftaEntries.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -48,15 +53,14 @@ public class FTAController {
     }
 
     // Logic to search FTA data based on query
-    /*Prepared statement: remove if fta isnt linked to account -> remove in FTAService too*/
     @GetMapping("/fta/search")
-    public ResponseEntity<String> searchFTA(@RequestParam String query) {
+    public ResponseEntity<?> searchFTA(@RequestParam String query) {
         if (query == null || query.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Invalid search query");
         }
 
         try {
-            String result = ftaService.searchFTA(query.trim());
+            String result = ftaService.getFTAGivenCountry(query.trim());
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Invalid input: " + e.getMessage());
