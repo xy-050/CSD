@@ -91,7 +91,7 @@ function TourController({ children }) {
     });
 
     useEffect(() => {
-        if (!tourState.isActive || tourState.completed) return; // 👈 don't restart if completed
+        if (!tourState.isActive || tourState.completed) return;
 
         const path = location.pathname.replace('/', '') || 'home';
         let pageName = 'home';
@@ -99,14 +99,29 @@ function TourController({ children }) {
         else if (path === 'calculator') pageName = 'calculator';
 
         if (pageName !== tourState.currentPage && allSteps[pageName]) {
+            // 👇 NEW: if user goes from calculator → home while tour is active,
+            // treat it as completing the tour (do NOT restart on home)
+            if (tourState.currentPage === 'calculator' && pageName === 'home') {
+                setTourState(prev => ({
+                    ...prev,
+                    isActive: false,
+                    completed: true,
+                    currentPage: 'home',
+                }));
+                setIsOpen(false);
+                return; // 🔚 stop, don't reset steps for 'home'
+            }
+
+            // Normal behavior: moving forward between pages during the tour
             setTimeout(() => {
                 setTourState(prev => ({ ...prev, currentPage: pageName }));
                 setSteps(allSteps[pageName]);
                 setCurrentStep(0);
                 setIsOpen(true);
-            }, 500);
+            }, 100);
         }
-    }, [location.pathname, tourState.isActive, tourState.currentPage, setSteps, setCurrentStep, setIsOpen]);
+    }, [location.pathname, tourState.isActive, tourState.completed, tourState.currentPage, setSteps, setCurrentStep, setIsOpen]);
+
 
     const startTour = () => {
         navigate('/home');
@@ -116,7 +131,7 @@ function TourController({ children }) {
                 setSteps(allSteps.home);
                 setCurrentStep(0);
                 setIsOpen(true);
-            }, 500);
+            }, 100);
         }, 300);
     };
 
