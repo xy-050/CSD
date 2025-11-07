@@ -1,18 +1,18 @@
 package app.fta;
 
 import java.util.List;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-import org.springframework.dao.DataAccessException;
 
-import app.fta.FTAService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 @RestController
 public class FTAController {
 
     private final FTAService ftaService;
 
-    public FTAController(FTAService ftaService) {
+    public FTAController (FTAService ftaService) {
         this.ftaService = ftaService;
     }
 
@@ -83,6 +83,4 @@ public class FTAController {
             return ResponseEntity.internalServerError().body("Create failed: " + e.getMessage());
         }
     }
-
-
 }
