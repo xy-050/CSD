@@ -39,6 +39,7 @@ public class FTAController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Delete failed: " + e.getMessage());
         }
+    
     }
     
     // Logic to list all FTA entries
@@ -54,13 +55,13 @@ public class FTAController {
 
     // Logic to search FTA data based on query
     @GetMapping("/fta/search")
-    public ResponseEntity<?> searchFTA(@RequestParam String query) {
+    public ResponseEntity<String> searchFTA(@RequestParam String query) {
         if (query == null || query.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Invalid search query");
         }
 
         try {
-            String result = ftaService.getFTAGivenCountry(query.trim());
+            String result = ftaService.searchFTA(query.trim());
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Invalid input: " + e.getMessage());
@@ -73,12 +74,14 @@ public class FTAController {
 
     // Logic to create a new FTA entry
     @PostMapping("/fta/create")
-    public ResponseEntity<String> createFTAEntry(@RequestBody String entryData) {
-        if (entryData == null || entryData.isEmpty()) {
-            return ResponseEntity.badRequest().body("Invalid FTA entry data");
-        }
-        ftaService.createFTAEntry(entryData);
+    public ResponseEntity<String> createFTAEntry(@Valid @RequestBody FTARequest request) {
+        try {
+        ftaService.createFTA(request.getCountry(), request.getHtsCode(), 
+                            request.getPrice(), request.getDate());
         return ResponseEntity.ok("New FTA entry created successfully");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Create failed: " + e.getMessage());
+        }
     }
 
 

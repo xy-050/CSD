@@ -3,6 +3,7 @@ package app.fta;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 import app.exception.FTANotFoundException;
 
@@ -45,7 +46,7 @@ public class FTAService {
     public List<FTA> getFTAGivenCountry(String country) {
         Optional<List<FTA>> ftas = ftaRepository.findByCountry(country);
 
-        if (ftas == null || !ftas.isPresent()) {
+        if (ftas.isEmpty()) {
             throw new FTANotFoundException("FTA with " + country + " does not exist");
         }
 
