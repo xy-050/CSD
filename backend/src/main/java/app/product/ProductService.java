@@ -2,13 +2,19 @@ package app.product;
 
 import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Scheduled;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import app.exception.HTSCodeNotFoundException;
 import app.query.QueryService;
 
 @Service
@@ -63,15 +69,79 @@ public class ProductService {
         return productRepository.findTopByHtsCodeOrderByFetchDateDesc(htsCode);
     }
 
-    public Optional<List<Product>> getProductsByCategory(String category) {
-        return productRepository.findByCategory(category);
+    public Optional<Product> getProductByHtsCode(String htsCode) {
+        System.out.println("ProductService: Looking for HTS code: " + htsCode);
+        Optional<List<Product>> products = productRepository.findByHtsCode(htsCode);
+        System.out.println("ProductService: Found " + (products.isPresent() ? products.get().size() : 0) + " products");
+        
+        // Return the most recent product if available
+        Optional<Product> result = products.flatMap(list -> 
+            list.stream()
+                .max((p1, p2) -> p1.getFetchDate().compareTo(p2.getFetchDate()))
+        );
+        
+        System.out.println("ProductService: Returning product: " + (result.isPresent() ? result.get().getHtsCode() : "none"));
+        return result;
+    }
+
+    public Optional<List<Product>> getProductsByCategory(String keyword) {
+        return Optional.of(productRepository.findByCategoryIgnoreCaseOrHtsCodeStartingWith(keyword, keyword)
+                .orElse(List.of()));
     }
 
     public Optional<List<Product>> getProductsByHtsCode(String htsCode) {
-        return productRepository.findByHtsCode(htsCode);
+        return productRepository.findByHtsCodeStartingWith(htsCode);
     }
 
     public Optional<Product> getProductPriceAtTime(String htsCode, LocalDate date) {
         return productRepository.findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(htsCode, date);
+    }
+
+    public String selectPrice(Product product, String country) {
+        String special = product.getSpecial();
+        String general = product.getGeneral();
+
+        if (special != null && special.contains(country)) {
+            return special.split(" ")[0];
+        }
+
+        return general != null ? general : "";
+    }
+
+    public Map<LocalDate, String> getHistoricalPrices(String htsCode, String country) {
+        Optional<List<Product>> products = productRepository.findByHtsCode(htsCode);
+
+        if (!products.isPresent()) {
+            throw new HTSCodeNotFoundException("Error: Product with HTS Code " + htsCode + " not found!");
+        }
+
+        return products.get().stream().collect(
+                Collectors.toMap(
+                        Product::getFetchDate,
+                        product -> selectPrice(product, country)));
+    }
+
+    public Map<String, String> mapCountryToPrice(String htsCode) {
+        Optional<Product> product = productRepository.findTopByHtsCodeOrderByFetchDateDesc(htsCode);
+        String[] countries = Locale.getISOCountries();
+
+        System.out.println(product);
+
+        if (!product.isPresent() || product == null) {
+            throw new HTSCodeNotFoundException("Product with HTS code " + htsCode + " not found!");
+        }
+
+        Map<String, String> pricesByCountry = new HashMap<>();
+
+        for (String country : countries) {
+            pricesByCountry.put(country, selectPrice(product.get(), country));
+        }
+
+        try {
+            System.out.println("Prices By Country:\n" + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pricesByCountry));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return pricesByCountry;
     }
 }

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTour } from "./Tour/TourContext.jsx";
 import NavBar from "./NavBar";
 import SearchBar from "./SearchBar";
 import Sidebar from "./Sidebar";
 import api from "../api/AxiosConfig.jsx";
 
 export default function HomePage() {
+  const { tourState } = useTour();
   const navigate = useNavigate();
 
   const [lastQuery, setLastQuery] = useState("");
@@ -17,10 +19,24 @@ export default function HomePage() {
   const [topProducts, setTopProducts] = useState([]);
   const [topLoading, setTopLoading] = useState(false);
   const [topError, setTopError] = useState(null);
+  // User state (for saving queries)
+  const [currentUserID, setCurrentUserID] = useState(null);
 
   const toggleSidebar = () => setSidebarOpen(v => !v);
   const closeSidebarOnMobile = () => {
     if (window.innerWidth <= 768) setSidebarOpen(false);
+  };
+
+  // Handle tour start button click
+  const handleTourStart = () => {
+    // Close sidebar if on mobile
+    if (window.innerWidth <= 768) {
+      setSidebarOpen(false);
+    }
+    // Small delay to let sidebar close
+    setTimeout(() => {
+      startTour();
+    }, 300);
   };
 
   // Open by default on desktop, closed on mobile
@@ -55,7 +71,7 @@ export default function HomePage() {
     return () => clearInterval(id);
   }, []);
 
-  // Fetch top queried products (single effect; your duplicate removed)
+  // Fetch top queried products
   useEffect(() => {
     (async () => {
       try {
@@ -74,6 +90,85 @@ export default function HomePage() {
     })();
   }, []);
 
+  useEffect(() => {
+    console.log('Milk button exists?', document.querySelector('[data-tour="category-milk"]'));
+    console.log('Category buttons exists?', document.querySelector('[data-tour="category-buttons"]'));
+}, []);
+  // Fetch current user details (used when saving queries)
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get('/currentUserDetails');
+        setCurrentUserID(res.data.userId);
+      } catch (err) {
+        // not logged in or failed to fetch; leaving userID null is fine
+        console.debug('No current user or failed to fetch', err);
+      }
+    })();
+  }, []);
+
+  // Helper to save a query to the backend (mirrors SearchResults.saveQuery)
+  const saveQuery = async (htsCode) => {
+    if (!currentUserID) return;
+    try {
+      const queryData = {
+        userID: { userID: currentUserID },
+        htsCode: htsCode,
+        originCountry: null,
+        modeOfTransport: null,
+        quantity: 0,
+      };
+      await api.post('/api/tariffs/queries', queryData);
+    } catch (error) {
+      console.error('Failed to save query:', error);
+    }
+  };
+
+  // When a top product is clicked, fetch its details and navigate to calculator
+  // HTS codes from most-queried are guaranteed to be final products
+  const handleProductClick = async (htsCode) => {
+    console.log('Clicking on HTS code:', htsCode);
+    try {
+      // Fetch product details using the new ProductController endpoint
+      console.log('Fetching from:', `/product/hts/${encodeURIComponent(htsCode)}`);
+      const response = await api.get(`/product/hts/${encodeURIComponent(htsCode)}`);
+      
+      console.log('Response received:', response.data);
+      
+      if (!response.data || !response.data.htsCode) {
+        console.error('Product not found in response:', response.data);
+        alert('Product details not found');
+        return;
+      }
+
+      // Save query for analytics
+      await saveQuery(htsCode);
+
+      // Format the result for the calculator page
+      const formattedResult = {
+        htsno: response.data.htsCode,
+        description: response.data.description || 'No description available',
+        descriptionChain: [response.data.description || 'No description available'],
+        fullDescriptionChain: [response.data.description || 'No description available'],
+        general: response.data.general,
+        special: response.data.special || '',
+        category: response.data.category || '',
+      };
+
+      console.log('Navigating to calculator with:', formattedResult);
+
+      // Navigate to calculator
+      navigate('/calculator', { 
+        state: { result: formattedResult, keyword: htsCode } 
+      });
+    } catch (error) {
+      console.error('Error fetching product details for', htsCode, error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      alert(`Failed to load product details. ${error.response?.data?.message || error.message}`);
+    }
+  };
+
   return (
     <div className="homepage">
       <NavBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
@@ -85,10 +180,16 @@ export default function HomePage() {
         {/* Main */}
         <main className="main-content" onClick={closeSidebarOnMobile}>
           <section className="hero-section">
-            <h1 className="hero-title">
+            <h1 className="hero-title" data-tour="hero-title">
               {typedTitle}
               {!doneTyping && <span className="caret" aria-hidden="true" />}
             </h1>
+
+            {/* Tour Start Button */}
+            <button className="tour-start-btn" onClick={handleTourStart}>
+              <span className="tour-btn-icon">🎓</span>
+              Take a Quick Tour
+            </button>
 
             {/* SearchBar */}
             <SearchBar />
@@ -100,7 +201,7 @@ export default function HomePage() {
             )}
           </section>
 
-          {/* These feature cards are fine; wired to routes for convenience */}
+          {/* Feature cards */}
           <section className="features-grid">
             <article className="feature-card">
               <div className="feature-header">
@@ -112,7 +213,7 @@ export default function HomePage() {
                 View reports
               </button>
             </article>
-			<article className="feature-card">
+            <article className="feature-card">
               <div className="feature-header">
                 <div className="feature-icon green">⭐️</div>
                 <h3>Favourites</h3>
@@ -134,6 +235,7 @@ export default function HomePage() {
               </button>
             </article>
           </section>
+
           {/* Top Products */}
           <section className="top-products">
             <h2>Top 10 Most Queried Products</h2>
@@ -150,7 +252,7 @@ export default function HomePage() {
                       <div className="query-cards-row top-three">
                         {/* Reorder: #2, #1, #3 */}
                         {topProducts[1] && (
-                          <div key={topProducts[1] + '1'} className="query-card top-three">
+                          <div key={topProducts[1] + '1'} className="query-card top-three rank-2">
                             <div className="query-rank">#2</div>
                             <div className="query-code" onClick={() => handleProductClick(topProducts[1])}>
                               {topProducts[1]}
@@ -166,7 +268,7 @@ export default function HomePage() {
                           </div>
                         )}
                         {topProducts[2] && (
-                          <div key={topProducts[2] + '2'} className="query-card top-three">
+                          <div key={topProducts[2] + '2'} className="query-card top-three rank-3">
                             <div className="query-rank">#3</div>
                             <div className="query-code" onClick={() => handleProductClick(topProducts[2])}>
                               {topProducts[2]}

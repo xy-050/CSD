@@ -1,20 +1,28 @@
 package app.fta;
 
 import java.util.List;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-import org.springframework.dao.DataAccessException;
 
-import app.fta.FTAService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 @RestController
 public class FTAController {
 
     private final FTAService ftaService;
 
-    public FTAController(FTAService ftaService) {
+    public FTAController (FTAService ftaService) {
         this.ftaService = ftaService;
     }
+
+    // Logic to get FTA status
+    @GetMapping("/fta/status")
+    public ResponseEntity<String> getFTAStatus() {
+        String status = "FTA system is operational";
+        return ResponseEntity.ok(status);
+    }
+
     // Logic to update FTA data
     // For example, save newData to the database
     @PostMapping("/fta/update")
@@ -76,6 +84,4 @@ public class FTAController {
         ftaService.createFTAEntry(entryData);
         return ResponseEntity.ok("New FTA entry created successfully");
     }
-
-
 }
