@@ -133,7 +133,7 @@ export default function SearchResults() {
             };
 
             navigate("/calculator", {
-                state: { result: formattedResult, keyword },
+                state: { result: formattedResult, keyword: location.state?.originalCategory || keyword },
             });
         } else {
             try {
