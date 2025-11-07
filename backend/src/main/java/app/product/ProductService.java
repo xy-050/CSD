@@ -13,6 +13,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import app.exception.HTSCodeNotFoundException;
@@ -139,7 +140,14 @@ public class ProductService {
             throw new ProductNotFoundException("Error: Product with HTS code " + htsCode + ".* not found!");
         }
 
-        return products.get().stream().collect(Collectors.toSet());
+        return products.get().stream()
+                .collect(Collectors.toMap(
+                        Product::getHtsCode, 
+                        Function.identity(), 
+                        (p1, p2) -> p1.getFetchDate().isAfter(p2.getFetchDate()) ? p1 : p2
+                ))
+                .values().stream()
+                .collect(Collectors.toSet());
     }
 
     public String selectPrice(Product product, String country) {

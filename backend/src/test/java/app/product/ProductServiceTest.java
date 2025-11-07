@@ -368,7 +368,7 @@ public class ProductServiceTest {
         Set<Product> actualResults = productService.getNextLevelCategory("1704");
 
         // Assert
-        assertEquals(Set.of(product2, product3), actualResults);
+        assertEquals(Set.of(existing, product2, product3), actualResults);
     }
 
     @Test
@@ -381,6 +381,33 @@ public class ProductServiceTest {
             productService.getNextLevelCategory("1704.90.35");
         });
         assertEquals(exception.getMessage(), "Error: Product with HTS code 1704.90.35.* not found!");
+    }
+
+    @Test
+    void getNextLevelCategory_WhenSubcategoriesExistsAndMultipleInstancesInDB_ShouldReturnMostRecent() {
+        // Arrange
+        Product product2 = new Product(
+                "1704.01",
+                LocalDate.of(2025, Month.APRIL, 1),
+                "",
+                "",
+                "",
+                "sugar");
+        Product product3 = new Product(
+                "1704.01",
+                LocalDate.of(2027, Month.APRIL, 1),
+                "",
+                "",
+                "",
+                "sugar");
+        List<Product> products = List.of(existing, product2, product3);
+        when(productRepository.findByHtsCodeStartingWith(anyString())).thenReturn(Optional.of(products));
+        
+        // Act
+        Set<Product> actualResults = productService.getNextLevelCategory("1704");
+
+        // Assert
+        assertEquals(Set.of(existing, product3), actualResults);
     }
 
     @Test
@@ -412,12 +439,13 @@ public class ProductServiceTest {
                 "",
                 "",
                 "sugar");
-        when(productRepository.findByCategoryContainingIgnoreCase(anyString())).thenReturn(Optional.of(List.of(product1, product2)));
+        when(productRepository.findByCategoryContainingIgnoreCase(anyString()))
+                .thenReturn(Optional.of(List.of(product1, product2)));
 
         // Act
         Set<Product> products = productService.getHighestLevelCategory("Sugar");
 
-        // Assert 
+        // Assert
         assertEquals(Set.of(product1), products);
     }
 
@@ -443,12 +471,13 @@ public class ProductServiceTest {
                 "",
                 "",
                 "sugar");
-        when(productRepository.findByCategoryContainingIgnoreCase(anyString())).thenReturn(Optional.of(List.of(existing, product2)));
+        when(productRepository.findByCategoryContainingIgnoreCase(anyString()))
+                .thenReturn(Optional.of(List.of(existing, product2)));
 
         // Act
         Set<Product> products = productService.getHighestLevelCategory("Sugar");
 
-        // Assert 
+        // Assert
         assertEquals(new HashSet<>(), products);
     }
 }
