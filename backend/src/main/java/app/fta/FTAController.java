@@ -2,6 +2,7 @@ package app.fta;
 
 import java.util.List;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,33 +55,33 @@ public class FTAController {
     }
 
     // Logic to search FTA data based on query
-    @GetMapping("/fta/search")
-    public ResponseEntity<String> searchFTA(@RequestParam String query) {
-        if (query == null || query.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Invalid search query");
-        }
+    // @GetMapping("/fta/search")
+    // public ResponseEntity<String> searchFTA(@RequestParam String query) {
+    //     if (query == null || query.trim().isEmpty()) {
+    //         return ResponseEntity.badRequest().body("Invalid search query");
+    //     }
 
-        try {
-            String result = ftaService.searchFTA(query.trim());
-            return ResponseEntity.ok(result);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid input: " + e.getMessage());
-        } catch (DataAccessException e) {
-            return ResponseEntity.internalServerError().body("Database error occurred");
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Unexpected error: " + e.getMessage());
-        }
-    }
+    //     try {
+    //         String result = ftaService.searchFTA(query.trim());
+    //         return ResponseEntity.ok(result);
+    //     } catch (IllegalArgumentException e) {
+    //         return ResponseEntity.badRequest().body("Invalid input: " + e.getMessage());
+    //     } catch (DataAccessException e) {
+    //         return ResponseEntity.internalServerError().body("Database error occurred");
+    //     } catch (Exception e) {
+    //         return ResponseEntity.internalServerError().body("Unexpected error: " + e.getMessage());
+    //     }
+    // }
 
-    // Logic to create a new FTA entry
-    @PostMapping("/fta/create")
-    public ResponseEntity<String> createFTAEntry(@Valid @RequestBody FTARequest request) {
-        try {
-        ftaService.createFTA(request.getCountry(), request.getHtsCode(), 
-                            request.getPrice(), request.getDate());
-        return ResponseEntity.ok("New FTA entry created successfully");
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Create failed: " + e.getMessage());
-        }
-    }
+    // // Logic to create a new FTA entry
+    // @PostMapping("/fta/create")
+    // public ResponseEntity<String> createFTAEntry(@Valid @RequestBody FTARequest request) {
+    //     try {
+    //     ftaService.createFTA(request.getCountry(), request.getHtsCode(), 
+    //                         request.getPrice(), request.getDate());
+    //     return ResponseEntity.ok("New FTA entry created successfully");
+    //     } catch (Exception e) {
+    //         return ResponseEntity.internalServerError().body("Create failed: " + e.getMessage());
+    //     }
+    // }
 }
