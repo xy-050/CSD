@@ -69,6 +69,21 @@ public class ProductService {
         return productRepository.findTopByHtsCodeOrderByFetchDateDesc(htsCode);
     }
 
+    public Optional<Product> getProductByHtsCode(String htsCode) {
+        System.out.println("ProductService: Looking for HTS code: " + htsCode);
+        Optional<List<Product>> products = productRepository.findByHtsCode(htsCode);
+        System.out.println("ProductService: Found " + (products.isPresent() ? products.get().size() : 0) + " products");
+        
+        // Return the most recent product if available
+        Optional<Product> result = products.flatMap(list -> 
+            list.stream()
+                .max((p1, p2) -> p1.getFetchDate().compareTo(p2.getFetchDate()))
+        );
+        
+        System.out.println("ProductService: Returning product: " + (result.isPresent() ? result.get().getHtsCode() : "none"));
+        return result;
+    }
+
     public Optional<List<Product>> getProductsByCategory(String keyword) {
         return Optional.of(productRepository.findByCategoryIgnoreCaseOrHtsCodeStartingWith(keyword, keyword)
                 .orElse(List.of()));
