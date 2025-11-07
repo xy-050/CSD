@@ -10,10 +10,7 @@ import app.exception.FTANotFoundException;
 public class FTAService {
 
     private final FTARepository ftaRepository;
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate; 
-
+ 
     public FTAService(FTARepository ftaRepository) {
         this.ftaRepository = ftaRepository;
     }
@@ -55,17 +52,55 @@ public class FTAService {
         return ftas.get();
     }
 
-    /*Prepared statement: remove if fta isnt linked to account -> remove in FTAController too*/
-    public String searchFTA(String query) {
-        // Only allow alphanumeric and space characters (adjust for your use case)
-        if (!query.matches("^[a-zA-Z0-9\\s]+$")) {
-            throw new IllegalArgumentException("Invalid characters in query");
+
+   
+    /**
+     * Updates FTA data.
+     * @param newData New FTA data in comma-separated format: id,country,htsCode,price,date
+     * @return void
+    */
+    public void updateFTAData(String newData) {
+        try {
+            String[] parts = newData.split(",");
+            if (parts.length != 5) {
+                throw new IllegalArgumentException("Invalid update format. Expected: id,country,htsCode,price,date");
+            }
+            
+            Long id = Long.parseLong(parts[0].trim());
+            String country = parts[1].trim();
+            String htsCode = parts[2].trim();
+            double price = Double.parseDouble(parts[3].trim());
+            LocalDate date = LocalDate.parse(parts[4].trim());
+            
+            FTA fta = ftaRepository.findById(id)
+                .orElseThrow(() -> new FTANotFoundException("FTA with id " + id + " does not exist"));
+            
+            // Update fields
+            fta.setCountry(country);
+            fta.setHtsCode(htsCode);
+            fta.setPrice(price);
+            fta.setDate(date);
+            
+            ftaRepository.save(fta);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid number format in update data");
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to update FTA data: " + e.getMessage());
         }
 
-        // Use parameterized (prepared) query — NEVER concatenate strings
-        String sql = "SELECT name FROM fta_table WHERE name LIKE ?";
-        List<String> results = jdbcTemplate.queryForList(sql, new Object[]{"%" + query + "%"}, String.class);
-
-        return String.join(", ", results);
     }
+
+    /**
+     * Deletes FTA data by ID.
+     * 
+     * @param id FTA ID to delete
+     */
+    public void deleteFTAData(Long id) {
+        if (!ftaRepository.existsById(id)) {
+            throw new FTANotFoundException("FTA with id " + id + " does not exist");
+        }
+        ftaRepository.deleteById(id);
+    }
+
+
 }
