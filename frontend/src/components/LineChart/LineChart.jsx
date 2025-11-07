@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getCode } from 'country-list'; 
 import {
     LineChart,
     Line,
@@ -26,14 +27,16 @@ function PriceHistoryChart({ hts, origin }) {
             setError(null);
 
             try {
+                const countryCode = getCode(origin);
+
                 // Call backend API
-                const response = await api.get(`/product/price/${hts}/${origin}`);
+                const response = await api.get(`/product/price/${hts}/${countryCode}`);
                 console.log("Line chart data:", response.data);
 
                 // Format data: Convert Map to Array of objects
                 const formattedData = Object.entries(response.data).map(([date, price]) => ({
                     date: date,
-                    price: price,
+                    price: extractNumericRate(price),
                     // Format date for display
                     displayDate: new Date(date).toLocaleDateString()
                 }));
@@ -54,6 +57,12 @@ function PriceHistoryChart({ hts, origin }) {
 
         fetchHistoricalPrices();
     }, [hts, origin]);
+
+    const extractNumericRate = (rateString) => {
+        if (!rateString || rateString === 'Free' || rateString === 'N/A') return 0;
+        const match = rateString.match(/([0-9.]+)/);
+        return match ? parseFloat(match[1]) : 0;
+    };
 
     if (loading) {
         return (
@@ -81,8 +90,8 @@ function PriceHistoryChart({ hts, origin }) {
 
     return (
         <div style={{ width: '100%', height: '500px' }}>
-            <h3>Price History: {hts} ({origin})</h3>
-            <ResponsiveContainer width="100%" height="100%">
+            <h3>Price History for {origin}</h3>
+            <ResponsiveContainer width="100%" height={400}>
                 <LineChart
                     data={chartData}
                     margin={{ top: 5, right: 30, left: 20, bottom: 20 }}
@@ -99,7 +108,7 @@ function PriceHistoryChart({ hts, origin }) {
                         label={{ value: 'Price', angle: -90, position: 'insideLeft' }}
                     />
                     <Tooltip />
-                    <Legend verticalAlign="top" height={36}/>
+                    <Legend verticalAlign="top" height={36} />
                     <Line
                         type="monotone"
                         dataKey="price"
