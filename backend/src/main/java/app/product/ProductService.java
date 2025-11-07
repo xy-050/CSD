@@ -12,9 +12,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import app.exception.HTSCodeNotFoundException;
+import app.exception.ProductNotFoundException;
 import app.fta.FTAService;
 import app.query.QueryService;
 
@@ -42,7 +44,8 @@ public class ProductService {
                 List<Map<String, Object>> response = queryService.searchTariffArticles(keyword);
 
                 for (Map<String, Object> map : response) {
-                    // System.out.println("Map:\n" + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(map));
+                    // System.out.println("Map:\n" +
+                    // objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(map));
 
                     // retrieve relevant information
                     String htsCode = (String) map.get("htsno");
@@ -76,14 +79,13 @@ public class ProductService {
         System.out.println("ProductService: Looking for HTS code: " + htsCode);
         Optional<List<Product>> products = productRepository.findByHtsCode(htsCode);
         System.out.println("ProductService: Found " + (products.isPresent() ? products.get().size() : 0) + " products");
-        
+
         // Return the most recent product if available
-        Optional<Product> result = products.flatMap(list -> 
-            list.stream()
-                .max((p1, p2) -> p1.getFetchDate().compareTo(p2.getFetchDate()))
-        );
-        
-        System.out.println("ProductService: Returning product: " + (result.isPresent() ? result.get().getHtsCode() : "none"));
+        Optional<Product> result = products.flatMap(list -> list.stream()
+                .max((p1, p2) -> p1.getFetchDate().compareTo(p2.getFetchDate())));
+
+        System.out.println(
+                "ProductService: Returning product: " + (result.isPresent() ? result.get().getHtsCode() : "none"));
         return result;
     }
 
@@ -98,6 +100,46 @@ public class ProductService {
 
     public Optional<Product> getProductPriceAtTime(String htsCode, LocalDate date) {
         return productRepository.findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(htsCode, date);
+    }
+
+    /**
+     * Given a keyword, return all the products that has the keyword in the
+     * description and are supercategories (e.g. "1704").
+     * A `ProductNotFoundException` is thrown when there are not matching records
+     * in the database.
+     * 
+     * @param keyword Keyword to search for
+     * @return Set of corresponding super-products
+     */
+    public Set<Product> getHighestLevelCategory(String keyword) {
+        Optional<List<Product>> products = productRepository.findByCategoryContainingIgnoreCase(keyword);
+
+        if (!products.isPresent()) {
+            throw new ProductNotFoundException("Error: Product with keyword " + keyword + " cannot be found!");
+        }
+
+        return products.get().stream()
+                .filter(p -> !p.getHtsCode().contains("."))
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Given a HTS code, return the subcategories. For instance, for HTS "1704",
+     * return "1704.00", "1704.03", ...
+     * A `ProductNotFoundException` is thrown when no matching records in the
+     * database.
+     * 
+     * @param htsCode Target HTS code
+     * @return Set of all products in subcategories
+     */
+    public Set<Product> getNextLevelCategory(String htsCode) {
+        Optional<List<Product>> products = productRepository.findByHtsCodeStartingWith(htsCode + ".");
+
+        if (!products.isPresent()) {
+            throw new ProductNotFoundException("Error: Product with HTS code " + htsCode + ".* not found!");
+        }
+
+        return products.get().stream().collect(Collectors.toSet());
     }
 
     public String selectPrice(Product product, String country) {
@@ -145,12 +187,6 @@ public class ProductService {
 
         for (String country : countries) {
             pricesByCountry.put(country, selectPrice(product.get(), country));
-        }
-
-        try {
-            System.out.println("Prices By Country:\n" + objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(pricesByCountry));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
         }
         return pricesByCountry;
     }
