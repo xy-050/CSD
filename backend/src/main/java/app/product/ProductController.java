@@ -2,14 +2,12 @@ package app.product;
 
 import org.springframework.web.bind.annotation.*;
 
-import app.exception.HTSCodeNotFoundException;
 import app.exception.ProductNotFoundException;
 
 import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.List;
 import java.util.Set;
 import java.time.LocalDate;
 
@@ -20,11 +18,9 @@ import app.query.QueryService;
 public class ProductController {
 
     private final ProductService productService;
-    private final QueryService queryService;
 
     public ProductController(ProductService productService, QueryService queryService) {
         this.productService = productService;
-        this.queryService = queryService;
     }
 
     /**
@@ -37,14 +33,10 @@ public class ProductController {
      */
     @GetMapping("/category/search/{keyword}")
     public ResponseEntity<Map<String, Object>> searchCategories(@PathVariable String keyword) {
-        try {
-            Set<Product> products = productService.getHighestLevelCategory(keyword);
-            return ResponseEntity.ok(Map.of(
-                    "message", "Categories for keyword " + keyword + " fetched successfully",
-                    "categories", products));
-        } catch (ProductNotFoundException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        Set<Product> products = productService.getHighestLevelCategory(keyword);
+        return ResponseEntity.ok(Map.of(
+                "message", "Categories for keyword " + keyword + " fetched successfully",
+                "categories", products));
     }
 
     /**
@@ -57,14 +49,10 @@ public class ProductController {
      */
     @GetMapping("/category/{htsCode}")
     public ResponseEntity<Map<String, Object>> getProductsByCategory(@PathVariable String htsCode) {
-        try {
-            Set<Product> subcategories = productService.getNextLevelCategory(htsCode);
-            return ResponseEntity.ok(Map.of(
-                    "message", "Subcategories for HTS " + htsCode + " fetched successfully",
-                    "categories", subcategories));
-        } catch (ProductNotFoundException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        Set<Product> subcategories = productService.getNextLevelCategory(htsCode);
+        return ResponseEntity.ok(Map.of(
+                "message", "Subcategories for HTS " + htsCode + " fetched successfully",
+                "categories", subcategories));
     }
 
     /**
@@ -76,72 +64,21 @@ public class ProductController {
      */
     @GetMapping("/hts/{htsCode}")
     public ResponseEntity<Map<String, Object>> getProductByHtsCode(@PathVariable String htsCode) {
-        System.out.println("Fetching product by HTS code: " + htsCode);
+        Optional<Product> product = productService.findProductByHtsCode(htsCode);
 
-        // First try to get from local database
-        Optional<Product> product = productService.getProductPrice(htsCode);
-
-        if (product.isPresent()) {
-            Product p = product.get();
-            System.out.println("Product found in database: " + p.toString());
-            return ResponseEntity.ok(Map.of(
-                    "message", "Product with HTS code " + htsCode + " found",
-                    "htsCode", p.getHtsCode(),
-                    "description", p.getDescription() != null ? p.getDescription() : "No description available",
-                    "general", p.getGeneral() != null ? p.getGeneral() : "",
-                    "special", p.getSpecial() != null ? p.getSpecial() : "",
-                    "category", p.getCategory() != null ? p.getCategory() : ""));
-        } else {
-            // If not in database, try searching by category/keyword
-            System.out.println("Product not in database, searching by keyword: " + htsCode);
-            Optional<List<Product>> searchResults = productService.getProductsByCategory(htsCode);
-
-            if (searchResults.isPresent() && !searchResults.get().isEmpty()) {
-                // Find exact match or use first result
-                Product p = searchResults.get().stream()
-                        .filter(prod -> prod.getHtsCode().equals(htsCode))
-                        .findFirst()
-                        .orElse(searchResults.get().get(0));
-
-                System.out.println("Product found by search: " + p.toString());
-                return ResponseEntity.ok(Map.of(
-                        "message", "Product with HTS code " + htsCode + " found",
-                        "htsCode", p.getHtsCode(),
-                        "description", p.getDescription() != null ? p.getDescription() : "",
-                        "general", p.getGeneral() != null ? p.getGeneral() : "",
-                        "special", p.getSpecial() != null ? p.getSpecial() : "",
-                        "category", p.getCategory() != null ? p.getCategory() : ""));
-            }
-
-            // If still not found, fetch from external API
-            System.out.println("Product not found locally, fetching from external API: " + htsCode);
-            try {
-                List<Map<String, Object>> apiResults = queryService.searchTariffArticles(htsCode);
-                if (apiResults != null && !apiResults.isEmpty()) {
-                    // Find exact match or use first result
-                    Map<String, Object> match = apiResults.stream()
-                            .filter(item -> htsCode.equals(item.get("htsno")))
-                            .findFirst()
-                            .orElse(apiResults.get(0));
-
-                    System.out.println("Product found from API: " + match.get("htsno"));
-                    return ResponseEntity.ok(Map.of(
-                            "message", "Product with HTS code " + htsCode + " found from API",
-                            "htsCode", match.get("htsno") != null ? match.get("htsno") : htsCode,
-                            "description",
-                            match.get("description") != null ? match.get("description") : "No description available",
-                            "general", match.get("general") != null ? match.get("general") : "",
-                            "special", match.get("special") != null ? match.get("special") : "",
-                            "category", ""));
-                }
-            } catch (Exception e) {
-                System.out.println("Error fetching from external API: " + e.getMessage());
-            }
-
-            System.out.println("No product found with HTS code: " + htsCode);
-            return ResponseEntity.status(404).body(Map.of(
-                    "message", "No product found with HTS code " + htsCode));
+        if (product.isEmpty()) {
+            return ResponseEntity.status(404).body(
+                    Map.of("message", "No product found with HTS code " + htsCode));
         }
+
+        Product p = product.get();
+        return ResponseEntity.ok(Map.of(
+                "message", "Product with HTS code " + htsCode + " found",
+                "htsCode", p.getHtsCode(),
+                "description", p.getDescription() != null ? p.getDescription() : "",
+                "general", p.getGeneral() != null ? p.getGeneral() : "",
+                "special", p.getSpecial() != null ? p.getSpecial() : "",
+                "category", p.getCategory() != null ? p.getCategory() : ""));
     }
 
     /**
@@ -210,13 +147,8 @@ public class ProductController {
      */
     @GetMapping("/price/{htsCode}/{country}")
     public ResponseEntity<?> getPrices(@PathVariable String htsCode, @PathVariable String country) {
-        try {
-            Map<LocalDate, String> prices = productService.getPrices(htsCode, country);
-            return ResponseEntity.ok().body(prices);
-        } catch (HTSCodeNotFoundException e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        Map<LocalDate, String> prices = productService.getPrices(htsCode, country);
+        return ResponseEntity.ok().body(prices);
     }
 
     /**
@@ -228,12 +160,7 @@ public class ProductController {
      */
     @GetMapping("/price/map/{htsCode}")
     public ResponseEntity<?> getMapCountryToPrice(@PathVariable String htsCode) {
-        try {
-            Map<String, String> result = productService.mapCountryToPrice(htsCode);
-            return ResponseEntity.ok().body(result);
-        } catch (HTSCodeNotFoundException e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        Map<String, String> result = productService.mapCountryToPrice(htsCode);
+        return ResponseEntity.ok().body(result);
     }
 }

@@ -3,7 +3,6 @@ package app.product;
 import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
@@ -15,7 +14,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import app.exception.HTSCodeNotFoundException;
 import app.exception.ProductNotFoundException;
 import app.fta.FTAService;
 import app.query.QueryService;
@@ -89,13 +87,54 @@ public class ProductService {
         return result;
     }
 
+    public Optional<Product> findProductByHtsCode(String htsCode) {
+        // Try local database
+        Optional<Product> product = getProductPrice(htsCode);
+        if (product.isPresent()) {
+            return product;
+        }
+
+        // Try category search
+        Optional<List<Product>> searchResults = getProductsByCategory(htsCode);
+        if (searchResults.isPresent() && !searchResults.isEmpty()) {
+            return searchResults.get().stream()
+                    .filter(p -> p.getHtsCode().equals(htsCode))
+                    .findFirst()
+                    .or(() -> Optional.of(searchResults.get().get(0)));
+        }
+
+        // Try external API
+        return fetchFromExternalApi(htsCode);
+    }
+
+    private Optional<Product> fetchFromExternalApi(String htsCode) {
+        try {
+            List<Map<String, Object>> apiResults = queryService.searchTariffArticles(htsCode);
+            if (apiResults != null && !apiResults.isEmpty()) {
+                Map<String, Object> match = apiResults.stream()
+                        .filter(item -> htsCode.equals(item.get("htsno")))
+                        .findFirst()
+                        .orElse(apiResults.get(0));
+                return Optional.of(mapToProduct(match, htsCode));
+            }
+        } catch (Exception e) {
+            // Log error
+        }
+        return Optional.empty();
+    }
+
+    private Product mapToProduct(Map<String, Object> apiData, String htsCode) {
+        Product product = new Product();
+        product.setHtsCode(apiData.get("htsno") != null ? (String) apiData.get("htsno") : htsCode);
+        product.setDescription(apiData.get("description") != null ? (String) apiData.get("description") : "");
+        product.setGeneral(apiData.get("general") != null ? (String) apiData.get("general") : "");
+        product.setSpecial(apiData.get("special") != null ? (String) apiData.get("special") : "");
+        return product;
+    }
+
     public Optional<List<Product>> getProductsByCategory(String keyword) {
         return Optional.of(productRepository.findByCategoryIgnoreCaseOrHtsCodeStartingWith(keyword, keyword)
                 .orElse(List.of()));
-    }
-
-    public Optional<List<Product>> getProductsByHtsCode(String htsCode) {
-        return productRepository.findByHtsCodeStartingWith(htsCode);
     }
 
     public Optional<Product> getProductPriceAtTime(String htsCode, LocalDate date) {
@@ -157,7 +196,7 @@ public class ProductService {
         Optional<List<Product>> products = productRepository.findByHtsCode(htsCode);
 
         if (!products.isPresent()) {
-            throw new HTSCodeNotFoundException("Error: Product with HTS Code " + htsCode + " not found!");
+            throw new ProductNotFoundException("Error: Product with HTS Code " + htsCode + " not found!");
         }
 
         return products.get().stream().collect(
@@ -180,7 +219,7 @@ public class ProductService {
         System.out.println(product);
 
         if (!product.isPresent() || product == null) {
-            throw new HTSCodeNotFoundException("Product with HTS code " + htsCode + " not found!");
+            throw new ProductNotFoundException("Product with HTS code " + htsCode + " not found!");
         }
 
         Map<String, String> pricesByCountry = new HashMap<>();
