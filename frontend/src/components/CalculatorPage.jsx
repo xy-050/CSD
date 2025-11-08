@@ -326,9 +326,6 @@ export default function CalculatorPage() {
                             className="chart-wrapper"
                             data-tour="price-distribution-map"
                         >
-                            <h3 className="chart-subtitle">
-                                Price Distribution by Country
-                            </h3>
                             <PriceWorldmap htsCode={hts} />
                         </div>
                     </section>
