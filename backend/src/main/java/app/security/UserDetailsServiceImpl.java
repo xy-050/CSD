@@ -23,10 +23,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (account == null) {
             throw new UsernameNotFoundException("User not found");
         }
+        
+        // Use the role from the database (USER or ADMIN)
+        String role = account.getRole() != null ? account.getRole() : "USER";
+        
         return User.builder()
                 .username(account.getUsername())
                 .password(account.getPassword())
-                .roles("USER")
+                .roles(role)
                 .build();
     }
 }

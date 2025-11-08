@@ -10,9 +10,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Optional;
+import java.util.Set;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import org.mockito.ArgumentCaptor;
 
@@ -22,6 +24,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import app.exception.HTSCodeNotFoundException;
+import app.exception.ProductNotFoundException;
 import app.query.QueryService;
 
 @ExtendWith(MockitoExtension.class)
@@ -336,9 +339,145 @@ public class ProductServiceTest {
 
         // Act & Assert
         HTSCodeNotFoundException exception = assertThrows(
-            HTSCodeNotFoundException.class,
-            () -> productService.mapCountryToPrice("67")
-        );
+                HTSCodeNotFoundException.class,
+                () -> productService.mapCountryToPrice("67"));
         assertEquals(exception.getMessage(), "Product with HTS code 67 not found!");
+    }
+
+    @Test
+    void getNextLevelCategory_WhenSubcategoriesExists_ShouldReturnSubcategories() {
+        // Arrange
+        Product product2 = new Product(
+                "1704.01",
+                LocalDate.of(2025, Month.APRIL, 1),
+                "",
+                "",
+                "",
+                "sugar");
+        Product product3 = new Product(
+                "1704.90",
+                LocalDate.of(2025, Month.APRIL, 1),
+                "",
+                "",
+                "",
+                "sugar");
+        List<Product> products = List.of(existing, product2, product3);
+        when(productRepository.findByHtsCodeStartingWith(anyString())).thenReturn(Optional.of(products));
+
+        // Act
+        Set<Product> actualResults = productService.getNextLevelCategory("1704");
+
+        // Assert
+        assertEquals(Set.of(existing, product2, product3), actualResults);
+    }
+
+    @Test
+    void getNextLevelCategory_WhenNoSubcategories_ShouldThrowProductNotFoundException() {
+        // Arrange
+        when(productRepository.findByHtsCodeStartingWith(anyString())).thenReturn(Optional.empty());
+
+        // Act & Assert
+        ProductNotFoundException exception = assertThrows(ProductNotFoundException.class, () -> {
+            productService.getNextLevelCategory("1704.90.35");
+        });
+        assertEquals(exception.getMessage(), "Error: Product with HTS code 1704.90.35.* not found!");
+    }
+
+    @Test
+    void getNextLevelCategory_WhenSubcategoriesExistsAndMultipleInstancesInDB_ShouldReturnMostRecent() {
+        // Arrange
+        Product product2 = new Product(
+                "1704.01",
+                LocalDate.of(2025, Month.APRIL, 1),
+                "",
+                "",
+                "",
+                "sugar");
+        Product product3 = new Product(
+                "1704.01",
+                LocalDate.of(2027, Month.APRIL, 1),
+                "",
+                "",
+                "",
+                "sugar");
+        List<Product> products = List.of(existing, product2, product3);
+        when(productRepository.findByHtsCodeStartingWith(anyString())).thenReturn(Optional.of(products));
+        
+        // Act
+        Set<Product> actualResults = productService.getNextLevelCategory("1704");
+
+        // Assert
+        assertEquals(Set.of(existing, product3), actualResults);
+    }
+
+    @Test
+    void getNextLevelCategory_WhenHtsInvalid_ShouldThrowProductNotFoundException() {
+        // Arrange
+        when(productRepository.findByHtsCodeStartingWith(anyString())).thenReturn(Optional.empty());
+
+        // Act & Assert
+        ProductNotFoundException exception = assertThrows(ProductNotFoundException.class, () -> {
+            productService.getNextLevelCategory("does not exist");
+        });
+        assertEquals(exception.getMessage(), "Error: Product with HTS code does not exist.* not found!");
+    }
+
+    @Test
+    void getHighestLevelCategory_WhenKeywordExists_ShouldReturnSetOfSuperProducts() {
+        // Arrange
+        Product product1 = new Product(
+                "1704",
+                LocalDate.of(2025, Month.APRIL, 1),
+                "",
+                "",
+                "",
+                "sugar");
+        Product product2 = new Product(
+                "1704.01",
+                LocalDate.of(2025, Month.APRIL, 1),
+                "",
+                "",
+                "",
+                "sugar");
+        when(productRepository.findByCategoryContainingIgnoreCase(anyString()))
+                .thenReturn(Optional.of(List.of(product1, product2)));
+
+        // Act
+        Set<Product> products = productService.getHighestLevelCategory("Sugar");
+
+        // Assert
+        assertEquals(Set.of(product1), products);
+    }
+
+    @Test
+    void getHighestLevelCategory_WhenKeywordDoesNotExist_ShouldThrowProductNotFoundException() {
+        // Arrange
+        when(productRepository.findByCategoryContainingIgnoreCase(anyString())).thenReturn(Optional.empty());
+
+        // Act & Assert
+        ProductNotFoundException exception = assertThrows(ProductNotFoundException.class, () -> {
+            productService.getHighestLevelCategory("Sugar");
+        });
+        assertEquals("Error: Product with keyword Sugar cannot be found!", exception.getMessage());
+    }
+
+    @Test
+    void getHighestLevelCategory_WhenKeywordExistsButNoSuper_ShouldReturnEmptySet() {
+        // Arrange
+        Product product2 = new Product(
+                "1704.01",
+                LocalDate.of(2025, Month.APRIL, 1),
+                "",
+                "",
+                "",
+                "sugar");
+        when(productRepository.findByCategoryContainingIgnoreCase(anyString()))
+                .thenReturn(Optional.of(List.of(existing, product2)));
+
+        // Act
+        Set<Product> products = productService.getHighestLevelCategory("Sugar");
+
+        // Assert
+        assertEquals(new HashSet<>(), products);
     }
 }

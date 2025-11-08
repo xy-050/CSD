@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -25,6 +26,7 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity  // Enables @PreAuthorize for role-based access control
 public class SecurityConfig {
 
     @Value("${jwt.secret:mySecretKey}")
@@ -36,6 +38,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/signup", "/error").permitAll()
                         .requestMatchers("/swagger-ui/index.html", "/swagger-ui.html", "/v3/api-docs").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")  // Admin-only endpoints
                         .anyRequest().authenticated())
                 .sessionManagement(configurer -> configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer((oauth2) -> oauth2

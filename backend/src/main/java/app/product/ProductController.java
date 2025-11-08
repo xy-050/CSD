@@ -2,8 +2,8 @@ package app.product;
 
 import org.springframework.web.bind.annotation.*;
 
-import app.exception.FTANotFoundException;
 import app.exception.HTSCodeNotFoundException;
+import app.exception.ProductNotFoundException;
 
 import org.springframework.http.ResponseEntity;
 
@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
 import java.time.LocalDate;
 
 import app.query.QueryService;
@@ -29,70 +27,57 @@ public class ProductController {
         this.queryService = queryService;
     }
 
+    /**
+     * Given a keyword, return all products in the supercategory (i.e. the most
+     * general). For instance, "1704" will be returned, but not "1704.01" or
+     * "1704.00.01".
+     * 
+     * @param keyword Keyword (e.g. "Sugar", "Egg")
+     * @return TreeSet containing the products in the supercategory
+     */
     @GetMapping("/category/search/{keyword}")
     public ResponseEntity<Map<String, Object>> searchCategories(@PathVariable String keyword) {
-        System.out.println("Searching for keyword: " + keyword);
-        Optional<List<Product>> products = productService.getProductsByCategory(keyword);
-
-        if (products.isPresent()) {
-            List<Product> productList = products.get();
-            System.out.println("Found " + productList.size() + " products");
-
-            // Get only the top-level categories (no dots in HTS code)
-            Set<Product> categories = productList.stream()
-                    .peek(p -> System.out.println("Found product: " + p.toString()))
-                    .filter(p -> !p.getHtsCode().contains(".")) // Only include products with no dots in HTS code
-                    .collect(Collectors.toCollection(TreeSet::new)); // Use natural ordering from Product
-
+        try {
+            Set<Product> products = productService.getHighestLevelCategory(keyword);
             return ResponseEntity.ok(Map.of(
                     "message", "Categories for keyword " + keyword + " fetched successfully",
-                    "categories", categories));
-        } else {
-            return ResponseEntity.ok(Map.of(
-                    "message", "Failed to fetch categories for keyword " + keyword));
+                    "categories", products));
+        } catch (ProductNotFoundException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
+    /**
+     * Returns the next level of subcategories of a product. For instance, if "1704"
+     * is passed in, then "1704.01" is returned, and if "1701.01" is passed in,
+     * "1701.00.01" is returned.
+     * 
+     * @param htsCode Super HTS code
+     * @return Sub HTS code
+     */
     @GetMapping("/category/{htsCode}")
     public ResponseEntity<Map<String, Object>> getProductsByCategory(@PathVariable String htsCode) {
-        Optional<List<Product>> products = productService.getProductsByHtsCode(htsCode);
-
-        if (products.isPresent()) {
-            // Get unique products for the next level of categorization
-            Set<Product> subcategories = products.get().stream()
-                    .filter(p -> {
-                        String code = p.getHtsCode();
-                        return code.equals(htsCode) || code.startsWith(htsCode + ".") || code.startsWith(htsCode);
-                    })
-                    .map(p -> {
-                        String code = p.getHtsCode();
-                        String[] parts = code.split("\\.");
-                        // If this is already a leaf node or has no further subcategories, return as is
-                        if (parts.length <= 1)
-                            return p;
-
-                        // For parent categories, get the next level down
-                        String nextLevel = parts[0] + (parts.length > 1 ? "." + parts[1] : "");
-                        return products.get().stream()
-                                .filter(sub -> sub.getHtsCode().equals(nextLevel))
-                                .findFirst()
-                                .orElse(p);
-                    })
-                    .collect(Collectors.toCollection(TreeSet::new)); // Use natural ordering from Product
-
+        try {
+            Set<Product> subcategories = productService.getNextLevelCategory(htsCode);
             return ResponseEntity.ok(Map.of(
                     "message", "Subcategories for HTS " + htsCode + " fetched successfully",
                     "categories", subcategories));
-        } else {
-            return ResponseEntity.ok(Map.of(
-                    "message", "Failed to fetch subcategories for HTS " + htsCode));
+        } catch (ProductNotFoundException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
+    /**
+     * Returns the details of a product given a HTS code. Tries to search database
+     * first, but if fails, will call external API.
+     * 
+     * @param htsCode Target HTS code
+     * @return Product details
+     */
     @GetMapping("/hts/{htsCode}")
     public ResponseEntity<Map<String, Object>> getProductByHtsCode(@PathVariable String htsCode) {
         System.out.println("Fetching product by HTS code: " + htsCode);
-        
+
         // First try to get from local database
         Optional<Product> product = productService.getProductPrice(htsCode);
 
@@ -110,14 +95,14 @@ public class ProductController {
             // If not in database, try searching by category/keyword
             System.out.println("Product not in database, searching by keyword: " + htsCode);
             Optional<List<Product>> searchResults = productService.getProductsByCategory(htsCode);
-            
+
             if (searchResults.isPresent() && !searchResults.get().isEmpty()) {
                 // Find exact match or use first result
                 Product p = searchResults.get().stream()
-                    .filter(prod -> prod.getHtsCode().equals(htsCode))
-                    .findFirst()
-                    .orElse(searchResults.get().get(0));
-                
+                        .filter(prod -> prod.getHtsCode().equals(htsCode))
+                        .findFirst()
+                        .orElse(searchResults.get().get(0));
+
                 System.out.println("Product found by search: " + p.toString());
                 return ResponseEntity.ok(Map.of(
                         "message", "Product with HTS code " + htsCode + " found",
@@ -127,7 +112,7 @@ public class ProductController {
                         "special", p.getSpecial() != null ? p.getSpecial() : "",
                         "category", p.getCategory() != null ? p.getCategory() : ""));
             }
-            
+
             // If still not found, fetch from external API
             System.out.println("Product not found locally, fetching from external API: " + htsCode);
             try {
@@ -135,15 +120,16 @@ public class ProductController {
                 if (apiResults != null && !apiResults.isEmpty()) {
                     // Find exact match or use first result
                     Map<String, Object> match = apiResults.stream()
-                        .filter(item -> htsCode.equals(item.get("htsno")))
-                        .findFirst()
-                        .orElse(apiResults.get(0));
-                    
+                            .filter(item -> htsCode.equals(item.get("htsno")))
+                            .findFirst()
+                            .orElse(apiResults.get(0));
+
                     System.out.println("Product found from API: " + match.get("htsno"));
                     return ResponseEntity.ok(Map.of(
                             "message", "Product with HTS code " + htsCode + " found from API",
                             "htsCode", match.get("htsno") != null ? match.get("htsno") : htsCode,
-                            "description", match.get("description") != null ? match.get("description") : "No description available",
+                            "description",
+                            match.get("description") != null ? match.get("description") : "No description available",
                             "general", match.get("general") != null ? match.get("general") : "",
                             "special", match.get("special") != null ? match.get("special") : "",
                             "category", ""));
@@ -151,13 +137,19 @@ public class ProductController {
             } catch (Exception e) {
                 System.out.println("Error fetching from external API: " + e.getMessage());
             }
-            
+
             System.out.println("No product found with HTS code: " + htsCode);
             return ResponseEntity.status(404).body(Map.of(
                     "message", "No product found with HTS code " + htsCode));
         }
     }
 
+    /**
+     * Returns the specific and general prices of a specific product.
+     * 
+     * @param htsCode
+     * @return
+     */
     @GetMapping("/price/{htsCode}")
     public ResponseEntity<Map<String, Object>> getProductPrice(@PathVariable String htsCode) {
         Optional<Product> latest = productService.getProductPrice(htsCode);
@@ -175,6 +167,15 @@ public class ProductController {
         }
     }
 
+    /**
+     * Returns the price of a specific product at a specific time.
+     * 
+     * @param htsCode
+     * @param year
+     * @param month
+     * @param day
+     * @return
+     */
     @GetMapping("/price/{htsCode}/{year}/{month}/{day}")
     public ResponseEntity<Map<String, Object>> getProductPriceAtSpecificTime(
             @PathVariable String htsCode,
@@ -198,17 +199,33 @@ public class ProductController {
         }
     }
 
+    /**
+     * Returns historical and future prices of a specific product for a specific
+     * country. Can be used to analyse how prices change over time.
+     * 
+     * @param htsCode HTS code of target product
+     * @param country Target country
+     * @return Map that maps the date to the price (example: { "2023-1-1": "$2.10",
+     *         "2025-01-01", "$2.30" })
+     */
     @GetMapping("/price/{htsCode}/{country}")
-    public ResponseEntity<?> getHistoricalPrices(@PathVariable String htsCode, @PathVariable String country) {
+    public ResponseEntity<?> getPrices(@PathVariable String htsCode, @PathVariable String country) {
         try {
-            Map<LocalDate, String> prices = productService.getHistoricalPrices(htsCode, country);
+            Map<LocalDate, String> prices = productService.getPrices(htsCode, country);
             return ResponseEntity.ok().body(prices);
-        } catch (FTANotFoundException e) {
+        } catch (HTSCodeNotFoundException e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
+    /**
+     * Maps a country to the price of a specific product. Can be used to compare the
+     * most recent prices across countries.
+     * 
+     * @param htsCode HTS code of target product
+     * @return Map (example: { "AF": "$2.30", "AU": "Free", ... })
+     */
     @GetMapping("/price/map/{htsCode}")
     public ResponseEntity<?> getMapCountryToPrice(@PathVariable String htsCode) {
         try {

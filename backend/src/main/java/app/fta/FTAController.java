@@ -19,14 +19,14 @@ public class FTAController {
 
     // Logic to update FTA data
     // For example, save newData to the database
-    @PostMapping("/fta/update")
-    public ResponseEntity<String> updateFTAData(@RequestBody String newData) {
-        if (newData == null || newData.isEmpty()) {
-            return ResponseEntity.badRequest().body("Invalid FTA data");
-        }
-        ftaService.updateFTAData(newData);
-        return ResponseEntity.ok("FTA data updated successfully");
-    }
+    // @PostMapping("/fta/update")
+    // public ResponseEntity<String> updateFTAData(@RequestBody String newData) {
+    //     if (newData == null || newData.isEmpty()) {
+    //         return ResponseEntity.badRequest().body("Invalid FTA data");
+    //     }
+    //     ftaService.updateFTAData(newData);
+    //     return ResponseEntity.ok("FTA data updated successfully");
+    // }
 
     // Logic to delete FTA data by id
     @DeleteMapping("/fta/delete/{id}")
