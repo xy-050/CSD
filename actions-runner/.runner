@@ -1,0 +1,11 @@
+﻿{
+  "agentId": 23,
+  "agentName": "Runner2",
+  "poolId": 1,
+  "poolName": "Default",
+  "serverUrl": "https://pipelinesghubeus6.actions.githubusercontent.com/hPy1ZmbybnIOBDbdfKG7EPHeTTjN7LZ3uhYoWbyPjJMdzTFBRq/",
+  "gitHubUrl": "https://github.com/xy-050/CSD",
+  "workFolder": "./run.cmd",
+  "useV2Flow": true,
+  "serverUrlV2": "https://broker.actions.githubusercontent.com/"
+}
