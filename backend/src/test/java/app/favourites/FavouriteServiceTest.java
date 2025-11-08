@@ -42,7 +42,7 @@ public class FavouriteServiceTest {
 
     @BeforeEach
     public void setUp() {
-        account1 = new Account(1, "User1", "password", "user1@test.com", new ArrayList<>(), new HashSet<>());
+        account1 = new Account(1, "User1", "password", "user1@test.com", "USER", new ArrayList<>(), new HashSet<>());
         favourites1 = new Favourites("1704.01.10", new HashSet<>());
     }
 
