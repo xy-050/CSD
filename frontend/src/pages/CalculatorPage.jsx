@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useLocation } from 'react-router-dom';
+
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/Sidebar";
-import { CalculatorInputs } from '../components/CalculatorInputs';
-import { CalculationResults } from '../components/CalculationResults';
+import { CalculatorInputs } from '../components/Calculator/CalculatorInputs';
+import { CalculationResults } from '../components/Calculator/CalculationResults';
+import { EmptyCalculator } from '../components/Calculator/EmptyCalculator';
 import { DataVisualizationsSection } from '../components/DataVisualizations/DataVisualizationsSection';
-import { EmptyCalculator } from '../components/EmptyCalculator';
+
 import { useResponsiveSidebar } from '../hooks/useResponsiveSidebar';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useFavorite } from '../hooks/useFavorite';

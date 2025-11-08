@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom";
+
 import { useTour } from "../components/TourContext.jsx";
 import NavBar from "../components/NavBar.jsx";
 import SearchBar from "../components/Searchbar.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 import { FeatureCard } from "../components/FeatureCard";
 import { TopProductsSection } from "../components/TopProductsSection/TopProductsSection.jsx";
-import { TourButton } from "../components/TourButton";
+import { TourButton } from "../components/TourButton/TourButton.jsx";
+
 import { useTypingEffect } from "../hooks/useTypingEffect";
 import { useResponsiveSidebar } from "../hooks/useResponsiveSidebar";
 import { useTopProducts } from "../hooks/useTopProducts";
