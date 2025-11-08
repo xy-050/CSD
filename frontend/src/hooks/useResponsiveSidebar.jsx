@@ -1,34 +1,44 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export function useResponsiveSidebar() {
-    const [isOpen, setIsOpen] = useState(window.innerWidth > 768);
+    // Initialize from localStorage, default to false (closed)
+    const [isOpen, setIsOpen] = useState(() => {
+        const saved = localStorage.getItem('sidebarOpen');
+        return saved ? JSON.parse(saved) : false;
+    });
 
-    const toggle = () => setIsOpen(v => !v);
+    // Save to localStorage whenever state changes
+    useEffect(() => {
+        localStorage.setItem('sidebarOpen', JSON.stringify(isOpen));
+    }, [isOpen]);
 
-    const close = () => setIsOpen(false);
+    // Toggle sidebar
+    const toggle = useCallback(() => {
+        setIsOpen(prev => !prev);
+    }, []);
 
-    const closeOnMobile = () => {
-        if (window.innerWidth <= 768) {
+    // Close sidebar (for mobile)
+    const closeOnMobile = useCallback(() => {
+        if (window.innerWidth < 1024) {
             setIsOpen(false);
         }
+    }, []);
+
+    // Open sidebar
+    const open = useCallback(() => {
+        setIsOpen(true);
+    }, []);
+
+    // Close sidebar
+    const close = useCallback(() => {
+        setIsOpen(false);
+    }, []);
+
+    return {
+        isOpen,
+        toggle,
+        closeOnMobile,
+        open,
+        close
     };
-
-    // Open by default on desktop, closed on mobile
-    useEffect(() => {
-        const isMobile = window.innerWidth <= 768;
-        setIsOpen(!isMobile);
-    }, []);
-
-    // ESC closes sidebar on mobile
-    useEffect(() => {
-        const onKey = (e) => {
-            if (e.key === "Escape" && window.innerWidth <= 768) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener("keydown", onKey);
-        return () => document.removeEventListener("keydown", onKey);
-    }, []);
-
-    return { isOpen, toggle, close, closeOnMobile };
 }
