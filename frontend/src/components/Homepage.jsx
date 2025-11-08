@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTour } from "./Tour/TourContext.jsx";
 import NavBar from "./NavBar";
-import SearchBar from "./SearchBar";
+import SearchBar from "./Searchbar";
 import Sidebar from "./Sidebar";
 import api from "../api/AxiosConfig.jsx";
 
 export default function HomePage() {
+  const { tourState, startTour } = useTour();
   const navigate = useNavigate();
 
   const [lastQuery, setLastQuery] = useState("");
@@ -17,10 +19,24 @@ export default function HomePage() {
   const [topProducts, setTopProducts] = useState([]);
   const [topLoading, setTopLoading] = useState(false);
   const [topError, setTopError] = useState(null);
+  // User state (for saving queries)
+  const [currentUserID, setCurrentUserID] = useState(null);
 
   const toggleSidebar = () => setSidebarOpen(v => !v);
   const closeSidebarOnMobile = () => {
     if (window.innerWidth <= 768) setSidebarOpen(false);
+  };
+
+  // Handle tour start button click
+  const handleTourStart = () => {
+    // Close sidebar if on mobile
+    if (window.innerWidth <= 768) {
+      setSidebarOpen(false);
+    }
+    // Small delay to let sidebar close
+    setTimeout(() => {
+      startTour();
+    }, 300);
   };
 
   // Open by default on desktop, closed on mobile
@@ -55,7 +71,7 @@ export default function HomePage() {
     return () => clearInterval(id);
   }, []);
 
-  // Fetch top queried products (single effect; your duplicate removed)
+  // Fetch top queried products with details
   useEffect(() => {
     (async () => {
       try {
@@ -63,7 +79,8 @@ export default function HomePage() {
         setTopError(null);
         const res = await api.get("/api/tariffs/most-queried");
         const list = Array.isArray(res.data) ? res.data : [];
-        const valid = list.filter(code => code && code.trim() !== "");
+        // Filter out any invalid entries
+        const valid = list.filter(item => item && item.htsCode && item.htsCode.trim() !== "");
         setTopProducts(valid.slice(0, 10));
       } catch (err) {
         console.error("Failed to load top products", err);
@@ -73,6 +90,78 @@ export default function HomePage() {
       }
     })();
   }, []);
+
+  // Fetch current user details (used when saving queries)
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get('/currentUserDetails');
+        setCurrentUserID(res.data.userId);
+      } catch (err) {
+        // not logged in or failed to fetch; leaving userID null is fine
+        console.debug('No current user or failed to fetch', err);
+      }
+    })();
+  }, []);
+
+  // Helper to save a query to the backend (mirrors SearchResults.saveQuery)
+  const saveQuery = async (htsCode) => {
+    if (!currentUserID) return;
+    try {
+      const queryData = {
+        userID: { userID: currentUserID },
+        htsCode: htsCode,
+        originCountry: null,
+        modeOfTransport: null,
+        quantity: 0,
+      };
+      await api.post('/api/tariffs/queries', queryData);
+    } catch (error) {
+      console.error('Failed to save query:', error);
+    }
+  };
+
+  // When a top product is clicked, navigate to calculator with its details
+  // Product details are already available from the QueryDTO
+  const handleProductClick = async (product) => {
+    console.log('Clicking on product:', product);
+    try {
+      // Fetch product details using the new ProductController endpoint
+      console.log('Fetching from:', `/product/hts/${encodeURIComponent(htsCode)}`);
+      const response = await api.get(`/product/hts/${encodeURIComponent(htsCode)}`);
+
+      console.log('Response received:', response.data);
+
+      if (!response.data || !response.data.htsCode) {
+        console.error('Product not found in response:', response.data);
+        alert('Product details not found');
+        return;
+      }
+
+      // Save query for analytics
+      await saveQuery(product.htsCode);
+
+      // Format the result for the calculator page using data from QueryDTO
+      const formattedResult = {
+        htsno: product.htsCode,
+        description: product.description || 'No description available',
+        descriptionChain: [product.description || 'No description available'],
+        fullDescriptionChain: [product.description || 'No description available'],
+        category: product.category || 'Unknown',
+        // Note: general and special rates may need to be fetched separately if needed
+      };
+
+      console.log('Navigating to calculator with:', formattedResult);
+
+      // Navigate to calculator
+      navigate('/calculator', {
+        state: { result: formattedResult, keyword: htsCode }
+      });
+    } catch (error) {
+      console.error('Error navigating to product details for', product.htsCode, error);
+      alert(`Failed to navigate to product details. ${error.message}`);
+    }
+  };
 
   return (
     <div className="homepage">
@@ -85,10 +174,16 @@ export default function HomePage() {
         {/* Main */}
         <main className="main-content" onClick={closeSidebarOnMobile}>
           <section className="hero-section">
-            <h1 className="hero-title">
+            <h1 className="hero-title" data-tour="hero-title">
               {typedTitle}
               {!doneTyping && <span className="caret" aria-hidden="true" />}
             </h1>
+
+            {/* Tour Start Button */}
+            <button className="tour-start-btn" onClick={handleTourStart}>
+              <span className="tour-btn-icon">🎓</span>
+              Take a Quick Tour
+            </button>
 
             {/* SearchBar */}
             <SearchBar />
@@ -100,7 +195,7 @@ export default function HomePage() {
             )}
           </section>
 
-          {/* These feature cards are fine; wired to routes for convenience */}
+          {/* Feature cards */}
           <section className="features-grid">
             <article className="feature-card">
               <div className="feature-header">
@@ -112,7 +207,7 @@ export default function HomePage() {
                 View reports
               </button>
             </article>
-			<article className="feature-card">
+            <article className="feature-card">
               <div className="feature-header">
                 <div className="feature-icon green">⭐️</div>
                 <h3>Favourites</h3>
@@ -134,6 +229,7 @@ export default function HomePage() {
               </button>
             </article>
           </section>
+
           {/* Top Products */}
           <section className="top-products">
             <h2>Top 10 Most Queried Products</h2>
@@ -150,27 +246,30 @@ export default function HomePage() {
                       <div className="query-cards-row top-three">
                         {/* Reorder: #2, #1, #3 */}
                         {topProducts[1] && (
-                          <div key={topProducts[1] + '1'} className="query-card top-three">
+                          <div key={topProducts[1].htsCode + '1'} className="query-card top-three rank-2" onClick={() => handleProductClick(topProducts[1])}>
                             <div className="query-rank">#2</div>
-                            <div className="query-code" onClick={() => handleProductClick(topProducts[1])}>
-                              {topProducts[1]}
-                            </div>
+                            <div className="query-code">{topProducts[1].htsCode}</div>
+                            <div className="query-category">{topProducts[1].category}</div>
+                            <div className="query-description">{topProducts[1].description}</div>
+                            <div className="query-count">{topProducts[1].queryCount} queries</div>
                           </div>
                         )}
                         {topProducts[0] && (
-                          <div key={topProducts[0] + '0'} className="query-card top-three rank-1">
+                          <div key={topProducts[0].htsCode + '0'} className="query-card top-three rank-1" onClick={() => handleProductClick(topProducts[0])}>
                             <div className="query-rank">#1</div>
-                            <div className="query-code" onClick={() => handleProductClick(topProducts[0])}>
-                              {topProducts[0]}
-                            </div>
+                            <div className="query-code">{topProducts[0].htsCode}</div>
+                            <div className="query-category">{topProducts[0].category}</div>
+                            <div className="query-description">{topProducts[0].description}</div>
+                            <div className="query-count">{topProducts[0].queryCount} queries</div>
                           </div>
                         )}
                         {topProducts[2] && (
-                          <div key={topProducts[2] + '2'} className="query-card top-three">
+                          <div key={topProducts[2].htsCode + '2'} className="query-card top-three rank-3" onClick={() => handleProductClick(topProducts[2])}>
                             <div className="query-rank">#3</div>
-                            <div className="query-code" onClick={() => handleProductClick(topProducts[2])}>
-                              {topProducts[2]}
-                            </div>
+                            <div className="query-code">{topProducts[2].htsCode}</div>
+                            <div className="query-category">{topProducts[2].category}</div>
+                            <div className="query-description">{topProducts[2].description}</div>
+                            <div className="query-count">{topProducts[2].queryCount} queries</div>
                           </div>
                         )}
                       </div>
@@ -179,12 +278,13 @@ export default function HomePage() {
                     {/* Remaining 7 Row */}
                     {topProducts.slice(3, 10).length > 0 && (
                       <div className="query-cards-row remaining">
-                        {topProducts.slice(3, 10).map((code, idx) => (
-                          <div key={code + idx} className="query-card remaining">
+                        {topProducts.slice(3, 10).map((product, idx) => (
+                          <div key={product.htsCode + idx} className="query-card remaining" onClick={() => handleProductClick(product)}>
                             <div className="query-rank">#{idx + 4}</div>
-                            <div className="query-code" onClick={() => handleProductClick(code)}>
-                              {code}
-                            </div>
+                            <div className="query-code">{product.htsCode}</div>
+                            <div className="query-category">{product.category}</div>
+                            <div className="query-description">{product.description}</div>
+                            <div className="query-count">{product.queryCount} queries</div>
                           </div>
                         ))}
                       </div>

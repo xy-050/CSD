@@ -33,9 +33,12 @@ Content-Type: application/json
 
 ###
 POST http://localhost:8080/login
-Content-Type: application/x-www-form-urlencoded
+Content-Type: application/json
 
-username=restuser2&password=P@ssw0rd
+{
+  "username": "restuser2",
+  "password": "P@ssw0rd"
+}
 
 ###
 GET http://localhost:8080/logout
@@ -59,3 +62,13 @@ Content-Type: application/json
   "userID": 15,
   "username": "rest"
 }
+
+###
+GET http://localhost:8080/product/category/search/sugar
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJjc2Qtc2VjdXJpdHktYXBwIiwic3ViIjoicmVzdHVzZXIyIiwiZXhwIjoxNzYyNDI1NDYxLCJpYXQiOjE3NjIzMzkwNjEsInNjb3BlIjoiUk9MRV9VU0VSIn0.0A6CJj40LqqqM4Q2nv2p93_Na-rlByBJYp7v6eNMkoZtyS9gnHlcMJ0hISr61Cv01G45kHv8jRY33_Ss1cfSTA
+
+###
+GET http://localhost:8080/product/category/1209
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJjc2Qtc2VjdXJpdHktYXBwIiwic3ViIjoicmVzdHVzZXIyIiwiZXhwIjoxNzYyNDI1NDYxLCJpYXQiOjE3NjIzMzkwNjEsInNjb3BlIjoiUk9MRV9VU0VSIn0.0A6CJj40LqqqM4Q2nv2p93_Na-rlByBJYp7v6eNMkoZtyS9gnHlcMJ0hISr61Cv01G45kHv8jRY33_Ss1cfSTA

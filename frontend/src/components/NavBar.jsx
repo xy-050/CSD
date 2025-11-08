@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTour } from "./Tour/TourContext.jsx";
 import api from "../api/AxiosConfig.jsx";
 import johnpork from "../assets/johnpork.png";
 
 export default function NavBar({ onToggleSidebar, sidebarOpen }) {
+    const { startTour } = useTour();
     const [menuOpen, setMenuOpen] = useState(false);
     const [username, setUsername] = useState(null);
     const [initials, setInitials] = useState(null);
@@ -59,11 +61,12 @@ export default function NavBar({ onToggleSidebar, sidebarOpen }) {
                 {/* Left side: Hamburger + Brand */}
                 <div className="nav-left">
                     {/* Hamburger toggle - visible at all screen sizes */}
-                    <button 
+                    <button
                         className={`hamburger-toggle ${sidebarOpen ? 'active' : ''}`}
                         onClick={onToggleSidebar}
                         aria-label="Toggle sidebar"
                         aria-pressed={sidebarOpen}
+                        data-tour="hamburger-toggle"
                     >
                         <span className="hamburger-line"></span>
                         <span className="hamburger-line"></span>
@@ -76,6 +79,7 @@ export default function NavBar({ onToggleSidebar, sidebarOpen }) {
                         style={{ background: "none", border: 0, cursor: "pointer" }}
                         onClick={() => navigate("/home")}
                         aria-label="Go to dashboard"
+                        data-tour="nav-brand"
                     >
                         <span className="nav-icon">💵</span>
                         <span className="nav-title">Tariff-ic!</span>

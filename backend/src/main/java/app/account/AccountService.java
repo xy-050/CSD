@@ -8,6 +8,7 @@ import app.exception.UserNotFoundException;
 import app.security.PasswordChecker;
 
 import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -113,11 +114,11 @@ public class AccountService {
     }
 
     /**
-     * Updates a user's account non-sensitive details, namely username and email.
-     * Future implementations can consider updating profile picture.
-     * 
-     * @param userId     Target user ID
-     * @param newAccount New account with udpated details
+     * Updates an account's information
+     * @param userId Target user ID
+     * @param newAccount Account with updated information
+     * @throws UserNotFoundException if account not found
+     * @throws UserConflictException if username/email conflicts
      */
     public void updateDetails(Integer userId, Account newAccount) throws UserNotFoundException, UserConflictException {
         // retrieve account
@@ -161,5 +162,31 @@ public class AccountService {
 
         // save changes
         accountRepository.save(account);
+    }
+
+    /**
+     * Gets all accounts in the system.
+     * @return List of all accounts
+     */
+    public List<Account> getAllAccounts() {
+        return accountRepository.findAll();
+    }
+
+    /**
+     * Gets account by ID.
+     * @param id The account ID
+     * @return The account or null if not found
+     */
+    public Account getAccountById(Integer id) {
+        return accountRepository.findByUserID(id);
+    }
+
+    /**
+     * Updates an account.
+     * @param account The account to update
+     * @return The updated account
+     */
+    public Account updateAccount(Account account) {
+        return accountRepository.save(account);
     }
 }

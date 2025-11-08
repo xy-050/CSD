@@ -20,5 +20,4 @@ public class Favourites {
 
     @ManyToMany(mappedBy = "favourites")
     private Set<Account> accounts = new HashSet<>();
-
 }
