@@ -25,6 +25,7 @@ public class Product implements Comparable<Product> {
     private LocalDate fetchDate;
 
     @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String description;
     
     @Column(nullable = true)

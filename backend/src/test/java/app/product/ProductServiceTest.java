@@ -79,7 +79,7 @@ public class ProductServiceTest {
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.empty());
 
         // Act
-        productService.fetchDaily();
+        productService.fetchExternal();
 
         // Assert
         ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
@@ -108,7 +108,7 @@ public class ProductServiceTest {
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
 
         // Act
-        productService.fetchDaily();
+        productService.fetchExternal();
 
         // Assert
         ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
@@ -135,7 +135,7 @@ public class ProductServiceTest {
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
 
         // Act
-        productService.fetchDaily();
+        productService.fetchExternal();
 
         // Assert
         verify(productRepository, never()).save(any(Product.class));

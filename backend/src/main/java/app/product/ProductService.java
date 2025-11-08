@@ -37,7 +37,7 @@ public class ProductService {
     }
 
     @Scheduled(cron = "0 0 0 * * MON")
-    public void fetchDaily() {
+    public void fetchExternal() {
         try {
             List<String> keywords = List.of("sugar", "bread", "milk", "egg", "rice");
 
