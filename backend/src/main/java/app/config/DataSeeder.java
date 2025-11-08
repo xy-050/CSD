@@ -60,11 +60,11 @@
 //                 seedQuery(queryRepo, "0404.90.10.00", rachel);
 //                 seedQuery(queryRepo, "0404.90.10.00", rachel);
 //                 seedQuery(queryRepo, "0407.11.00.00", rachel);
-//                 seedQuery(queryRepo, "1905.90.10.70", rachel);
+//                 seedQuery(queryRepo, "1905.90.10", rachel);
 //             }
             
 //             if (elodie != null) {
-//                 seedQuery(queryRepo, "1905.90.10.70", elodie);
+//                 seedQuery(queryRepo, "1905.90.10", elodie);
 //                 seedQuery(queryRepo, "1006.10.00.00", elodie);
 //                 seedQuery(queryRepo, "0404.90.10.00", elodie);
 //                 seedQuery(queryRepo, "2303.20.00", elodie);
