@@ -8,8 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface AccountRepository extends JpaRepository<Account, Integer> {
     Account findByUsername(String username);
     
-    Account findByEmail(String email);
-
     Account findByUserID(Integer userID);
 
     Account save(Account account);
@@ -17,4 +15,6 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
     List<Account> findAll();
 
     void deleteById(Integer userID);
+
+    Account findByEmail(String email);
 }

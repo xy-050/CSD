@@ -1,103 +1,293 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTour } from "./Tour/TourContext.jsx";
 import NavBar from "./NavBar";
 import SearchBar from "./SearchBar";
+import Sidebar from "./Sidebar";
+import api from "../api/AxiosConfig.jsx";
 
-export default function HomePage({  }) {
-    const [lastQuery, setLastQuery] = useState("");
-    const menuRef = useRef(null)
-    const [typedTitle, setTypedTitle] = useState("");
-    const [doneTyping, setDoneTyping] = useState(false);
+export default function HomePage() {
+  const { tourState } = useTour();
+  const navigate = useNavigate();
 
-    // typing effect for welcome message
-    useEffect(() => {
-        const fullTitle = "Welcome to your dashboard :)";
-        let i = 0;
-        const id = setInterval(() => {
-            i += 1;
-            setTypedTitle(fullTitle.slice(0, i));
-            if (i >= fullTitle.length) {
-                clearInterval(id);
-                setDoneTyping(true);
-            }
-        }, 60); // typing speed (ms per char)
-        return () => clearInterval(id);
-    }, []);
+  const [lastQuery, setLastQuery] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+  const [typedTitle, setTypedTitle] = useState("");
+  const [doneTyping, setDoneTyping] = useState(false);
 
-    // handle outside clicks and escape key
-    useEffect(() => {
-        const onDown = (e) => {
-            if (!menuRef.current || !btnRef.current) return
-            if (!menuRef.current.contains(e.target) && !btnRef.current.contains(e.target)) setMenuOpen(false)
-        }
-        const onKey = (e) => { if (e.key === "Escape") setMenuOpen(false) }
-        document.addEventListener("mousedown", onDown)
-        document.addEventListener("keydown", onKey)
-        return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey) }
-    }, []);
-    
-    // display initials from user's name or email
-    // const initials = (user?.username || user?.email || "U").split(/\s+/).map(s => s[0]).slice(0, 2).join("").toUpperCase()
+  // (optional) for future use
+  const [topProducts, setTopProducts] = useState([]);
+  const [topLoading, setTopLoading] = useState(false);
+  const [topError, setTopError] = useState(null);
+  // User state (for saving queries)
+  const [currentUserID, setCurrentUserID] = useState(null);
 
-    // Handle the search by passing the query to parent (App.jsx)
-    // const handleSearch = (searchTerm, results) => {
-    //     const term = (searchTerm || "").trim();
-    //     if (!term) return;
-    //     setLastQuery(term); // Store the last query
-    //     setCalcQuery(term);  // Pass query to setCalcQuery (for use in calculator page)
+  const toggleSidebar = () => setSidebarOpen(v => !v);
+  const closeSidebarOnMobile = () => {
+    if (window.innerWidth <= 768) setSidebarOpen(false);
+  };
 
-    //     // If onSearch is provided (from App.js), call it
-    //     if (typeof onSearch === 'function') {
-    //         onSearch(term);
-    //     }
-    // };
+  // Handle tour start button click
+  const handleTourStart = () => {
+    // Close sidebar if on mobile
+    if (window.innerWidth <= 768) {
+      setSidebarOpen(false);
+    }
+    // Small delay to let sidebar close
+    setTimeout(() => {
+      startTour();
+    }, 300);
+  };
 
-    return (
-        <div className="homepage">
-            <NavBar />
+  // Open by default on desktop, closed on mobile
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 768;
+    setSidebarOpen(!isMobile);
+  }, []);
 
-            {/* Main */}
-            <main className="main-content">
-                <><section className="hero-section">
-                    <h1 className="hero-title">
-                        {typedTitle}
-                        {!doneTyping && <span className="caret" aria-hidden="true" />}
-                    </h1>
-                    {/* SearchBar */}
-                    <SearchBar />
-                    {lastQuery && (
-                        <p className="hero-subtitle" style={{ marginTop: "0.75rem" }}>
-                            Showing results for: <b>{lastQuery}</b>
-                        </p>
+  // ESC closes sidebar on mobile
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape" && window.innerWidth <= 768) {
+        setSidebarOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Typing effect
+  useEffect(() => {
+    const fullTitle = "Welcome to your dashboard :)";
+    let i = 0;
+    const id = setInterval(() => {
+      i += 1;
+      setTypedTitle(fullTitle.slice(0, i));
+      if (i >= fullTitle.length) {
+        clearInterval(id);
+        setDoneTyping(true);
+      }
+    }, 60);
+    return () => clearInterval(id);
+  }, []);
+
+  // Fetch top queried products with details
+  useEffect(() => {
+    (async () => {
+      try {
+        setTopLoading(true);
+        setTopError(null);
+        const res = await api.get("/api/tariffs/most-queried");
+        const list = Array.isArray(res.data) ? res.data : [];
+        // Filter out any invalid entries
+        const valid = list.filter(item => item && item.htsCode && item.htsCode.trim() !== "");
+        setTopProducts(valid.slice(0, 10));
+      } catch (err) {
+        console.error("Failed to load top products", err);
+        setTopError("Could not load top products");
+      } finally {
+        setTopLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    console.log('Milk button exists?', document.querySelector('[data-tour="category-milk"]'));
+    console.log('Category buttons exists?', document.querySelector('[data-tour="category-buttons"]'));
+}, []);
+  // Fetch current user details (used when saving queries)
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get('/currentUserDetails');
+        setCurrentUserID(res.data.userId);
+      } catch (err) {
+        // not logged in or failed to fetch; leaving userID null is fine
+        console.debug('No current user or failed to fetch', err);
+      }
+    })();
+  }, []);
+
+  // Helper to save a query to the backend (mirrors SearchResults.saveQuery)
+  const saveQuery = async (htsCode) => {
+    if (!currentUserID) return;
+    try {
+      const queryData = {
+        userID: { userID: currentUserID },
+        htsCode: htsCode,
+        originCountry: null,
+        modeOfTransport: null,
+        quantity: 0,
+      };
+      await api.post('/api/tariffs/queries', queryData);
+    } catch (error) {
+      console.error('Failed to save query:', error);
+    }
+  };
+
+  // When a top product is clicked, navigate to calculator with its details
+  // Product details are already available from the QueryDTO
+  const handleProductClick = async (product) => {
+    console.log('Clicking on product:', product);
+    try {
+      // Save query for analytics
+      await saveQuery(product.htsCode);
+
+      // Format the result for the calculator page using data from QueryDTO
+      const formattedResult = {
+        htsno: product.htsCode,
+        description: product.description || 'No description available',
+        descriptionChain: [product.description || 'No description available'],
+        fullDescriptionChain: [product.description || 'No description available'],
+        category: product.category || 'Unknown',
+        // Note: general and special rates may need to be fetched separately if needed
+      };
+
+      console.log('Navigating to calculator with:', formattedResult);
+
+      // Navigate to calculator
+      navigate('/calculator', { 
+        state: { result: formattedResult, keyword: product.category || product.htsCode } 
+      });
+    } catch (error) {
+      console.error('Error navigating to product details for', product.htsCode, error);
+      alert(`Failed to navigate to product details. ${error.message}`);
+    }
+  };
+
+  return (
+    <div className="homepage">
+      <NavBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
+
+      <div className="homepage-container">
+        {/* Sidebar */}
+        <Sidebar isOpen={sidebarOpen} />
+
+        {/* Main */}
+        <main className="main-content" onClick={closeSidebarOnMobile}>
+          <section className="hero-section">
+            <h1 className="hero-title" data-tour="hero-title">
+              {typedTitle}
+              {!doneTyping && <span className="caret" aria-hidden="true" />}
+            </h1>
+
+            {/* Tour Start Button */}
+            <button className="tour-start-btn" onClick={handleTourStart}>
+              <span className="tour-btn-icon">🎓</span>
+              Take a Quick Tour
+            </button>
+
+            {/* SearchBar */}
+            <SearchBar />
+
+            {lastQuery && (
+              <p className="hero-subtitle" style={{ marginTop: "0.75rem" }}>
+                Showing results for: <b>{lastQuery}</b>
+              </p>
+            )}
+          </section>
+
+          {/* Feature cards */}
+          <section className="features-grid">
+            <article className="feature-card">
+              <div className="feature-header">
+                <div className="feature-icon blue">📈</div>
+                <h3>Insights</h3>
+              </div>
+              <p>Track activity and recent events at a glance.</p>
+              <button className="feature-btn" onClick={() => navigate("/home")}>
+                View reports
+              </button>
+            </article>
+            <article className="feature-card">
+              <div className="feature-header">
+                <div className="feature-icon green">⭐️</div>
+                <h3>Favourites</h3>
+              </div>
+              <p>Organize work with a soothing, minimal UI.</p>
+              <button className="feature-btn" onClick={() => navigate("/favourites")}>
+                Open favourites
+              </button>
+            </article>
+
+            <article className="feature-card">
+              <div className="feature-header">
+                <div className="feature-icon purple">⚙️</div>
+                <h3>Settings</h3>
+              </div>
+              <p>Tune preferences and notification rules.</p>
+              <button className="feature-btn" onClick={() => navigate("/profile")}>
+                Manage
+              </button>
+            </article>
+          </section>
+
+          {/* Top Products */}
+          <section className="top-products">
+            <h2>Top 10 Most Queried Products</h2>
+            {topLoading && <p>Loading top products…</p>}
+            {topError && <p style={{ color: 'red' }}>{topError}</p>}
+            {!topLoading && !topError && (
+              <>
+                {topProducts.length === 0 ? (
+                  <p style={{ color: 'var(--muted)', fontStyle: 'italic' }}>No queries yet. Start searching to see popular products!</p>
+                ) : (
+                  <div className="query-cards-container">
+                    {/* Top 3 Row */}
+                    {topProducts.slice(0, 3).length > 0 && (
+                      <div className="query-cards-row top-three">
+                        {/* Reorder: #2, #1, #3 */}
+                        {topProducts[1] && (
+                          <div key={topProducts[1].htsCode + '1'} className="query-card top-three rank-2" onClick={() => handleProductClick(topProducts[1])}>
+                            <div className="query-rank">#2</div>
+                            <div className="query-code">{topProducts[1].htsCode}</div>
+                            <div className="query-category">{topProducts[1].category}</div>
+                            <div className="query-description">{topProducts[1].description}</div>
+                            <div className="query-count">{topProducts[1].queryCount} queries</div>
+                          </div>
+                        )}
+                        {topProducts[0] && (
+                          <div key={topProducts[0].htsCode + '0'} className="query-card top-three rank-1" onClick={() => handleProductClick(topProducts[0])}>
+                            <div className="query-rank">#1</div>
+                            <div className="query-code">{topProducts[0].htsCode}</div>
+                            <div className="query-category">{topProducts[0].category}</div>
+                            <div className="query-description">{topProducts[0].description}</div>
+                            <div className="query-count">{topProducts[0].queryCount} queries</div>
+                          </div>
+                        )}
+                        {topProducts[2] && (
+                          <div key={topProducts[2].htsCode + '2'} className="query-card top-three rank-3" onClick={() => handleProductClick(topProducts[2])}>
+                            <div className="query-rank">#3</div>
+                            <div className="query-code">{topProducts[2].htsCode}</div>
+                            <div className="query-category">{topProducts[2].category}</div>
+                            <div className="query-description">{topProducts[2].description}</div>
+                            <div className="query-count">{topProducts[2].queryCount} queries</div>
+                          </div>
+                        )}
+                      </div>
                     )}
-                </section><section className="features-grid">
-                        <article className="feature-card">
-                            <div className="feature-header">
-                                <div className="feature-icon blue">📈</div>
-                                <h3>Insights</h3>
-                            </div>
-                            <p>Track activity and recent events at a glance.</p>
-                            <button className="feature-btn">View reports</button>
-                        </article>
 
-                        <article className="feature-card">
-                            <div className="feature-header">
-                                <div className="feature-icon green">⭐️</div>
-                                <h3>Favourites</h3>
-                            </div>
-                            <p>Organize work with a soothing, minimal UI.</p>
-                            <button className="feature-btn">Open favourites</button>
-                        </article>
-
-                        <article className="feature-card">
-                            <div className="feature-header">
-                                <div className="feature-icon purple">⚙️</div>
-                                <h3>Settings</h3>
-                            </div>
-                            <p>Tune preferences and notification rules.</p>
-                            <button className="feature-btn">Manage</button>
-                        </article>
-                    </section></>
-            </main>
-        </div>
-    )
+                    {/* Remaining 7 Row */}
+                    {topProducts.slice(3, 10).length > 0 && (
+                      <div className="query-cards-row remaining">
+                        {topProducts.slice(3, 10).map((product, idx) => (
+                          <div key={product.htsCode + idx} className="query-card remaining" onClick={() => handleProductClick(product)}>
+                            <div className="query-rank">#{idx + 4}</div>
+                            <div className="query-code">{product.htsCode}</div>
+                            <div className="query-category">{product.category}</div>
+                            <div className="query-description">{product.description}</div>
+                            <div className="query-count">{product.queryCount} queries</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        </main>
+      </div>
+    </div>
+  );
 }
