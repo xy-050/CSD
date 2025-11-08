@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useTour } from './Tour/TourContext.jsx';
 
-export default function Sidebar({ isOpen }) {
+export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { startTour } = useTour();
 
@@ -13,7 +13,7 @@ export default function Sidebar({ isOpen }) {
     // Small delay to let sidebar close animation complete
     setTimeout(() => {
       startTour();
-    }, 300);
+    }, 100);
   };
   
   const menuItems = [

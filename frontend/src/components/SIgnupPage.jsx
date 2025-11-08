@@ -50,9 +50,17 @@ export default function SignupPage() {
     return (
         <div className="signup-container">
             <div className="signup-box">
-                <div className="signup-header">
+                 <div className="login-brand">
+                    <div className="login-logo-circle">
+                        💸
+                    </div>
+                    <span className="login-brand-name">Tariff-ic</span>
+                </div>
+
+                {/* Compact header like login, but for create account */}
+                <div className="signup-header login-header-compact">
                     <h1>Create account</h1>
-                    <p>Join us on this Tariff-ic day! 🌤️</p>
+                    <p>Join us on this Tariff-ic day! ✨</p>
                 </div>
 
                 {error && (

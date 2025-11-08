@@ -5,7 +5,7 @@ import api from "../api/AxiosConfig.jsx";
 import johnpork from "../assets/johnpork.png";
 
 export default function NavBar({ onToggleSidebar, sidebarOpen }) {
-    const { startTour } = useTour(); // Changed from 'start' to 'startTour'
+    const { startTour } = useTour();
     const [menuOpen, setMenuOpen] = useState(false);
     const [username, setUsername] = useState(null);
     const [initials, setInitials] = useState(null);
@@ -66,6 +66,7 @@ export default function NavBar({ onToggleSidebar, sidebarOpen }) {
                         onClick={onToggleSidebar}
                         aria-label="Toggle sidebar"
                         aria-pressed={sidebarOpen}
+                        data-tour="hamburger-toggle"
                     >
                         <span className="hamburger-line"></span>
                         <span className="hamburger-line"></span>
@@ -78,6 +79,7 @@ export default function NavBar({ onToggleSidebar, sidebarOpen }) {
                         style={{ background: "none", border: 0, cursor: "pointer" }}
                         onClick={() => navigate("/home")}
                         aria-label="Go to dashboard"
+                        data-tour="nav-brand"
                     >
                         <span className="nav-icon">💵</span>
                         <span className="nav-title">Tariff-ic!</span>

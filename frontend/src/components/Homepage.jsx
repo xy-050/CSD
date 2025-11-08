@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTour } from "./Tour/TourContext.jsx";
 import NavBar from "./NavBar";
-import SearchBar from "./SearchBar";
+import SearchBar from "./Searchbar";
 import Sidebar from "./Sidebar";
 import api from "../api/AxiosConfig.jsx";
 
 export default function HomePage() {
-  const { tourState } = useTour();
+  const { tourState, startTour } = useTour();
   const navigate = useNavigate();
 
   const [lastQuery, setLastQuery] = useState("");
@@ -91,10 +91,6 @@ export default function HomePage() {
     })();
   }, []);
 
-  useEffect(() => {
-    console.log('Milk button exists?', document.querySelector('[data-tour="category-milk"]'));
-    console.log('Category buttons exists?', document.querySelector('[data-tour="category-buttons"]'));
-}, []);
   // Fetch current user details (used when saving queries)
   useEffect(() => {
     (async () => {
@@ -130,6 +126,18 @@ export default function HomePage() {
   const handleProductClick = async (product) => {
     console.log('Clicking on product:', product);
     try {
+      // Fetch product details using the new ProductController endpoint
+      console.log('Fetching from:', `/product/hts/${encodeURIComponent(htsCode)}`);
+      const response = await api.get(`/product/hts/${encodeURIComponent(htsCode)}`);
+
+      console.log('Response received:', response.data);
+
+      if (!response.data || !response.data.htsCode) {
+        console.error('Product not found in response:', response.data);
+        alert('Product details not found');
+        return;
+      }
+
       // Save query for analytics
       await saveQuery(product.htsCode);
 
@@ -146,8 +154,8 @@ export default function HomePage() {
       console.log('Navigating to calculator with:', formattedResult);
 
       // Navigate to calculator
-      navigate('/calculator', { 
-        state: { result: formattedResult, keyword: product.category || product.htsCode } 
+      navigate('/calculator', {
+        state: { result: formattedResult, keyword: htsCode }
       });
     } catch (error) {
       console.error('Error navigating to product details for', product.htsCode, error);

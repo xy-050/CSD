@@ -6,7 +6,7 @@ import Sidebar from './Sidebar.jsx';
 import api from '../api/AxiosConfig.jsx';
 
 export default function SearchResults() {
-    const { tourState } = useTour();
+    const { tourState, setCurrentStep } = useTour();
     const location = useLocation();
     const { keyword } = location.state || {};
     const navigate = useNavigate();
@@ -162,6 +162,11 @@ export default function SearchResults() {
                     },
                     replace: true  // Replace current history entry
                 });
+
+                // 👉 advance tour automatically after See More
+                setTimeout(() => {
+                    setCurrentStep(prev => prev + 1);
+                }, 100);
             } catch (error) {
                 console.error('Error searching HTS subcategories:', error);
                 alert('Failed to load subcategories. Please try again.');
@@ -174,25 +179,31 @@ export default function SearchResults() {
         ? results.slice(0, 8)
         : [];
 
-    // Handle loading state
-    if (loading) {
-        return (
-            <div className="homepage">
-                <NavBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
-                <div className="homepage-container">
-                    <Sidebar isOpen={sidebarOpen} />
-                    <main className="main-content" onClick={closeSidebar}>
-                        <div className="search-results">
-                            <div className="loading-container">
-                                <div className="loading-icon">⌛</div>
-                                <h2 className="loading-title">Loading Results...</h2>
-                            </div>
-                        </div>
-                    </main>
-                </div>
-            </div>
-        );
-    }
+    // compute spotlight index: 2nd item w general tariff
+    const generalTariffIndexes = displayedResults
+        .map((r, i) => (r.general && r.general.trim() !== '' ? i : null))
+        .filter(i => i !== null);
+    const spotlightIndex = generalTariffIndexes.length > 1 ? generalTariffIndexes[1] : generalTariffIndexes[0];
+
+    // // Handle loading state
+    // if (loading) {
+    //     return (
+    //         <div className="homepage">
+    //             <NavBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
+    //             <div className="homepage-container">
+    //                 <Sidebar isOpen={sidebarOpen} />
+    //                 <main className="main-content" onClick={closeSidebar}>
+    //                     <div className="search-results">
+    //                         <div className="loading-container">
+    //                             <div className="loading-icon">⌛</div>
+    //                             <h2 className="loading-title">Loading Results...</h2>
+    //                         </div>
+    //                     </div>
+    //                 </main>
+    //             </div>
+    //         </div>
+    //     );
+    // }
 
     // Handle no products to show
     if (displayedResults.length == 0) {
@@ -248,11 +259,13 @@ export default function SearchResults() {
                                 <div
                                     className="result-item"
                                     key={index}
-                                    // Add data attribute to the first item with a general tariff for tour targeting
                                     data-tour={
-                                        tourState.isActive &&
-                                            index === displayedResults.findIndex(r => r.general && r.general.trim() !== '')
-                                            ? 'result-item'
+                                        tourState.isActive
+                                            ? (index === 0
+                                                ? 'result-parent' // first box highlighted
+                                                : index === spotlightIndex
+                                                    ? 'result-item' // second box with general tariff highlighted
+                                                    : undefined)
                                             : undefined
                                     }
                                 >

@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { TourProvider } from './components/Tour/TourContext.jsx';
 import ProtectedRoute from "./components/ProtectedRoute.jsx"
 import LoginPage from './components/LoginPage.jsx';
-import SignupPage from './components/SignupPage.jsx';
+import SignupPage from './components/SIgnupPage.jsx';
+import ForgotPasswordPage from './components/ForgotPassword/ForgotPasswordPage.jsx';
 import HomePage from './components/Homepage.jsx';
 import ProfilePage from './components/ProfilePage.jsx';
 import SearchResults from './components/SearchResults.jsx';
@@ -20,6 +21,7 @@ export default function App() {
                 <Routes>
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<SignupPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
                     <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
                     <Route path="/results" element={<ProtectedRoute><SearchResults /></ProtectedRoute>} />
