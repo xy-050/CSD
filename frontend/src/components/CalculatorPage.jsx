@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import NavBar from "./NavBar";
 import Sidebar from "./Sidebar";
 import api from '../api/AxiosConfig.jsx';
-import { getNames as getCountryNames } from 'country-list'; // added import
+import { getNames as getCountryNames, getName as IsoToName } from 'country-list';
 import PriceHistoryChart from "./LineChart/LineChart.jsx";
 import PriceWorldmap from "./WorldMap/WorldMap.jsx";
 
@@ -67,31 +67,37 @@ export default function CalculatorPage() {
             if (!result?.htsno) return;
             setLoading(true);
             try {
-                const response = await api.get(`/api/tariffs/compare-countries`, {
-                    params: { htsno: result.htsno }
-                });
+                const response = await api.get(`product/price/map/${result.htsno}`);
                 const data = response.data;
-                setCountryTariffs(data);
-                // build list then set initial rate from that same data
-                const countries = [];
-                if (data['Special countries']) {
-                    data['Special countries'].forEach(name => {
-                        countries.push({ name, rate: data['Special rate'] || 'N/A' });
-                    });
-                }
+                console.log("Response data:", data);
 
-                const allCountries = getCountryNames();
-                allCountries.forEach(name => {
-                    if (!countries.find(c => c.name === name)) {
-                        countries.push({ name, rate: data['General rate'] || 'N/A' });
+                setCountryTariffs(data);
+
+                const countries = [];
+
+                Object.entries(data).forEach(([code, rate]) => {
+                    const countryName = IsoToName(code);
+
+                    if (countryName) {
+                        countries.push({
+                            name: countryName,
+                            code: code,
+                            rate: rate
+                        })
                     }
-                })
+                });
+
+                countries.sort((a, b) => a.name.localeCompare(b.name));
                 setAvailableCountries(countries);
-                // set rate for default origin
+
                 const found = countries.find(c => c.name === origin);
-                const initialRate = found ? found.rate : (data['General rate'] || 'N/A');
+                const initialRate = found ? found.rate : 'N/A';
                 setCurrentTariffRate(initialRate);
-                setLines(prev => [{ ...prev[0], ratePct: extractNumericRate(initialRate) }, ...prev.slice(1)]);
+                setLines(prev => [
+                    { ...prev[0], ratePct: extractNumericRate(initialRate) },
+                    ...prev.slice(1)
+                ]);
+
             } catch (error) {
                 console.error('Error fetching country tariffs:', error);
             } finally {
@@ -101,50 +107,6 @@ export default function CalculatorPage() {
         fetchCountryTariffs();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [result?.htsno]);
-
-    // Build country list from API response
-    const buildCountryList = (tariffData) => {
-        const countries = [];
-
-        // Add special countries with special rates
-        if (tariffData['Special countries']) {
-            tariffData['Special countries'].forEach(countryName => {
-                countries.push({
-                    name: countryName,
-                    rate: tariffData['Special rate'] || 'N/A'
-                });
-            });
-        }
-
-        // Use country-list package for common countries instead of hardcoded list
-        const commonCountries = getCountryNames(); // all standard country names
-        commonCountries.forEach(countryName => {
-            if (!countries.find(c => c.name === countryName)) {
-                countries.push({
-                    name: countryName,
-                    rate: tariffData['General rate'] || 'N/A'
-                });
-            }
-        });
-
-        setAvailableCountries(countries);
-    };
-
-    // Update tariff rate when origin changes
-    const updateTariffRate = (selectedCountry, tariffData) => {
-        if (!tariffData) return;
-
-        const country = availableCountries.find(c => c.name === selectedCountry);
-        const newRate = country ? country.rate : tariffData['General rate'] || 'N/A';
-        setCurrentTariffRate(newRate);
-
-        // Update the duty line percentage
-        const numericRate = extractNumericRate(newRate);
-        setLines(prevLines => [
-            { ...prevLines[0], ratePct: numericRate },
-            ...prevLines.slice(1)
-        ]);
-    };
 
     // Helper to extract numeric rate from strings like "5.6%" or "Free"
     const extractNumericRate = (rateString) => {

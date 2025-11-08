@@ -3,8 +3,6 @@ package app.query;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import app.account.Account;
 import app.account.AccountRepository;
 import org.springframework.data.domain.PageRequest;
