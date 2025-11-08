@@ -11,7 +11,7 @@ services:
       - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
@@ -22,12 +22,14 @@ services:
     container_name: CSD-backend
     ports:
       - "8080:8080"
+    env_file:
+      - .env #Load environment vairables from .env file
     environment:
       SPRING_DATASOURCE_HOST: mysql
       SPRING_DATASOURCE_PORT: 3306
       SPRING_DATASOURCE_USERNAME: sa
       SPRING_DATASOURCE_PASSWORD: 
-      JWT_SECRET: your-secret-key-change-in-production
+      JWT_SECRET: 7ffb140f4850b1e30b2a77737864e46d68853283ff03567dbe88579ce19d17df
     depends_on:
       mysql:
         condition: service_healthy

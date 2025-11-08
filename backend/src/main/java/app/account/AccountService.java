@@ -49,8 +49,8 @@ public class AccountService {
      * @param id Target user ID.
      * @return Corresponding Account instance.
      */
-    public Account getAccountById(Long id) {
-        return accountRepository.findByUserID(userID);
+    public Account getAccountById(Integer id) {
+        return accountRepository.findByUserID(id);
     }
 
     /**
