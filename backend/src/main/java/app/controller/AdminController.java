@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import app.account.Account;
 import app.account.AccountService;
+import app.exception.UserNotFoundException;
 
 /**
  * Admin-only endpoints for managing users and system data.
@@ -52,8 +53,12 @@ public class AdminController {
      */
     @DeleteMapping("/users/{userId}")
     public ResponseEntity<String> deleteUser(@PathVariable Integer userId) {
-        accountService.deleteAccount(userId);
-        return ResponseEntity.ok("User deleted successfully");
+        try {
+            accountService.deleteAccount(userId);
+            return ResponseEntity.ok("User deleted successfully");
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
     
     /**

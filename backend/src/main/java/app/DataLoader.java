@@ -39,7 +39,15 @@ public class DataLoader implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        accountRepository.save(new Account(1, "demo", passwordEncoder.encode("P@ssw0rd"), "demo@example.com", new ArrayList<>(), new HashSet<>()));
+        Account demoAccount = new Account();
+        demoAccount.setUserID(1);
+        demoAccount.setUsername("demo");
+        demoAccount.setPassword(passwordEncoder.encode("P@ssw0rd"));
+        demoAccount.setEmail("demo@example.com");
+        demoAccount.setRole("USER");
+        demoAccount.setQueries(new ArrayList<>());
+        demoAccount.setFavourites(new HashSet<>());
+        accountRepository.save(demoAccount);
 
         List<Product> products = List.of(
                 new Product(

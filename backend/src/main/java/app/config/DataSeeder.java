@@ -57,14 +57,14 @@ public class DataSeeder {
             System.out.println("Seeding historical queries...");
             
             if (rachel != null) {
-                seedQuery(queryRepo, "8471.30.0100", "SEA", "CHINA", 100, rachel);
-                seedQuery(queryRepo, "8528.72.6400", "AIR", "JAPAN", 50, rachel);
-                seedQuery(queryRepo, "8471.30.0100", "AIR", "TAIWAN", 75, rachel);
+                seedQuery(queryRepo, "8471.30.0100", rachel);
+                seedQuery(queryRepo, "8528.72.6400", rachel);
+                seedQuery(queryRepo, "8471.30.0100", rachel);
             }
             
             if (elodie != null) {
-                seedQuery(queryRepo, "9503.00.0073", "SEA", "VIETNAM", 200, elodie);
-                seedQuery(queryRepo, "6109.10.0012", "SEA", "BANGLADESH", 500, elodie);
+                seedQuery(queryRepo, "9503.00.0073", elodie);
+                seedQuery(queryRepo, "6109.10.0012", elodie);
             }
             
             System.out.println("=== Database Seeding Complete ===");
@@ -100,15 +100,12 @@ public class DataSeeder {
      * Queries can have duplicates (same user can query same product multiple times)
      * so we don't check for existence.
      */
-    private void seedQuery(QueryRepository repo, String htsCode, String transport, String origin, int quantity, Account user) {
+    private void seedQuery(QueryRepository repo, String htsCode, Account user) {
         Query query = new Query();
         query.setHtsCode(htsCode);
-        query.setModeOfTransport(transport);
-        query.setOriginCountry(origin);
-        query.setQuantity(quantity);
         query.setUserID(user);
         
         Query saved = repo.save(query);
-        System.out.println("  + Created query: " + htsCode + " from " + origin + " (ID: " + saved.getQueryID() + ")");
+        System.out.println("  + Created query: " + htsCode + " (ID: " + saved.getQueryID() + ")");
     }
 }
