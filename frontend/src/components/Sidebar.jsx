@@ -17,7 +17,6 @@ export default function Sidebar({ isOpen, onClose }) {
   };
   
   const menuItems = [
-    { icon: '📈', label: 'Insights', path: '/home' },
     { icon: '⭐️', label: 'Favourites', path: '/favourites', dataTour: 'sidebar-favourites' },
     { icon: '⚙️', label: 'Settings', path: '/profile' }
   ];
@@ -42,23 +41,6 @@ export default function Sidebar({ isOpen, onClose }) {
             </button>
           </div>
         ))}
-        
-        {/* Tour button */}
-        {/* <div className="sidebar-item" style={{ marginTop: 'auto' }}>
-          <button
-            type="button"
-            className="sidebar-btn"
-            onClick={startTour}
-            style={{ opacity: 0.8 }}
-          >
-            <div className="sidebar-icon-wrapper">
-              <span className="sidebar-icon">🎓</span>
-            </div>
-            <div className="sidebar-content">
-              <h3>Take Tour</h3>
-            </div>
-          </button>
-        </div> */}
       </nav>
     </aside>
   );
