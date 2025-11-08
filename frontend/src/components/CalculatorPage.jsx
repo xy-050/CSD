@@ -306,9 +306,9 @@ export default function CalculatorPage() {
                                         <div className="search-input">Loading countries...</div>
                                     ) : (
                                         <select
-                                        className="search-input"
-                                        value={origin}
-                                        onChange={e => handleOriginChange(e.target.value)}>
+                                            className="search-input"
+                                            value={origin}
+                                            onChange={e => handleOriginChange(e.target.value)}>
                                             {availableCountries.map((c, i) => (
                                                 <option key={i} value={c.name}>
                                                     {c.name} - {c.rate}
@@ -350,14 +350,25 @@ export default function CalculatorPage() {
                         </aside>
                     </div>
                     <section className="charts">
-                        <h1>Data Visualizations</h1>
-                        <div>
+                        <h2 className="charts-title"> Data Visualisations</h2>
+                        {/* Line chart step */}
+                        <div
+                            className="chart-wrapper"
+                            data-tour="price-history-chart"
+                        >
                             <PriceHistoryChart hts={hts} origin={origin} />
                         </div>
-                        <div>
+
+                        {/* World map step */}
+                        <div
+                            className="chart-wrapper"
+                            data-tour="price-distribution-map"
+                        >
+                            <h3 className="chart-subtitle">
+                                Price Distribution by Country
+                            </h3>
                             <PriceWorldmap htsCode={hts} />
                         </div>
-
                     </section>
                 </main>
             </div>
