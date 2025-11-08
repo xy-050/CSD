@@ -15,7 +15,7 @@ public class emailService {
     private String PasswordResetBody = "Click the link below to reset your password:\n\n" +
             "http://your-frontend-url/reset-password?email=%s";
     private String NotificationSubject = "Notification from Tariffics";
-    private String NotificationBody = "Hello! The item" + htscode + "This is a notification email from Tariffics.\n\n%s";
+    private String NotificationBody = "Hello! The item" + htscode + "has been updated. Click on this link to find out more: https://tariffics.org/login \n\n%s";
 
     /**
     * Constructor-based injection.
