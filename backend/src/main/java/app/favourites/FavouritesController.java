@@ -1,5 +1,6 @@
 package app.favourites;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
@@ -32,7 +33,7 @@ public class FavouritesController {
     }
 
     @GetMapping("/account/{userID}/favourites")
-    public ResponseEntity<Set<String>> getFavourites(@PathVariable Integer userID) {
+    public ResponseEntity<List<FavouritesDTO>> getFavourites(@PathVariable Integer userID) {
         return ResponseEntity.ok(favouritesService.getFavouritesHtsCodes(userID));
     }
 

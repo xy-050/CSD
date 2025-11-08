@@ -36,7 +36,7 @@ public class Account {
     private String username;
     private String password;
     private String email;
-    // private Boolean hasTakenTour;
+    private String role;  // USER or ADMIN
 
     @OneToMany(mappedBy = "userID", cascade = CascadeType.ALL)
     private List<Query> queries = new ArrayList<>();

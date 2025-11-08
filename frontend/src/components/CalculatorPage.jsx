@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import NavBar from "./NavBar";
 import Sidebar from "./Sidebar";
 import api from '../api/AxiosConfig.jsx';
-import { getNames as getCountryNames } from 'country-list'; // added import
+import { getNames as getCountryNames, getName as IsoToName } from 'country-list';
 import PriceHistoryChart from "./LineChart/LineChart.jsx";
 import PriceWorldmap from "./WorldMap/WorldMap.jsx";
 
@@ -67,31 +67,37 @@ export default function CalculatorPage() {
             if (!result?.htsno) return;
             setLoading(true);
             try {
-                const response = await api.get(`/api/tariffs/compare-countries`, {
-                    params: { htsno: result.htsno }
-                });
+                const response = await api.get(`product/price/map/${result.htsno}`);
                 const data = response.data;
-                setCountryTariffs(data);
-                // build list then set initial rate from that same data
-                const countries = [];
-                if (data['Special countries']) {
-                    data['Special countries'].forEach(name => {
-                        countries.push({ name, rate: data['Special rate'] || 'N/A' });
-                    });
-                }
+                console.log("Response data:", data);
 
-                const allCountries = getCountryNames();
-                allCountries.forEach(name => {
-                    if (!countries.find(c => c.name === name)) {
-                        countries.push({ name, rate: data['General rate'] || 'N/A' });
+                setCountryTariffs(data);
+
+                const countries = [];
+
+                Object.entries(data).forEach(([code, rate]) => {
+                    const countryName = IsoToName(code);
+
+                    if (countryName) {
+                        countries.push({
+                            name: countryName,
+                            code: code,
+                            rate: rate
+                        })
                     }
-                })
+                });
+
+                countries.sort((a, b) => a.name.localeCompare(b.name));
                 setAvailableCountries(countries);
-                // set rate for default origin
+
                 const found = countries.find(c => c.name === origin);
-                const initialRate = found ? found.rate : (data['General rate'] || 'N/A');
+                const initialRate = found ? found.rate : 'N/A';
                 setCurrentTariffRate(initialRate);
-                setLines(prev => [{ ...prev[0], ratePct: extractNumericRate(initialRate) }, ...prev.slice(1)]);
+                setLines(prev => [
+                    { ...prev[0], ratePct: extractNumericRate(initialRate) },
+                    ...prev.slice(1)
+                ]);
+
             } catch (error) {
                 console.error('Error fetching country tariffs:', error);
             } finally {
@@ -101,50 +107,6 @@ export default function CalculatorPage() {
         fetchCountryTariffs();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [result?.htsno]);
-
-    // Build country list from API response
-    const buildCountryList = (tariffData) => {
-        const countries = [];
-
-        // Add special countries with special rates
-        if (tariffData['Special countries']) {
-            tariffData['Special countries'].forEach(countryName => {
-                countries.push({
-                    name: countryName,
-                    rate: tariffData['Special rate'] || 'N/A'
-                });
-            });
-        }
-
-        // Use country-list package for common countries instead of hardcoded list
-        const commonCountries = getCountryNames(); // all standard country names
-        commonCountries.forEach(countryName => {
-            if (!countries.find(c => c.name === countryName)) {
-                countries.push({
-                    name: countryName,
-                    rate: tariffData['General rate'] || 'N/A'
-                });
-            }
-        });
-
-        setAvailableCountries(countries);
-    };
-
-    // Update tariff rate when origin changes
-    const updateTariffRate = (selectedCountry, tariffData) => {
-        if (!tariffData) return;
-
-        const country = availableCountries.find(c => c.name === selectedCountry);
-        const newRate = country ? country.rate : tariffData['General rate'] || 'N/A';
-        setCurrentTariffRate(newRate);
-
-        // Update the duty line percentage
-        const numericRate = extractNumericRate(newRate);
-        setLines(prevLines => [
-            { ...prevLines[0], ratePct: numericRate },
-            ...prevLines.slice(1)
-        ]);
-    };
 
     // Helper to extract numeric rate from strings like "5.6%" or "Free"
     const extractNumericRate = (rateString) => {
@@ -258,11 +220,12 @@ export default function CalculatorPage() {
                             <div className="calc-card-head">
                                 <div className="calc-title-wrap">
                                     <div className="mini-label">Inputs</div>
-                                    <h3 className="calc-title">{keyword}</h3>
+                                    <h3 className="calc-title" data-tour="calc-title">{keyword}</h3>
                                 </div>
                                 <button
                                     type="button"
                                     className="star-btn"
+                                    data-tour="star-button"
                                     aria-pressed={isFav}
                                     title={isFav ? "Unfavourite" : "Favourite"}
                                     onClick={toggleFav}
@@ -282,7 +245,7 @@ export default function CalculatorPage() {
                                 <input className="search-input" value={desc} readOnly style={{ backgroundColor: '#f8f9fa', cursor: 'default' }} />
                             </div>
 
-                            <div className="form-row">
+                            <div className="form-row" data-tour="shipment-value">
                                 <label>Shipment Value (USD)</label>
                                 <input
                                     type="number"
@@ -298,13 +261,16 @@ export default function CalculatorPage() {
                                 />
                             </div>
 
-                            <div className="form-row two">
+                            <div className="form-row two" data-tour="country-origin">
                                 <div>
                                     <label>Country of Origin</label>
                                     {loading ? (
                                         <div className="search-input">Loading countries...</div>
                                     ) : (
-                                        <select className="search-input" value={origin} onChange={e => handleOriginChange(e.target.value)}>
+                                        <select
+                                            className="search-input"
+                                            value={origin}
+                                            onChange={e => handleOriginChange(e.target.value)}>
                                             {availableCountries.map((c, i) => (
                                                 <option key={i} value={c.name}>
                                                     {c.name} - {c.rate}
@@ -314,72 +280,22 @@ export default function CalculatorPage() {
                                         </select>
                                     )}
                                 </div>
-                                <div>
-                                    <label>Import Programs</label>
-                                    <select className="search-input" value={program} onChange={e => setProgram(e.target.value)}>
-                                        <option value="none">None</option>
-                                        <option value="ieepa25">IEEPA 25%</option>
-                                        <option value="ieepa50">IEEPA 50%</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="form-row two">
-                                <div>
-                                    <label>Mode of Transport</label>
-                                    <select className="search-input" value={transport} onChange={e => setTransport(e.target.value)}>
-                                        <option value="OCEAN">🚢 Ocean</option>
-                                        <option value="AIR">✈️ Air</option>
-                                        <option value="TRUCK">🚚 Truck</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Entry Date</label>
-                                    <input type="date" className="search-input" value={entryDate} onChange={e => setEntryDate(e.target.value)} />
-                                </div>
-                            </div>
-
-                            <div className="form-row two">
-                                <div>
-                                    <label>Date of Loading</label>
-                                    <input type="date" className="search-input" value={loadDate} onChange={e => setLoadDate(e.target.value)} />
-                                </div>
-                            </div>
-
-                            <div className="form-row">
-                                <div className="lines-header">
-                                    <label>Duty Lines</label>
-                                    <button type="button" className="feature-btn" onClick={addLine}>Add line</button>
-                                </div>
-                                <div className="lines-list">
-                                    {lines.map((l, i) => (
-                                        <div key={i} className="line-item">
-                                            <input className="search-input" value={l.label} onChange={e => updateLine(i, { label: e.target.value })} />
-                                            <input type="number" className="search-input" value={l.base} onChange={e => updateLine(i, { base: Number(e.target.value) || 0 })} placeholder="Value (USD)" />
-                                            <div className="inline">
-                                                <input type="number" className="search-input" value={l.ratePct} onChange={e => updateLine(i, { ratePct: Number(e.target.value) || 0 })} />
-                                                <span className="pct">%</span>
-                                            </div>
-                                            <button type="button" className="chip danger" onClick={() => removeLine(i)}>✕</button>
-                                        </div>
-                                    ))}
-                                </div>
                             </div>
                         </section>
 
                         {/* RIGHT: Results */}
                         <aside className="calc-card">
-                            <h3 className="calc-title">Calculation Results</h3>
-                            <div className="results-top">
+                            <h3 className="calc-title" data-tour="calc-results-title">Calculation Results</h3>
+                            <div className="results-top" data-tour="calc-results">
                                 <div>
                                     <div className="muted">DUTY RATE</div>
-                                    <div className="duty-rate">{dutyRatePct.toFixed(2)}%</div>
+                                    <div className="duty-rate" data-tour="duty-rate">{dutyRatePct.toFixed(2)}%</div>
                                 </div>
                                 <div className="breakdown">
                                     <div className="muted">COST BREAKDOWN</div>
                                     <div className="row"><span>Base Cost</span><b>${value.toLocaleString()}</b></div>
                                     <div className="row"><span>Total Duties</span><b>${dutyTotal.toLocaleString()}</b></div>
-                                    <div className="row total"><span>Landed Cost</span><b>${landedCost.toLocaleString()}</b></div>
+                                    <div className="row total" data-tour="landed-cost"><span>Landed Cost</span><b>${landedCost.toLocaleString()}</b></div>
                                 </div>
                             </div>
 
@@ -396,14 +312,25 @@ export default function CalculatorPage() {
                         </aside>
                     </div>
                     <section className="charts">
-                        <h1>Data Visualizations</h1>
-                        <div>
+                        <h2 className="charts-title"> Data Visualisations</h2>
+                        {/* Line chart step */}
+                        <div
+                            className="chart-wrapper"
+                            data-tour="price-history-chart"
+                        >
                             <PriceHistoryChart hts={hts} origin={origin} />
                         </div>
-                        <div>
+
+                        {/* World map step */}
+                        <div
+                            className="chart-wrapper"
+                            data-tour="price-distribution-map"
+                        >
+                            <h3 className="chart-subtitle">
+                                Price Distribution by Country
+                            </h3>
                             <PriceWorldmap htsCode={hts} />
                         </div>
-
                     </section>
                 </main>
             </div>

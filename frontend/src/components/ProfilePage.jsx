@@ -36,48 +36,33 @@ export default function ProfilePage({ }) {
 
     const handleUpdate = async (e) => {
         e.preventDefault();
+
         try {
-            const response = await api.post(`/updateEmail/${encodeURIComponent(userID)}`, {
-                userID,
-                email,
+            const response = await api.post(`/updateUser/${encodeURIComponent(userID)}`, {
+                "userID": userID,
+                "username": username,
+                "email": email
             });
             console.log(response);
-            setMsg("✅ Profile updated successfully!");
-            setTimeout(() => navigate("/"), 1000);
         } catch (error) {
-            console.log("Error: " + error);
-            setMsg("❌ Failed to update. Please try again.");
-            const handleUpdate = async (e) => {
-                e.preventDefault();
+            console.log("Error: " + error.response.data);
 
-                try {
-                    const response = await api.post(`/updateUser/${encodeURIComponent(userID)}`, {
-                        "userID": userID,
-                        "username": username,
-                        "email": email
-                    });
-                    console.log(response);
-                } catch (error) {
-                    console.log("Error: " + error.response.data);
-
-                    if (error.response.data.trim() === "Nothing to update.") {
-                        setMsg("Nothing to update. Redirecting to home...");
-                        await new Promise(resolve => setTimeout(resolve, 2000));
-                        navigate("/");
-                        return;
-                    }
-
-                    setMsg(error.response.data);
-                    return;
-                }
-
-                setMsg("Update complete! Re-directing you back to login...");
+            if (error.response.data.trim() === "Nothing to update.") {
+                setMsg("❌Nothing to update. Redirecting to home...");
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                localStorage.removeItem("token");
-                navigate("/login");
+                navigate("/");
+                return;
             }
+
+            setMsg(error.response.data);
+            return;
         }
-    };
+
+        setMsg("✅ Profile updated successfully! Redirecting to login...");
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        localStorage.removeItem("token");
+        navigate("/login");
+    }
 
     const handleCancel = () => {
         navigate("/");

@@ -24,13 +24,6 @@ public class Product implements Comparable<Product> {
     @Id
     private LocalDate fetchDate;
 
-    @Override
-    public int compareTo(Product other) {
-        int htsCodeComparison = htsCode.compareTo(other.htsCode);
-        if (htsCodeComparison != 0) return htsCodeComparison;
-        return fetchDate.compareTo(other.fetchDate);
-    }
-
     @Lob
     private String description;
     
@@ -41,7 +34,14 @@ public class Product implements Comparable<Product> {
     private String special;
 
     private String category;
-    
+
+    @Override
+    public int compareTo(Product other) {
+        int htsCodeComparison = htsCode.compareTo(other.htsCode);
+        if (htsCodeComparison != 0) return htsCodeComparison;
+        return fetchDate.compareTo(other.fetchDate);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof Product p) {

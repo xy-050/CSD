@@ -39,8 +39,16 @@ export default function LoginPage() {
     return (
         <div className="login-container">
             <div className="login-box">
-                <div className="login-header">
-                    <h1>Welcome back</h1>
+                {/* Brand strip like Mangools */}
+                <div className="login-brand">
+                    <div className="login-logo-circle">
+                        💸
+                    </div>
+                    <span className="login-brand-name">Tariff-ic</span>
+                </div>
+
+                <div className="login-header login-header-compact">
+                    <h1>Welcome back!</h1>
                     <p>Sign in to continue</p>
                 </div>
 
@@ -89,13 +97,15 @@ export default function LoginPage() {
                     </button>
                 </form>
 
-                <div className="switch-form">
-                    <p>
-                        New here?{' '}
-                        <Link to="/signup" className="link-btn">
-                            Create an account
-                        </Link>
-                    </p>
+                {/* Bottom inline links like the screenshot */}
+                <div className="login-footer-links">
+                    <Link to="/signup" className="link-btn">
+                        Don&apos;t have an account?
+                    </Link>
+                    <span className="footer-divider">•</span>
+                    <Link to="/forgot-password" className="link-btn">
+                        Forgot password?
+                    </Link>
                 </div>
             </div>
         </div>

@@ -6,6 +6,7 @@ import app.account.Account;
 import app.account.AccountRepository;
 import jakarta.persistence.EntityNotFoundException;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -109,14 +110,9 @@ public class FavouritesService {
      * @param userId Target user ID
      * @return Set containing all the favouried HTS codes
      */
-    public Set<String> getFavouritesHtsCodes(Integer userId) {
+    public List<FavouritesDTO> getFavouritesHtsCodes(Integer userId) {
         try {
-            Account account = accountRepository.findById(userId).orElseThrow();
-
-            return account.getFavourites()
-                    .stream()
-                    .map(Favourites::getHtsCode)
-                    .collect(Collectors.toSet());
+            return favouritesRepository.findFavouritesByAccountId(userId);
         } catch (EntityNotFoundException | NoSuchElementException e) {
             System.out.println(e.getMessage());
             return null;
