@@ -25,9 +25,9 @@ jobs:
 
       - name: Stop and remove backend container
         run: |
-          docker-compose stop backend
-          docker-compose rm -f backend
+          docker compose stop backend
+          docker compose rm -f backend
 
       - name: Deploy backend only
         run: |
-          docker-compose up -d backend
+          docker compose up -d backend
