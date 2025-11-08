@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { TourProvider } from './components/Tour/TourContext.jsx';
-import ProtectedRoute from "./components/ProtectedRoute.jsx"
-import LoginPage from './components/LoginPage.jsx';
-import SignupPage from './components/SIgnupPage.jsx';
-import ForgotPasswordPage from './components/ForgotPassword/ForgotPasswordPage.jsx';
-import HomePage from './components/Homepage.jsx';
-import ProfilePage from './components/ProfilePage.jsx';
-import SearchResults from './components/SearchResults.jsx';
-import CalculatorPage from "./components/CalculatorPage.jsx";
-import FavouritesPage from './components/FavouritesPage.jsx';
-import ChangePasswordPage from './components/ChangePasswordPage.jsx';
+
+import { TourProvider } from './contexts/TourContext.jsx';
+
+import ProtectedRoute from "./guards/ProtectedRoute.jsx"
+
+import LoginPage from './pages/LoginPage.jsx';
+import SignupPage from './pages/SignupPage.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
+import HomePage from './pages/Homepage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import SearchResults from './pages/SearchResults.jsx';
+import CalculatorPage from "./pages/CalculatorPage.jsx";
+import FavouritesPage from './pages/FavouritesPage.jsx';
+import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
+
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 

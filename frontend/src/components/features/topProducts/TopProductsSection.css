@@ -1,0 +1,25 @@
+@media (max-width: 1200px) {
+	.query-cards-row.remaining {
+		grid-template-columns: repeat(4, 1fr);
+	}
+}
+
+@media (max-width: 768px) {
+	.query-cards-row.top-three {
+		grid-template-columns: repeat(1, 1fr);
+	}
+
+	.query-cards-row.remaining {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	.query-card.top-three {
+		min-height: 140px;
+	}
+}
+
+@media (max-width: 480px) {
+	.query-cards-row.remaining {
+		grid-template-columns: repeat(1, 1fr);
+	}
+}
