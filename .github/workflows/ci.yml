@@ -20,12 +20,12 @@ jobs:
       # Build frontend image
       - name: Build frontend image
         run: |
-          echo "${{ secrets.ORIGIN_PEM}}" | base64 --decode > origin.pem
-          echo "${{ secrets.PRIVATEKEY_PEM}}" | base64 --decode > privatekey.pem
+          echo "${{ secrets.ORIGIN_PEM }}" > origin.pem
+          echo "${{ secrets.PRIVATEKEY_PEM }}" > privatekey.pem
           docker build \
-            --build-arg ORIGIN_PEM="$(cat origin.pem)" \
-            --build-arg PRIVATEKEY_PEM="$(cat privatekey.pem)" \
-            -t ${{ secrets.DOCKER_USERNAME }}/tariffic-frontend:latest ./frontend
+          --build-arg ORIGIN_PEM="$(cat origin.pem)" \
+          --build-arg PRIVATEKEY_PEM="$(cat privatekey.pem)" \
+          -t ${{ secrets.DOCKER_USERNAME }}/tariffic-frontend:latest ./frontend
 
       # Push frontend image
       - name: Push frontend image
