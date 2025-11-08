@@ -59,8 +59,8 @@ public class QueryController {
 	}
 
 	@GetMapping("/most-queried") 
-	public ResponseEntity<List<String>> getMostQueriedHTSCodes() {
-		List<String> results = queryService.getMostQueried();
+	public ResponseEntity<List<QueryDTO>> getMostQueriedHTSCodes() {
+		List<QueryDTO> results = queryService.getMostQueried();
 		return ResponseEntity.ok(results);
 	}
 	

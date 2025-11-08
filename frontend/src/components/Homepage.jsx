@@ -71,7 +71,7 @@ export default function HomePage() {
     return () => clearInterval(id);
   }, []);
 
-  // Fetch top queried products
+  // Fetch top queried products with details
   useEffect(() => {
     (async () => {
       try {
@@ -79,7 +79,8 @@ export default function HomePage() {
         setTopError(null);
         const res = await api.get("/api/tariffs/most-queried");
         const list = Array.isArray(res.data) ? res.data : [];
-        const valid = list.filter(code => code && code.trim() !== "");
+        // Filter out any invalid entries
+        const valid = list.filter(item => item && item.htsCode && item.htsCode.trim() !== "");
         setTopProducts(valid.slice(0, 10));
       } catch (err) {
         console.error("Failed to load top products", err);
@@ -124,48 +125,33 @@ export default function HomePage() {
     }
   };
 
-  // When a top product is clicked, fetch its details and navigate to calculator
-  // HTS codes from most-queried are guaranteed to be final products
-  const handleProductClick = async (htsCode) => {
-    console.log('Clicking on HTS code:', htsCode);
+  // When a top product is clicked, navigate to calculator with its details
+  // Product details are already available from the QueryDTO
+  const handleProductClick = async (product) => {
+    console.log('Clicking on product:', product);
     try {
-      // Fetch product details using the new ProductController endpoint
-      console.log('Fetching from:', `/product/hts/${encodeURIComponent(htsCode)}`);
-      const response = await api.get(`/product/hts/${encodeURIComponent(htsCode)}`);
-      
-      console.log('Response received:', response.data);
-      
-      if (!response.data || !response.data.htsCode) {
-        console.error('Product not found in response:', response.data);
-        alert('Product details not found');
-        return;
-      }
-
       // Save query for analytics
-      await saveQuery(htsCode);
+      await saveQuery(product.htsCode);
 
-      // Format the result for the calculator page
+      // Format the result for the calculator page using data from QueryDTO
       const formattedResult = {
-        htsno: response.data.htsCode,
-        description: response.data.description || 'No description available',
-        descriptionChain: [response.data.description || 'No description available'],
-        fullDescriptionChain: [response.data.description || 'No description available'],
-        general: response.data.general,
-        special: response.data.special || '',
-        category: response.data.category || '',
+        htsno: product.htsCode,
+        description: product.description || 'No description available',
+        descriptionChain: [product.description || 'No description available'],
+        fullDescriptionChain: [product.description || 'No description available'],
+        category: product.category || 'Unknown',
+        // Note: general and special rates may need to be fetched separately if needed
       };
 
       console.log('Navigating to calculator with:', formattedResult);
 
       // Navigate to calculator
       navigate('/calculator', { 
-        state: { result: formattedResult, keyword: htsCode } 
+        state: { result: formattedResult, keyword: product.category || product.htsCode } 
       });
     } catch (error) {
-      console.error('Error fetching product details for', htsCode, error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      alert(`Failed to load product details. ${error.response?.data?.message || error.message}`);
+      console.error('Error navigating to product details for', product.htsCode, error);
+      alert(`Failed to navigate to product details. ${error.message}`);
     }
   };
 
@@ -252,27 +238,30 @@ export default function HomePage() {
                       <div className="query-cards-row top-three">
                         {/* Reorder: #2, #1, #3 */}
                         {topProducts[1] && (
-                          <div key={topProducts[1] + '1'} className="query-card top-three rank-2">
+                          <div key={topProducts[1].htsCode + '1'} className="query-card top-three rank-2" onClick={() => handleProductClick(topProducts[1])}>
                             <div className="query-rank">#2</div>
-                            <div className="query-code" onClick={() => handleProductClick(topProducts[1])}>
-                              {topProducts[1]}
-                            </div>
+                            <div className="query-code">{topProducts[1].htsCode}</div>
+                            <div className="query-category">{topProducts[1].category}</div>
+                            <div className="query-description">{topProducts[1].description}</div>
+                            <div className="query-count">{topProducts[1].queryCount} queries</div>
                           </div>
                         )}
                         {topProducts[0] && (
-                          <div key={topProducts[0] + '0'} className="query-card top-three rank-1">
+                          <div key={topProducts[0].htsCode + '0'} className="query-card top-three rank-1" onClick={() => handleProductClick(topProducts[0])}>
                             <div className="query-rank">#1</div>
-                            <div className="query-code" onClick={() => handleProductClick(topProducts[0])}>
-                              {topProducts[0]}
-                            </div>
+                            <div className="query-code">{topProducts[0].htsCode}</div>
+                            <div className="query-category">{topProducts[0].category}</div>
+                            <div className="query-description">{topProducts[0].description}</div>
+                            <div className="query-count">{topProducts[0].queryCount} queries</div>
                           </div>
                         )}
                         {topProducts[2] && (
-                          <div key={topProducts[2] + '2'} className="query-card top-three rank-3">
+                          <div key={topProducts[2].htsCode + '2'} className="query-card top-three rank-3" onClick={() => handleProductClick(topProducts[2])}>
                             <div className="query-rank">#3</div>
-                            <div className="query-code" onClick={() => handleProductClick(topProducts[2])}>
-                              {topProducts[2]}
-                            </div>
+                            <div className="query-code">{topProducts[2].htsCode}</div>
+                            <div className="query-category">{topProducts[2].category}</div>
+                            <div className="query-description">{topProducts[2].description}</div>
+                            <div className="query-count">{topProducts[2].queryCount} queries</div>
                           </div>
                         )}
                       </div>
@@ -281,12 +270,13 @@ export default function HomePage() {
                     {/* Remaining 7 Row */}
                     {topProducts.slice(3, 10).length > 0 && (
                       <div className="query-cards-row remaining">
-                        {topProducts.slice(3, 10).map((code, idx) => (
-                          <div key={code + idx} className="query-card remaining">
+                        {topProducts.slice(3, 10).map((product, idx) => (
+                          <div key={product.htsCode + idx} className="query-card remaining" onClick={() => handleProductClick(product)}>
                             <div className="query-rank">#{idx + 4}</div>
-                            <div className="query-code" onClick={() => handleProductClick(code)}>
-                              {code}
-                            </div>
+                            <div className="query-code">{product.htsCode}</div>
+                            <div className="query-category">{product.category}</div>
+                            <div className="query-description">{product.description}</div>
+                            <div className="query-count">{product.queryCount} queries</div>
                           </div>
                         ))}
                       </div>
