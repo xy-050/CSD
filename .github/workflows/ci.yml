@@ -25,24 +25,21 @@ jobs:
           echo "$ORIGIN_PEM" > secrets/origin.pem
           echo "$PRIVATEKEY_PEM" > secrets/privatekey.pem
           echo "$NGINX_CONF" > secrets/nginx.conf
+          
+      # Build frontend image
+      - name: Build frontend image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/tariffic-frontend:latest ./frontend
+
+      # Push frontend image
+      - name: Push frontend image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/tariffic-frontend:latest
 
       # Build backend image
-      - name: Build and push backend
-        run: |
-          export DOCKER_BUILDKIT=1
-          docker build \
-            --secret id=origin.pem,src=secrets/origin.pem \
-            --secret id=privatekey.pem,src=secrets/privatekey.pem \
-            -t $DOCKER_USERNAME/tariffic-backend:latest ./backend
-          docker push $DOCKER_USERNAME/tariffic-backend:latest
+      - name: Build backend image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/tariffic-backend:latest ./backend
 
-      # 5️⃣ Build frontend image with nginx secret
-      - name: Build and push frontend
-        run: |
-          export DOCKER_BUILDKIT=1
-          docker build \
-            --secret id=nginx.conf,src=secrets/nginx.conf \
-            -t $DOCKER_USERNAME/tariffic-frontend:latest ./frontend
-          docker push $DOCKER_USERNAME/tariffic-frontend:latest
-
+      # Push backend image
+      - name: Push backend image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/tariffic-backend:latest
+      - name: Prepare secrets
 
