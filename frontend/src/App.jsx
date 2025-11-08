@@ -7,7 +7,7 @@ import SignupPage from './pages/SignupPage.jsx'
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import HomePage from './pages/Homepage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
-import SearchResults from './components/SearchResults.jsx';
+import SearchResults from './pages/SearchResults.jsx';
 import CalculatorPage from "./components/CalculatorPage.jsx";
 import FavouritesPage from './components/FavouritesPage.jsx';
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
