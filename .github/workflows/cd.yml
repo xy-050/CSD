@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: [self-hosted, runner]
+    runs-on: [runner]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
