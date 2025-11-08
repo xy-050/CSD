@@ -46,7 +46,7 @@ function PriceHistoryChart({ hts, origin }) {
             console.log("Line chart data:", response.data);
 
             const formattedData = Object.entries(response.data).map(([date, price]) => ({
-                date: date,
+                date: new Date(date).getTime(),
                 price: extractNumericRate(price),
                 displayDate: new Date(date).toLocaleDateString()
             }));
@@ -105,7 +105,11 @@ function PriceHistoryChart({ hts, origin }) {
                 >
                     <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                     <XAxis
-                        dataKey="displayDate"
+                        dataKey="date"
+                        type="number"
+                        domain={['dataMin', 'dataMax']}
+                        scale="time"
+                        tickFormatter={(timestamp) => new Date(timestamp).toLocaleDateString()}
                         label={{ value: 'Date', position: 'insideBottom', offset: -10 }}
                         angle={-45}
                         textAnchor="end"
@@ -122,6 +126,7 @@ function PriceHistoryChart({ hts, origin }) {
                             border: '2px solid #57B9FF',
                             borderRadius: '8px'
                         }}
+                        labelFormatter={(timestamp) => new Date(timestamp).toLocaleDateString()}
                     />
                     <Legend
                         verticalAlign="top"

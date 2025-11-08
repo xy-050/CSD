@@ -11,6 +11,7 @@ import { SuccessMessage } from "../components/ui/SuccessMessage/SuccessMessage.j
 import Popup from "../components/ui/Popup/Popup.jsx";
 
 import { useCurrentUser } from "../hooks/auth/useCurrentUser.jsx";
+import { useResponsiveSidebar } from '../hooks/ui/useResponsiveSidebar.jsx';
 
 export default function ProfilePage() {
     const { user, loading, error: fetchError } = useCurrentUser();
@@ -22,9 +23,11 @@ export default function ProfilePage() {
     const navigate = useNavigate();
 
     // Sidebar state
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const toggleSidebar = () => setSidebarOpen(v => !v);
-    const closeSidebar = () => setSidebarOpen(false);
+    const {
+            isOpen: sidebarOpen,
+            toggle: toggleSidebar,
+            closeOnMobile: closeSidebar
+        } = useResponsiveSidebar();
 
     // Update local state when user data loads
     useEffect(() => {
