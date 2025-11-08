@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import PriceHistoryChart from "./LineChart.jsx";
-import PriceWorldmap from "./WorldMap/WorldMap.jsx";
+import PriceWorldmap from "./WorldMap.jsx";
 
 export const DataVisualizationsSection = memo(function DataVisualizationsSection({
     htsCode,

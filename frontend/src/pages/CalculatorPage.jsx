@@ -4,7 +4,7 @@ import NavBar from "../components/NavBar";
 import Sidebar from "../components/Sidebar";
 import { CalculatorInputs } from '../components/CalculatorInputs';
 import { CalculationResults } from '../components/CalculationResults';
-import { DataVisualizationsSection } from '../components/DataVisualizationsSection';
+import { DataVisualizationsSection } from '../components/DataVisualizations/DataVisualizationsSection';
 import { EmptyCalculator } from '../components/EmptyCalculator';
 import { useResponsiveSidebar } from '../hooks/useResponsiveSidebar';
 import { useCurrentUser } from '../hooks/useCurrentUser';

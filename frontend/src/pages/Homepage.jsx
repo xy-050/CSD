@@ -4,7 +4,7 @@ import NavBar from "../components/NavBar.jsx";
 import SearchBar from "../components/Searchbar.jsx";
 import Sidebar from "../components/Sidebar.jsx";
 import { FeatureCard } from "../components/FeatureCard";
-import { TopProductsSection } from "../components/TopProductsSection";
+import { TopProductsSection } from "../components/TopProductsSection/TopProductsSection.jsx";
 import { TourButton } from "../components/TourButton";
 import { useTypingEffect } from "../hooks/useTypingEffect";
 import { useResponsiveSidebar } from "../hooks/useResponsiveSidebar";
