@@ -44,26 +44,18 @@ mvn exec:java '-Dexec.mainClass=app.utility.SeedDataGenerator'
 - Used by MySQL during container initialization
 
 **What it contains**:
-1. **User Accounts** (6 team members):
+1. **User Accounts** (6 team members + 1 admin):
    - rachel@tarrific.com
    - elodie@tarrific.com
    - xinyu@tarrific.com
    - amos@tarrific.com
    - roopa@tarrific.com
    - jordan@tarrific.com
+   - admin@ tarrific.com
    
    All passwords are BCrypt-hashed (plaintext versions are in SeedDataGenerator.java for reference)
 
-2. **Favourite HTS Codes** (4 tariff codes):
-   - 8471.30.0100 (Computer parts)
-   - 8528.72.6400 (Display devices)
-   - 9503.00.0073 (Toys)
-   - 6109.10.0012 (Textiles)
-
-3. **Account-Favourite Associations**:
-   - Links users to their favourite tariff codes
-
-4. **Historical Queries** (5 sample queries):
+2. **Historical Queries** (1 sample query for each hts code):
    - Past tariff lookups by users for analytics
 
 **SQL Pattern (Idempotent)**:

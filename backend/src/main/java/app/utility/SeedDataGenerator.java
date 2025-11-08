@@ -75,50 +75,7 @@ public class SeedDataGenerator {
                 writer.println("WHERE NOT EXISTS (SELECT 1 FROM account WHERE email = '" + email + "');");
                 writer.println();
             }
-            
-            // ========== SEED FAVOURITE HTS CODES ==========
-            // writer.println("-- ========== Favourite HTS Codes ==========");
-            // writer.println("-- Common tariff codes that can be favourited by users");
-            // writer.println();
-            
-            // String[] htsCodes = {
-            //     // "", // add in codes of fav hts in the brackets
-            // };
-            
-            // for (String code : htsCodes) {
-            //     writer.println("INSERT INTO favourite_hts_codes (hts_code)");
-            //     writer.println("SELECT '" + code + "' FROM DUAL");
-            //     writer.println("WHERE NOT EXISTS (SELECT 1 FROM favourite_hts_codes WHERE hts_code = '" + code + "');");
-            //     writer.println();
-            // }
-            
-            // // ========== LINK FAVOURITES TO ACCOUNTS ==========
-            // writer.println("-- ========== Link Favourites to User Accounts ==========");
-            // writer.println("-- Associates HTS codes with user accounts");
-            // writer.println("-- Note: userid 1 = rachel, 2 = elodie, etc. (based on insertion order above)");
-            // writer.println();
-            
-            // // Map account ID to HTS codes
-            // // IMPORTANT: Account IDs are auto-increment, so first inserted user gets ID 1
-            // String[][] favouriteLinks = {
-            //     {"1", "8471.30.0100"},  // Rachel's favourites
-            //     {"1", "8528.72.6400"},
-            //     {"2", "9503.00.0073"},  // Elodie's favourites
-            //     {"2", "6109.10.0012"}
-            // };
-            
-            // for (String[] link : favouriteLinks) {
-            //     String accountId = link[0];
-            //     String htsCode = link[1];
-                
-            //     writer.println("INSERT INTO account_favourite_hts (account_id, hts_code)");
-            //     writer.println("SELECT " + accountId + ", '" + htsCode + "' FROM DUAL");
-            //     writer.println("WHERE NOT EXISTS (");
-            //     writer.println("    SELECT 1 FROM account_favourite_hts");
-            //     writer.println("    WHERE account_id = " + accountId + " AND hts_code = '" + htsCode + "'");
-            //     writer.println(");");
-            //     writer.println();
-            // }
+        
             
             // ========== SEED HISTORICAL QUERIES ==========
             writer.println("-- ========== Historical User Queries ==========");
@@ -127,133 +84,157 @@ public class SeedDataGenerator {
             writer.println("-- The foreign key column name is 'userID' (mapped from Account entity)");
             writer.println();
             
-            // Define historical queries: hts_code, transport_mode (might need to be removed i think), origin, quantity, userid
-            // 
+            // Define historical queries: only hts_code and userid matter now
+            // Format: {hts_code, userid}
             String[][] queries = {
-                // comparing historical prices (multiple query for same htscode)
-                {"1806.90.55.00", "SEA", "CHINA", "100", "1"},
-                {"1806.90.55.00", "SEA", "CHINA", "100", "1"},
-                {"1806.90.55.00", "SEA", "CHINA", "100", "1"},
-                {"1806.90.55.00", "SEA", "CHINA", "100", "1"},
-                {"1806.90.55.00", "SEA", "CHINA", "100", "1"},
-                {"1806.90.55.00", "SEA", "CHINA", "100", "1"},
-                {"1806.90.55.00", "SEA", "CHINA", "100", "1"},
-                {"1806.90.55.00", "SEA", "CHINA", "100", "1"},
+                // Multiple queries for same HTS code for top10queries
+                {"0404.90.10.00", "1"}, 
+                {"0404.90.10.00", "1"}, 
+                {"0404.90.10.00", "1"}, 
+                {"0404.90.10.00", "1"}, 
+                {"0404.90.10.00", "1"}, 
+                {"0404.90.10.00", "1"}, 
 
-                // one of each hts code --> sugar, bread, milk, egg, rice
+                {"2303.20.00.00", "3"},
+                {"2303.20.00.00", "3"},
+                {"2303.20.00.00", "3"},
+                {"2303.20.00.00", "3"},
+                {"2303.20.00.00", "3"},
 
-                // egg
-                {"0408.11.0000", "AIR", "NZ", "60", "1"},
-                {"0408.19.0000", "AIR", "JP", "50", "2"},
-                {"0408.91.0000", "SEA", "KW", "200", "2"},
-                {"0408.99.0000", "SEA", "KR", "500", "2"},
+                {"1905.90.10.70", "2"},
+                {"1905.90.10.70", "2"},
+                {"1905.90.10.70", "2"},
+                {"1905.90.10.70", "2"},
+ 
 
-                // rice
-                {"1006.10.0000", "AIR", "TAIWAN", "75", "1"},
-                {"1006.20.2010", "AIR", "TAIWAN", "75", "1"},
-                {"1006.20.2090", "AIR", "TAIWAN", "75", "1"},
-                {"1006.20.4025", "AIR", "TAIWAN", "75", "1"},
-                {"1006.20.4035", "AIR", "TAIWAN", "75", "1"},
-                {"1006.20.4040", "AIR", "TAIWAN", "75", "1"},
-                {"1006.20.4060", "AIR", "TAIWAN", "75", "1"},
-                {"1006.20.4080", "AIR", "TAIWAN", "75", "1"},
-                {"1006.30.1020", "AIR", "TAIWAN", "75", "1"},
-                {"1006.30.1040", "AIR", "TAIWAN", "75", "1"},
-                {"1006.30.9015", "AIR", "TAIWAN", "75", "1"},
-                {"1006.30.9057", "AIR", "TAIWAN", "75", "1"},
-                {"1006.30.9059", "AIR", "TAIWAN", "75", "1"},
-                {"1006.30.9061", "AIR", "TAIWAN", "75", "1"},
-                {"1006.30.9065", "AIR", "TAIWAN", "75", "1"},
-                {"1006.30.9075", "AIR", "TAIWAN", "75", "1"},
-                {"1006.40.0000", "AIR", "TAIWAN", "75", "1"},
-
-                // milk (not concentrated 0401)
-                {"0401.10.0000", "AIR", "TAIWAN", "75", "2"},
-                {"0401.20.2000", "AIR", "TAIWAN", "75", "2"},
-                {"0401.20.4000", "AIR", "TAIWAN", "75", "2"},
-                {"0401.40.0200", "AIR", "TAIWAN", "75", "2"},
-                {"0401.40.0500", "AIR", "TAIWAN", "75", "2"},
-                {"0401.40.2500", "AIR", "TAIWAN", "75", "3"},
-                {"0401.50.0200", "AIR", "TAIWAN", "75", "3"},
-                {"0401.50.0500", "AIR", "TAIWAN", "75", "3"},
-                {"0401.50.2500", "AIR", "TAIWAN", "75", "3"},
-                {"0401.50.4200", "AIR", "TAIWAN", "75", "3"},
-                {"0401.50.5000", "AIR", "TAIWAN", "75", "4"},
-                {"0401.50.7500", "AIR", "TAIWAN", "75", "4"},
-
-                // milk (concentrated 0402)
-                {"0402.10.0500", "AIR", "TAIWAN", "75", "4"},
-                {"0402.10.1000", "AIR", "TAIWAN", "75", "4"},
-                {"0402.10.1050", "AIR", "TAIWAN", "75", "4"},
-                {"0402.21.0200", "AIR", "TAIWAN", "75", "4"},
-                {"0402.21.0500", "AIR", "TAIWAN", "75", "5"},
-                {"0402.21.2500", "AIR", "TAIWAN", "75", "5"},
-                {"0402.21.2700", "AIR", "TAIWAN", "75", "5"},
-                {"0402.21.3000", "AIR", "TAIWAN", "75", "5"},
-                {"0402.21.5000", "AIR", "TAIWAN", "75", "5"},
-                {"0402.21.7300", "AIR", "TAIWAN", "75", "5"},
-                {"0402.21.7500", "AIR", "TAIWAN", "75", "5"},
-                {"0402.21.9000", "AIR", "TAIWAN", "75", "5"},
-                {"0402.29.0500", "AIR", "TAIWAN", "75", "5"},
-                {"0402.29.1000", "AIR", "TAIWAN", "75", "5"},
-                {"0402.29.5000", "AIR", "TAIWAN", "75", "5"},
-                {"0402.91.0300", "AIR", "TAIWAN", "75", "5"},
-                {"0402.91.0600", "AIR", "TAIWAN", "75", "5"},
-                {"0402.91.1000", "AIR", "TAIWAN", "75", "5"},
-                {"0402.91.3000", "AIR", "TAIWAN", "75", "6"},
-                {"0402.91.7000", "AIR", "TAIWAN", "75", "6"},
-                {"0402.91.9000", "AIR", "TAIWAN", "75", "6"},
-                {"0402.99.0300", "AIR", "TAIWAN", "75", "6"},
-                {"0402.99.0600", "AIR", "TAIWAN", "75", "6"},
-                {"0402.99.1000", "AIR", "TAIWAN", "75", "6"},
-                {"0402.99.3000", "AIR", "TAIWAN", "75", "6"},
-                {"0402.99.4500", "AIR", "TAIWAN", "75", "6"},
-                {"0402.99.5500", "AIR", "TAIWAN", "75", "6"},
-                {"0402.99.6800", "AIR", "TAIWAN", "75", "6"},
-                {"0402.99.7000", "AIR", "TAIWAN", "75", "6"},
-                {"0402.99.9000", "AIR", "TAIWAN", "75", "6"},
-
-                // bread
-                {"1905.10.0000", "AIR", "TAIWAN", "75", "1"},
-                {"1905.20.0000", "AIR", "TAIWAN", "75", "1"},
-                {"1905.31.0021", "AIR", "TAIWAN", "75", "1"},
-                {"1905.31.0029", "AIR", "TAIWAN", "75", "1"},
-                {"1905.31.0041", "AIR", "TAIWAN", "75", "2"},
-                {"1905.31.0049", "AIR", "TAIWAN", "75", "2"},
-                {"1905.32.0021", "AIR", "TAIWAN", "75", "2"},
-                {"1905.32.0029", "AIR", "TAIWAN", "75", "2"},
-                {"1905.32.0041", "AIR", "TAIWAN", "75", "2"},
-                {"1905.32.0049", "AIR", "TAIWAN", "75", "2"},
-                {"1905.40.0000", "AIR", "TAIWAN", "75", "2"},
-                {"1905.90.1041", "AIR", "TAIWAN", "75", "2"},
-                {"1905.90.1049", "AIR", "TAIWAN", "75", "2"},
-                {"1905.90.1050", "AIR", "TAIWAN", "75", "2"},
-                {"1905.90.1070", "AIR", "TAIWAN", "75", "2"},
-                {"1905.90.1090", "AIR", "TAIWAN", "75", "2"},
-                {"1905.90.9030", "AIR", "TAIWAN", "75", "3"},
-                {"1905.90.9060", "AIR", "TAIWAN", "75", "3"},
-                {"1905.90.9090", "AIR", "TAIWAN", "75", "3"},
-
-                // sugar
-                {"2303.20.0000s", "AIR", "TAIWAN", "75", "1"},
-
+                // ===== Product Categories =====
                 
-                // honey
+                // Egg Products
+                {"0408.11.00.00", "1"},
+                {"0408.19.00.00", "2"},
+                {"0408.91.00.00", "2"},
+                {"0408.99.00.00", "2"},
+
+                // Rice Products
+                {"1006.10.00.00", "1"},
+                {"1006.20.20.10", "1"},
+                {"1006.20.20.90", "1"},
+                {"1006.20.40.25", "1"},
+                {"1006.20.40.35", "1"},
+                {"1006.20.40.40", "1"},
+                {"1006.20.40.60", "1"},
+                {"1006.20.40.80", "1"},
+                {"1006.30.10.20", "1"},
+                {"1006.30.10.40", "1"},
+                {"1006.30.90.15", "1"},
+                {"1006.30.90.57", "1"},
+                {"1006.30.90.59", "1"},
+                {"1006.30.90.61", "1"},
+                {"1006.30.90.65", "1"},
+                {"1006.30.90.75", "1"},
+                {"1006.40.00.00", "1"},
+
+                // Milk Products (not concentrated 0401)
+                {"0401.10.00.00", "2"},
+                {"0401.20.20.00", "2"},
+                {"0401.20.40.00", "2"},
+                {"0401.40.02.00", "2"},
+                {"0401.40.05.00", "2"},
+                {"0401.40.25.00", "3"},
+                {"0401.50.02.00", "3"},
+                {"0401.50.05.00", "3"},
+                {"0401.50.25.00", "3"},
+                {"0401.50.42.00", "3"},
+                {"0401.50.50.00", "4"},
+                {"0401.50.75.00", "4"},
+
+                // Milk Products (concentrated 0402)
+                {"0402.10.05.00", "4"},
+                {"0402.10.10.00", "4"},
+                {"0402.10.10.50", "4"},
+                {"0402.21.02.00", "4"},
+                {"0402.21.05.00", "5"},
+                {"0402.21.25.00", "5"},
+                {"0402.21.27.00", "5"},
+                {"0402.21.30.00", "5"},
+                {"0402.21.50.00", "5"},
+                {"0402.21.73.00", "5"},
+                {"0402.21.75.00", "5"},
+                {"0402.21.90.00", "5"},
+                {"0402.29.05.00", "5"},
+                {"0402.29.10.00", "5"},
+                {"0402.29.50.00", "5"},
+                {"0402.91.03.00", "5"},
+                {"0402.91.06.00", "5"},
+                {"0402.91.10.00", "5"},
+                {"0402.91.30.00", "6"},
+                {"0402.91.70.00", "6"},
+                {"0402.91.90.00", "6"},
+                {"0402.99.03.00", "6"},
+                {"0402.99.06.00", "6"},
+                {"0402.99.10.00", "6"},
+                {"0402.99.30.00", "6"},
+                {"0402.99.45.00", "6"},
+                {"0402.99.55.00", "6"},
+                {"0402.99.68.00", "6"},
+                {"0402.99.70.00", "6"},
+                {"0402.99.90.00", "6"},
+
+                // Bread Products
+                {"1905.10.00.00", "1"},
+                {"1905.20.00.00", "1"},
+                {"1905.31.00.21", "1"},
+                {"1905.31.00.29", "1"},
+                {"1905.31.00.41", "2"},
+                {"1905.31.00.49", "2"},
+                {"1905.32.00.21", "2"},
+                {"1905.32.00.29", "2"},
+                {"1905.32.00.41", "2"},
+                {"1905.32.00.49", "2"},
+                {"1905.40.00.00", "2"},
+                {"1905.90.10.41", "2"},
+                {"1905.90.10.49", "2"},
+                {"1905.90.10.50", "2"},
+                {"1905.90.10.70", "2"},
+                {"1905.90.10.90", "2"},
+                {"1905.90.90.30", "3"},
+                {"1905.90.90.60", "3"},
+                {"1905.90.90.90", "3"},
+
+                // Sugar Products
+                {"2303.20.00.00", "3"},
+                {"0403.90.85.00", "3"},
+                {"1701.14.20.00", "3"},
+                {"1701.91.52.00", "3"},
+                {"1701.13.20.00", "3"},
+                {"1701.91.42.00", "3"},
+                {"1702.90.05.00", "3"},
+                {"1702.40.28.00", "3"},
+                {"1702.60.28.00", "3"},
+                {"1702.90.58.00", "3"},
+                {"1702.90.10.00", "4"},
+                {"1702.90.64.00", "4"},
+                {"1702.20.28", "4"},
+                {"1702.30.28.00", "4"},
+                {"2202.99.10.00", "4"},
+                {"2202.10.00", "4"},
+                {"0404.90.10.00", "4"},
 
             };
             
             for (String[] query : queries) {
                 String htsCode = query[0];
-                String modeOfTransport = query[1];
-                String originCountry = query[2];
-                String quantity = query[3];
-                String userId = query[4];
+                String userId = query[4];  // Keep only HTS code and userID
+                
+                // Use default values for other fields:
+                // - mode_of_transport: "ANY" (default transport mode)
+                // - origin_country: "ALL" (default country)
+                // - quantity: 100 (default quantity)
                 
                 // No idempotency check for queries - historical records can have duplicates
-                // (same user can query same product multiple times)
                 // Column name is 'userID' (not 'userid') to match JPA @JoinColumn mapping
                 writer.println("INSERT INTO query (hts_code, mode_of_transport, origin_country, quantity, userID)");
-                writer.println("VALUES ('" + htsCode + "', '" + modeOfTransport + "', '" + originCountry + "', " + quantity + ", " + userId + ");");
+                writer.println("VALUES ('" + htsCode + "', 'ANY', 'ALL', 100, " + userId + ");");
                 writer.println();
             }
             
