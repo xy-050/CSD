@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useTour } from './Tour/TourContext.jsx';
+import { useTour } from './TourContext.jsx';
 import NavBar from './NavBar.jsx';
 import Sidebar from './Sidebar.jsx';
 import api from '../api/AxiosConfig.jsx';

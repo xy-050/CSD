@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTour } from "./Tour/TourContext.jsx";
+import { useTour } from "./TourContext.jsx";
 import api from "../api/AxiosConfig.jsx";
 import johnpork from "../assets/johnpork.png";
 

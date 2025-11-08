@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { TourProvider } from './components/Tour/TourContext.jsx';
+import { TourProvider } from './components/TourContext.jsx';
 import ProtectedRoute from "./components/ProtectedRoute.jsx"
 import LoginPage from './pages/LoginPage.jsx';
 import SignupPage from './pages/SignupPage.jsx'
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
-import HomePage from './components/Homepage.jsx';
+import HomePage from './pages/Homepage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import SearchResults from './components/SearchResults.jsx';
 import CalculatorPage from "./components/CalculatorPage.jsx";
