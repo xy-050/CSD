@@ -1,22 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api/AxiosConfig.jsx";
-
-/*
- * TODO:
- * - understand lines before handleSearch function
- * - update for search history -> should store/call from Query database to update/display to segregate between users
- * - understand what is debounce (live search)
- * - get rid of user 
- */
 
 export default function SearchBar({ }) {
     const [q, setQ] = useState("");
-    // const [history, setHistory] = useState([]); // commented - re-enable if needed
-    const [results, setResults] = useState([]);
     const [error, setError] = useState(null);
-    const inputRef = useRef(null);
-    const timerRef = useRef(null);
     const navigate = useNavigate();
 
     // add category definitions
@@ -27,28 +14,6 @@ export default function SearchBar({ }) {
         { key: 'Egg', label: 'Egg', icon: '🥚', dataTour: 'category-egg'},
         { key: 'Rice', label: 'Rice', icon: '🍚', dataTour: null},
     ];
-
-    // // per-user storage key (commented out)
-    // const storageKey = useMemo(
-    //     () => `history:${user?.email || "anon"}`,
-    //     [user?.email]
-    // );
-    //
-    // // safe JSON helpers (commented out)
-    // const readSearchHistory = () => {
-    //     try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); }
-    //     catch { return []; }
-    // };
-    // const writeSearchHistory = (arr) =>
-    //     localStorage.setItem(storageKey, JSON.stringify(arr));
-    //
-    // // load history when user (key) changes
-    // useEffect(() => { setHistory(readSearchHistory()); }, [storageKey]);
-    //
-    // const saveHistory = (arr) => { setHistory(arr); writeSearchHistory(arr); };
-    //
-    // const removeOne = (term) => saveHistory(history.filter(x => x !== term));
-    // const clearAll = () => saveHistory([]);
 
     const handleSearch = (term) => {
         const searchTerm = (term ?? q).trim();
@@ -118,43 +83,6 @@ export default function SearchBar({ }) {
                     {error}
                 </div>
             )}
-
-            {/* 
-                Commented-out history UI: keep for other developers to re-enable if needed.
-                To restore, uncomment the state + helpers above and this block below.
-            */}
-            {/*
-            {history.length > 0 && (
-                <div className="search-history">
-                    <div className="history-header">
-                        <span>Recent searches</span>
-                        <button className="link-btn" onClick={clearAll}>Clear all</button>
-                    </div>
-
-                    <div className="chips">
-                        {history.map((term) => (
-                            <button
-                                key={term}
-                                className="chip"
-                                onClick={() => handleSearch(term)}
-                                title={`Search "${term}"`}
-                            >
-                                <span className="chip-text">{term}</span>
-                                <span
-                                    className="chip-x"
-                                    role="button"
-                                    aria-label={`Remove ${term}`}
-                                    onClick={(e) => { e.stopPropagation(); removeOne(term); }}
-                                >
-                                    ×
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-            */}
-
         </section>
     );
 }

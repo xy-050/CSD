@@ -1,12 +1,21 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../../api/AxiosConfig.jsx';
+import { Logo } from '../components/Logo.jsx';
+import { FormInput } from '../components/FormInput.jsx';
+import { ErrorMessage } from '../components/ErrorMessage.jsx';
+import { SuccessMessage } from '../components/SuccessMessage.jsx';
+import api from '../api/AxiosConfig.jsx';
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+
+    const clearMessages = () => {
+        if (error) setError('');
+        if (success) setSuccess('');
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -15,15 +24,18 @@ export default function ForgotPasswordPage() {
         setSuccess('');
 
         try {
-            // adjust endpoint / payload to whatever your backend expects
             await api.post('/forgot-password', { email });
-
             setSuccess(
-                'If an account exists for this email, we’ve sent a reset link.'
+                "If an account exists for this email, we've sent a reset link."
             );
+            // Optional: Clear the email field after success
+            // setEmail('');
         } catch (err) {
             console.error(err);
-            setError('Something went wrong. Please try again.');
+            const errorMessage = err.response?.data?.message
+                || err.response?.data
+                || 'Something went wrong. Please try again.';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -32,38 +44,29 @@ export default function ForgotPasswordPage() {
     return (
         <div className="login-container">
             <div className="login-box">
-                <div className="login-brand">
-                    <div className="login-logo-circle">
-                        💸
-                    </div>
-                    <span className="login-brand-name">Tariff-ic</span>
-                </div>
+                <Logo />
+
                 <div className="login-header login-header-compact">
                     <h1>Reset password</h1>
                     <p>Enter the email linked to your account.</p>
                 </div>
 
-                {error && <div className="error-message mb-3">{error}</div>}
-                {success && <div className="success-message mb-3">{success}</div>}
+                <ErrorMessage message={error} />
+                <SuccessMessage message={success} />
 
                 <form className="form-container" onSubmit={handleSubmit}>
-                    <div className="input-group">
-                        <label>Email</label>
-                        <div className="input-wrapper">
-                            <span className="input-icon">📧</span>
-                            <input
-                                type="email"
-                                placeholder="you@example.com"
-                                value={email}
-                                onChange={(e) => {
-                                    setEmail(e.target.value);
-                                    if (error) setError('');
-                                    if (success) setSuccess('');
-                                }}
-                                required
-                            />
-                        </div>
-                    </div>
+                    <FormInput
+                        label="Email"
+                        icon="📧"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => {
+                            setEmail(e.target.value);
+                            clearMessages();
+                        }}
+                        required
+                    />
 
                     <button
                         className="submit-btn login-btn"

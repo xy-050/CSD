@@ -1,9 +1,3 @@
-// ============================================
-// REACT 19 COMPATIBLE TOUR 🎉
-// ============================================
-// Install: npm install @reactour/tour
-// ============================================
-
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {

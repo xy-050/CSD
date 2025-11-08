@@ -4,7 +4,7 @@ import NavBar from "./NavBar";
 import Sidebar from "./Sidebar";
 import api from '../api/AxiosConfig.jsx';
 import { getNames as getCountryNames, getName as IsoToName } from 'country-list';
-import PriceHistoryChart from "./LineChart/LineChart.jsx";
+import PriceHistoryChart from "./LineChart.jsx";
 import PriceWorldmap from "./WorldMap/WorldMap.jsx";
 
 export default function CalculatorPage() {

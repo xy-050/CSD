@@ -10,7 +10,7 @@ import {
     Legend,
     ResponsiveContainer
 } from 'recharts';
-import api from '../../api/AxiosConfig.jsx';
+import api from '../api/AxiosConfig.jsx';
 
 function PriceHistoryChart({ hts, origin }) {
     const [chartData, setChartData] = useState([]);
