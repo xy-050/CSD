@@ -1,16 +1,21 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useTour } from '../components/TourContext.jsx';
-import NavBar from '../components/NavBar.jsx';
-import Sidebar from '../components/Sidebar.jsx';
-import { SearchResultsHeader } from '../components/SearchResultsHeader.jsx';
-import { ResultCard } from '../components/ResultCard.jsx';
-import { EmptyResults } from '../components/EmptyResults.jsx';
-import { LoadingResults } from '../components/LoadingResults.jsx';
-import { useResponsiveSidebar } from '../hooks/useResponsiveSidebar.jsx';
-import { useSearchResults } from '../hooks/useSearchResults.jsx';
-import { useSaveQuery } from '../hooks/useSaveQuery.jsx';
-import { useTourSpotlight } from '../hooks/useTourSpotlight.jsx';
+
 import api from '../api/AxiosConfig.jsx';
+
+import NavBar from '../components/layout/NavBar/NavBar.jsx'
+import Sidebar from '../components/layout/SideBar/Sidebar.jsx';
+import { SearchResultsHeader } from '../components/features/search/SearchResultsHeader.jsx';
+import { ResultCard } from '../components/features/search/ResultCard.jsx';
+import { EmptyResults } from '../components/features/search/EmptyResults.jsx';
+import { LoadingResults } from '../components/features/search/LoadingResults.jsx';
+
+import { useTour } from '../contexts/TourContext.jsx';
+
+import { useResponsiveSidebar } from '../hooks/ui/useResponsiveSidebar.jsx';
+import { useSearchResults } from '../hooks/search/useSearchResults.jsx'
+import { useSaveQuery } from '../hooks/search/useSaveQuery.jsx';
+import { useTourSpotlight } from '../hooks/ui/useTourSpotlight.jsx';
+
 
 export default function SearchResults() {
     const { tourState, setCurrentStep } = useTour();

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Logo } from '../components/Logo.jsx';
-import { FormInput } from '../components/FormInput.jsx';
-import { ErrorMessage } from '../components/ErrorMessage.jsx';
+
 import api from "../api/AxiosConfig.jsx";
+
+import { Logo } from '../components/ui/Logo/Logo.jsx';
+import { FormInput } from '../components/ui/FormInput/FormInput.jsx';
+import { ErrorMessage } from '../components/ui/ErrorMessage/ErrorMessage.jsx';
 
 export default function LoginPage() {
     const navigate = useNavigate();

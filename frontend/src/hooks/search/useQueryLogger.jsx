@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import api from '../api/AxiosConfig.jsx';
+import api from '../../api/AxiosConfig.jsx';
 
 export function useQueryLogger(userId) {
     const logQuery = useCallback(async (htsCode, originCountry = null, modeOfTransport = null, quantity = 0) => {

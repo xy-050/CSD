@@ -1,4 +1,4 @@
-import { getCategoryIcon } from '../config/categoryIcons';
+import { getCategoryIcon } from '../../../config/categoryIcons';
 
 export function SearchResultsHeader({ keyword, originalCategory }) {
     const categoryIcon = getCategoryIcon(originalCategory || keyword);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../api/AxiosConfig.jsx';
+import api from "../../api/AxiosConfig";
 
 export function useCurrentUser() {
     const [user, setUser] = useState({

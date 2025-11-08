@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTour } from "./TourContext.jsx";
-import api from "../api/AxiosConfig.jsx";
-import johnpork from "../assets/johnpork.png";
+
+import api from "../../../api/AxiosConfig.jsx";
+
+import johnpork from "../../../assets/images/johnpork.png";
+
+import { useTour } from "../../../contexts/TourContext.jsx";
 
 export default function NavBar({ onToggleSidebar, sidebarOpen }) {
     const { startTour } = useTour();

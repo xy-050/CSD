@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ErrorMessage } from "../components/ErrorMessage";
+
+import { ErrorMessage } from '../../ui/ErrorMessage/ErrorMessage';
 
 const CATEGORIES = [
     { key: 'Sugar', label: 'Sugar', icon: '🍬' },

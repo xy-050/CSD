@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import { scaleLinear } from 'd3-scale';
 import 'leaflet/dist/leaflet.css';
-import '../../utils/leafletIconFix.jsx';
-import { useCountryGeoJSON } from '../../hooks/useCountryGeoJSON.jsx';
-import api from '../../api/AxiosConfig.jsx';
+import '../../../utils/leafletIconFix.jsx';
+import { useCountryGeoJSON } from '../../../hooks/dataVisualization/useCountryGeoJSON.jsx';
+import api from '../../../api/AxiosConfig.jsx';
 
 function PriceWorldMap({ htsCode }) {
     const [priceData, setPriceData] = useState({});

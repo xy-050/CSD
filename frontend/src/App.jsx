@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { TourProvider } from './components/TourContext.jsx';
+
+import { TourProvider } from './contexts/TourContext.jsx';
+
 import ProtectedRoute from "./guards/ProtectedRoute.jsx"
+
 import LoginPage from './pages/LoginPage.jsx';
-import SignupPage from './pages/SignupPage.jsx'
+import SignupPage from './pages/SignupPage.jsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 import HomePage from './pages/Homepage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
@@ -11,6 +14,7 @@ import SearchResults from './pages/SearchResults.jsx';
 import CalculatorPage from "./pages/CalculatorPage.jsx";
 import FavouritesPage from './pages/FavouritesPage.jsx';
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
+
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../api/AxiosConfig.jsx';
+import api from '../../api/AxiosConfig.jsx';
 
 export function useSearchResults(keyword, navigationResults) {
     const [results, setResults] = useState(null);

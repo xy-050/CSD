@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import api from '../api/AxiosConfig.jsx';
+import api from '../../api/AxiosConfig.jsx';
 
 export function useFavourites(userId) {
     const [favourites, setFavourites] = useState([]);

@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import { useLocation } from 'react-router-dom';
 
-import NavBar from "../components/NavBar";
-import Sidebar from "../components/Sidebar";
-import { CalculatorInputs } from '../components/Calculator/CalculatorInputs';
-import { CalculationResults } from '../components/Calculator/CalculationResults';
-import { EmptyCalculator } from '../components/Calculator/EmptyCalculator';
-import { DataVisualizationsSection } from '../components/DataVisualizations/DataVisualizationsSection';
+import NavBar from "../components/layout/NavBar/NavBar";
+import Sidebar from "../components/layout/SideBar/Sidebar";
+import { CalculatorInputs } from '../components/features/calculator/CalculatorInputs'
+import { CalculationResults } from '../components/features/calculator/CalculationResults';
+import { EmptyCalculator } from '../components/features/calculator/EmptyCalculator';
+import { DataVisualizationsSection } from '../components/features/dataVisualizations/DataVisualizationsSection';
 
-import { useResponsiveSidebar } from '../hooks/useResponsiveSidebar';
-import { useCurrentUser } from '../hooks/useCurrentUser';
-import { useFavorite } from '../hooks/useFavorite';
-import { useCountryTariffs } from '../hooks/useCountryTariffs';
-import { useTariffCalculation } from '../hooks/useTariffCalculation';
+import { useCurrentUser } from "../hooks/auth/useCurrentUser.jsx";
+import { useFavorite } from '../hooks/calculator/useFavorite.jsx';
+import { useTariffCalculation } from '../hooks/calculator/useTariffCalculation.jsx';
+import { useCountryTariffs } from '../hooks/dataVisualization/useCountryTariffs.jsx';
+import { useResponsiveSidebar } from '../hooks/ui/useResponsiveSidebar.jsx';
 
 export default function CalculatorPage() {
     const location = useLocation();

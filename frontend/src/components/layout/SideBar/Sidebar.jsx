@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useTour } from './TourContext.jsx';
+import { useTour } from "../../../contexts/TourContext.jsx";
 
 export default function Sidebar({ isOpen, onClose }) {
     const navigate = useNavigate();

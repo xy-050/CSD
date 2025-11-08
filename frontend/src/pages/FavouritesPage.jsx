@@ -1,13 +1,16 @@
 import { useNavigate } from "react-router-dom";
-import NavBar from "../components/NavBar";
-import Sidebar from "../components/Sidebar";
-import { FavouritesGrid } from '../components/Favourites/FavouritesGrid';
-import { EmptyFavourites } from '../components/Favourites/EmptyFavourites';
-import { LoadingFavourites } from '../components/Favourites/LoadingFavourites';
-import { useResponsiveSidebar } from '../hooks/useResponsiveSidebar';
-import { useCurrentUser } from '../hooks/useCurrentUser';
-import { useFavourites } from '../hooks/useFavourites';
-import { useQueryLogger } from '../hooks/useQueryLogger';
+
+import NavBar from "../components/layout/NavBar/NavBar";
+import Sidebar from "../components/layout/SideBar/Sidebar";
+import { FavouritesGrid } from '../components/features/favourites/FavouritesGrid';
+import { EmptyFavourites } from '../components/features/favourites/EmptyFavourites';
+import { LoadingFavourites } from '../components/features/favourites/LoadingFavourites';
+
+import { useResponsiveSidebar } from '../hooks/ui/useResponsiveSidebar.jsx';
+import { useCurrentUser } from "../hooks/auth/useCurrentUser.jsx";
+import { useFavourites } from '../hooks/favourites/useFavourites.jsx';
+import { useQueryLogger } from '../hooks/search/useQueryLogger.jsx';
+
 import { createCalculatorState } from '../utils/favouriteFormatter';
 
 export default function FavouritesPage() {

@@ -1,18 +1,20 @@
 import { useNavigate } from "react-router-dom";
 
-import { useTour } from "../components/TourContext.jsx";
-import NavBar from "../components/NavBar.jsx";
-import SearchBar from "../components/Searchbar.jsx";
-import Sidebar from "../components/Sidebar.jsx";
-import { FeatureCard } from "../components/FeatureCard";
-import { TopProductsSection } from "../components/TopProductsSection/TopProductsSection.jsx";
-import { TourButton } from "../components/TourButton/TourButton.jsx";
-
-import { useTypingEffect } from "../hooks/useTypingEffect";
-import { useResponsiveSidebar } from "../hooks/useResponsiveSidebar";
-import { useTopProducts } from "../hooks/useTopProducts";
-import { useSaveQuery } from "../hooks/useSaveQuery";
 import api from "../api/AxiosConfig.jsx";
+
+import NavBar from "../components/layout/NavBar/NavBar.jsx";
+import Sidebar from "../components/layout/SideBar/Sidebar.jsx";
+import SearchBar from "../components/features/search/Searchbar.jsx";
+import { FeatureCard } from "../components/ui/FeatureCard/FeatureCard.jsx";
+import { TopProductsSection } from "../components/features/topProducts/TopProductsSection.jsx";
+import { TourButton } from "../components/features/tour/TourButton.jsx";
+
+import { useTour } from "../contexts/TourContext.jsx";
+
+import { useTypingEffect } from "../hooks/ui/useTypingEffect.jsx";
+import { useResponsiveSidebar } from "../hooks/ui/useResponsiveSidebar.jsx";
+import { useTopProducts } from "../hooks/dataVisualization/useTopProducts.jsx";
+import { useSaveQuery } from "../hooks/search/useSaveQuery.jsx";
 
 export default function HomePage() {
     const { startTour } = useTour();

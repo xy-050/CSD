@@ -1,12 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import NavBar from "../components/NavBar.jsx";
-import Sidebar from "../components/Sidebar.jsx";
-import { FormInput } from "../components/FormInput.jsx";
-import { ErrorMessage } from "../components/ErrorMessage.jsx";
-import { SuccessMessage } from "../components/SuccessMessage.jsx";
-import { useCurrentUser } from "../hooks/useCurrentUser.jsx"; 
+
 import api from '../api/AxiosConfig.jsx';
+
+import NavBar from "../components/layout/NavBar/NavBar.jsx";
+import Sidebar from "../components/layout/SideBar/Sidebar.jsx";
+import { FormInput } from "../components/ui/FormInput/FormInput.jsx";
+import { ErrorMessage } from "../components/ui/ErrorMessage/ErrorMessage.jsx";
+import { SuccessMessage } from "../components/ui/SuccessMessage/SuccessMessage.jsx";
+
+import { useCurrentUser } from "../hooks/auth/useCurrentUser.jsx";
 
 export default function ChangePasswordPage() {
     const navigate = useNavigate();

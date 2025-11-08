@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import NavBar from "../components/NavBar.jsx";
-import Sidebar from "../components/Sidebar.jsx";
-import { FormInput } from "../components/FormInput.jsx";
-import { ErrorMessage } from "../components/ErrorMessage.jsx";
-import { SuccessMessage } from "../components/SuccessMessage.jsx";
-import { useCurrentUser } from "../hooks/useCurrentUser.jsx";
+
 import api from "../api/AxiosConfig.jsx";
-import Popup from "../components/Popup/Popup.jsx";
+
+import NavBar from "../components/layout/NavBar/NavBar.jsx";
+import Sidebar from "../components/layout/SideBar/Sidebar.jsx";
+import { FormInput } from "../components/ui/FormInput/FormInput.jsx";
+import { ErrorMessage } from "../components/ui/ErrorMessage/ErrorMessage.jsx";
+import { SuccessMessage } from "../components/ui/SuccessMessage/SuccessMessage.jsx";
+import Popup from "../components/ui/Popup/Popup.jsx";
+
+import { useCurrentUser } from "../hooks/auth/useCurrentUser.jsx";
 
 export default function ProfilePage() {
     const { user, loading, error: fetchError } = useCurrentUser();

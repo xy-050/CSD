@@ -1,4 +1,4 @@
-import { ErrorMessage } from '../ErrorMessage';
+import { ErrorMessage } from '../../ui/ErrorMessage/ErrorMessage';
 
 export function TopProductsSection({ products, loading, error, onProductClick }) {
     if (loading) {

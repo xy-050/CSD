@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getName as IsoToName } from 'country-list';
-import api from '../api/AxiosConfig.jsx';
+import api from '../../api/AxiosConfig.jsx';
 
 // Helper to extract numeric rate from strings like "5.6%" or "Free"
 function extractNumericRate(rateString) {

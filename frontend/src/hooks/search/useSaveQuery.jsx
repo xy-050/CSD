@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
-import { useCurrentUser } from './useCurrentUser';
-import api from '../api/AxiosConfig.jsx';
+import { useCurrentUser } from "../auth/useCurrentUser";
 
 export function useSaveQuery() {
     const { user } = useCurrentUser();
