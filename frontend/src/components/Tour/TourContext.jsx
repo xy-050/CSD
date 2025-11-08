@@ -11,6 +11,8 @@ import {
     useTour as useReactour,
 } from '@reactour/tour';
 
+const TourContext = createContext(null);
+
 // --------------------------------------------------
 // 🧠 Step definitions for each page
 // --------------------------------------------------
@@ -201,8 +203,6 @@ function TourController({ children }) {
 // --------------------------------------------------
 // 🎯 TourStyles 
 // --------------------------------------------------
-const TourContext = createContext(null);
-
 export const tourStyles = {
     // main white box
     popover: (base) => ({
@@ -264,7 +264,6 @@ export function TourProvider({ children }) {
         <ReactourProvider
             steps={allSteps.home}
             styles={tourStyles}
-            maskRadius={20}
             scrollSmooth
             showNavigation
             showBadge

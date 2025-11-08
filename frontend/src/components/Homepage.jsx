@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTour } from "./Tour/TourContext.jsx";
 import NavBar from "./NavBar";
-import SearchBar from "./SearchBar";
+import SearchBar from "./Searchbar";
 import Sidebar from "./Sidebar";
 import api from "../api/AxiosConfig.jsx";
 
