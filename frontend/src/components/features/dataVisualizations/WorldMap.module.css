@@ -1,0 +1,143 @@
+/* Leaflet Container Overrides */
+.leaflet-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f8f9fa;
+}
+
+/* Popup Styling */
+.leaflet-popup-content {
+    margin: 8px;
+    font-size: 14px;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: white;
+}
+
+.leaflet-popup-content strong {
+    color: #333;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.leaflet-popup-tip {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Zoom Controls */
+.leaflet-control-zoom {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-control-zoom a {
+    border: none;
+    color: #333;
+}
+
+.leaflet-control-zoom a:hover {
+    background: #f0f0f0;
+}
+
+/* Attribution */
+.leaflet-control-attribution {
+    background: rgba(255, 255, 255, 0.8);
+    font-size: 11px;
+}
+
+/* Map */
+.world-map-container {
+    width: 100%;
+}
+
+.map-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--brand-ink);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.map-wrapper {
+    height: 600px;
+    width: 100%;
+    border: 1px solid rgba(144, 213, 255, 0.12);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Map States */
+.map-loading,
+.map-error,
+.map-empty {
+    text-align: center;
+    padding: 3rem;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.map-error {
+    color: #B42318;
+    background: rgba(239, 68, 68, 0.05);
+    border-radius: 12px;
+}
+
+.map-empty {
+    background: rgba(144, 213, 255, 0.04);
+    border-radius: 12px;
+}
+
+/* Map Legend */
+.map-legend {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(144, 213, 255, 0.04);
+    border-radius: 12px;
+    border: 1px solid rgba(144, 213, 255, 0.12);
+}
+
+.legend-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+
+.legend-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--brand-ink);
+}
+
+.legend-gradient {
+    width: 250px;
+    height: 25px;
+    background: linear-gradient(to right, #c6dbef, #08519c);
+    border-radius: 4px;
+    border: 1px solid rgba(144, 213, 255, 0.25);
+}
+
+.legend-note {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--medium-gray);
+} 
+
+/* Map Popup */
+.map-popup {
+    padding: 0.5rem;
+}
+
+.map-popup strong {
+    color: var(--brand-ink);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
