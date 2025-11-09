@@ -33,7 +33,8 @@ jobs:
 
       # Build backend image
       - name: Build backend image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/tariffic-backend:latest ./backend
+        run: docker build --pull -t ${{ secrets.DOCKER_USERNAME }}/tariffic-backend:latest ./backend
+
 
       # Push backend image
       - name: Push backend image

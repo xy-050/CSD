@@ -5,10 +5,10 @@ services:
     image: mysql:8.0
     container_name: TarrificDB-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-TarrificDB}
-      MYSQL_USER: ${MYSQL_USER:-sa}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-password}
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: TarrificDB
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
     ports:
       - "3307:3306"
     volumes:
