@@ -1,5 +1,7 @@
 package app.config;
 
+import java.util.Optional;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -80,11 +82,12 @@ public class DataSeeder {
      * @return The saved Account (or existing one), or null if something went wrong
      */
     private Account seedUser(AccountRepository repo, String email, String rawPassword, String username, String role, BCryptPasswordEncoder encoder) {
-        Account existing = repo.findByEmail(email);
+        Optional<Account> existing = repo.findByEmail(email);
         
-        if (existing != null) {
-            System.out.println("  ✓ User already exists: " + email + " (Role: " + existing.getRole() + ")");
-            return existing;
+        if (existing.isPresent()) {
+            Account acc = existing.get();
+            System.out.println("  ✓ User already exists: " + email + " (Role: " + acc.getRole() + ")");
+            return acc;
         }
         
         Account account = new Account();

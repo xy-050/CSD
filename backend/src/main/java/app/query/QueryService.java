@@ -4,7 +4,7 @@ package app.query;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import app.account.Account;
-import app.account.AccountRepository;
+import app.account.AccountService;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.Map;
 @Service
 public class QueryService {
 
-    private final AccountRepository accountRepository;
+    private final AccountService accountService;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private static final String HTS_SEARCH_API = "https://hts.usitc.gov/reststop/search";
@@ -24,9 +24,9 @@ public class QueryService {
      * 
      * @param queryRepository The QueryRepository instance
      */
-    public QueryService(QueryRepository queryRepository, AccountRepository accountRepository) {
+    public QueryService(QueryRepository queryRepository, AccountService accountService) {
         this.queryRepository = queryRepository;
-        this.accountRepository = accountRepository;
+        this.accountService = accountService;
     }
 
     /**
@@ -311,10 +311,7 @@ public class QueryService {
     }
 
     public List<Query> getQueriesByUserId(Integer userID) {
-        Account user = accountRepository.findByUserID(userID);
-        if (user == null) {
-            throw new IllegalArgumentException("User with ID " + userID + " not found.");
-        }
+        Account user = accountService.getAccountByUserID(userID);
         return queryRepository.findByUserID(user);
     }
 
