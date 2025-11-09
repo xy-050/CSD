@@ -1,6 +1,6 @@
 package app.email;
 
-import security.JwtUtils; 
+import app.security.JwtUtils; 
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
