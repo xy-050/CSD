@@ -1,8 +1,25 @@
 package app.email;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
+
+/**
+ * Compatibility wrapper class named with original lowercase type used across tests.
+ * Delegates to the proper `EmailService` implementation.
+ */
+@org.springframework.stereotype.Service
+public class emailService extends EmailService {
+
+    @Autowired
+    public emailService(JavaMailSender mailSender, app.security.JwtUtils jwtUtils, app.account.AccountService accountService) {
+        super(mailSender, jwtUtils, accountService);
+    }
+}
+package app.email;
+
 import app.security.JwtUtils;
 import app.account.Account;
-import app.account.AccountRepository;
+import app.account.AccountService;
 import app.product.ProductService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,14 +30,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
-import java.util.Optional;
 
 @Service
 public class EmailService {
 
     private final JwtUtils jwtUtils;
     private final JavaMailSender mailSender;
-    private final AccountRepository accountRepository;
+    private final AccountService accountService;
     
     @Autowired
     public ProductService productService; 
@@ -34,10 +50,10 @@ public class EmailService {
      * Constructor-based injection.
      */
     @Autowired
-    public EmailService(JavaMailSender mailSender, JwtUtils jwtUtils, AccountRepository accountRepository) {
+    public EmailService(JavaMailSender mailSender, JwtUtils jwtUtils, AccountService accountService) {
         this.mailSender = mailSender;
         this.jwtUtils = jwtUtils;
-        this.accountRepository = accountRepository;
+        this.accountService = accountService;
     }
 
     /**
@@ -93,16 +109,16 @@ public class EmailService {
 
             // Extract email from token
             String tokenEmail = jwtUtils.getUserNameFromJwtToken(token);
-            
+
             // Verify the email from token matches the provided email
-            if (!tokenEmail.equals(email)) {
-                System.out.println("Email mismatch: token=" + tokenEmail + ", provided=" + email);
+            if (tokenEmail == null || !tokenEmail.equals(email)) {
+                System.out.println("Email mismatch or token missing subject: token=" + tokenEmail + ", provided=" + email);
                 return null;
             }
 
             // Verify user exists
-            Account userOpt = accountRepository.findByEmail(email);
-            if (!userOpt.isPresent()) {
+            Account account = accountService.getAccountByEmail(email);
+            if (account == null) {
                 System.out.println("User not found: " + email);
                 return null;
             }
@@ -114,6 +130,36 @@ public class EmailService {
             System.err.println("Error validating token: " + e.getMessage());
             e.printStackTrace();
             return null;
+        }
+    }
+
+    /**
+     * Reset password using token. Returns true when successful.
+     */
+    public boolean resetPasswordWithToken(String email, String token, String newPassword) {
+        try {
+            // Validate token
+            if (!jwtUtils.validateToken(token)) {
+                return false;
+            }
+
+            String tokenEmail = jwtUtils.getUserNameFromJwtToken(token);
+            if (tokenEmail == null || !tokenEmail.equals(email)) {
+                return false;
+            }
+
+            // Ensure account exists
+            Account account = accountService.getAccountByEmail(email);
+            if (account == null) {
+                return false;
+            }
+
+            // Delegate to AccountService which handles password encoding and validation
+            accountService.resetPassword(email, newPassword);
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error resetting password: " + e.getMessage());
+            return false;
         }
     }
 
