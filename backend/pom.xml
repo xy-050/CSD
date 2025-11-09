@@ -16,6 +16,13 @@
   <name>CSD</name>
   <packaging>war</packaging>
 
+  <properties>
+    <!-- target Java version for compilation in CI/Docker -->
+    <java.version>17</java.version>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+  </properties>
+
   <dependencies>
     <!-- Spring Boot Starters -->
     <dependency>
@@ -50,11 +57,12 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Lombok -->
+    <!-- Lombok: provide compile-time annotation processing for getters/setters -->
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <optional>true</optional>
+      <version>1.18.26</version>
+      <scope>provided</scope>
     </dependency>
 
     <!-- Web -->
@@ -128,6 +136,21 @@
 
   <build>
     <plugins>
+      <!-- Ensure annotation processing for Lombok during compilation -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>1.18.26</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
