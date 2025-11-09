@@ -83,4 +83,16 @@ public class JwtUtils {
             return false;
         }
     }
+
+    /**
+     * Decode token and return the subject (username/email) or null if invalid.
+     */
+    public String getUserNameFromJwtToken(String token) {
+        try {
+            Jwt jwt = jwtDecoder.decode(token);
+            return jwt.getSubject();
+        } catch (JwtException e) {
+            return null;
+        }
+    }
 }

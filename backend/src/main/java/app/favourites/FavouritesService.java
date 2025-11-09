@@ -118,4 +118,22 @@ public class FavouritesService {
             return null;
         }
     }
+
+    /**
+        * Retrieves all user emails who have favorited a specific HTS code
+        * 
+        * @param htsCode Target HTS code
+        * @return List of user emails
+    */
+    public List<String> getUserEmailsByHtsCode(String htsCode) {
+        try {
+            Favourites favourites = favouritesRepository.findById(htsCode).orElseThrow();
+            return favourites.getAccounts().stream()
+                .map(Account::getEmail)  // Assuming Account has getEmail() method
+                .collect(Collectors.toList());
+        } catch (EntityNotFoundException | NoSuchElementException e) {
+            System.out.println("No favourites found for HTS code: " + htsCode);
+            return List.of(); // Return empty list if no one has favorited this item
+        }
+    }
 }

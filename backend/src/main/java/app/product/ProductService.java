@@ -18,8 +18,10 @@ import java.util.stream.Collectors;
 
 import app.exception.HTSCodeNotFoundException;
 import app.exception.ProductNotFoundException;
+import app.favourites.FavouritesService;
 import app.fta.FTAService;
 import app.query.QueryService;
+import app.email.EmailService;
 
 @Service
 public class ProductService {
@@ -27,13 +29,17 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final QueryService queryService;
     private final FTAService ftaService;
+    private final FavouritesService favouritesService;
+    private final EmailService emailService; 
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    public ProductService(ProductRepository productRepository, QueryService queryService, FTAService ftaService) {
+    public ProductService(ProductRepository productRepository, QueryService queryService, FTAService ftaService, FavouritesService favouritesService, EmailService emailService) {
         this.productRepository = productRepository;
         this.queryService = queryService;
         this.ftaService = ftaService;
+        this.favouritesService = favouritesService; 
+        this.emailService = emailService;
     }
 
     @Scheduled(cron = "0 0 0 * * MON")
@@ -60,10 +66,22 @@ public class ProductService {
                     Optional<Product> latestRecord = productRepository.findTopByHtsCodeOrderByFetchDateDesc(htsCode);
 
                     // check with latest record - if same then don't save
-                    if (!latestRecord.isPresent() || !latestRecord.get().equals(product)) {
+                    if (!latestRecord.isPresent()) {
                         productRepository.save(product);
+                    } else if (!latestRecord.get().equals(product)) {
+                    // Product has changed
+                        Product oldProduct = latestRecord.get();
+                        String oldGeneral = oldProduct.getGeneral();
+                        String newGeneral = general;
+                    
+                        // Save the updated product
+                        productRepository.save(product);
+                    
+                        // Notify users if the general rate changed
+                        if (oldGeneral != null && newGeneral != null && !oldGeneral.equals(newGeneral)) {
+                            notifyUsersOfPriceChange(htsCode, oldGeneral, newGeneral);  
+                        }
                     }
-
                 }
             }
         } catch (Exception e) {
@@ -197,5 +215,38 @@ public class ProductService {
             pricesByCountry.put(country, selectPrice(product.get(), country));
         }
         return pricesByCountry;
+    }
+
+    /**
+     * Notifies all users who have favorited an HTS code about a price change
+     * 
+     * @param htsCode Target HTS code
+     * @param oldPrice Previous general rate
+     * @param newPrice New general rate
+    */
+    private void notifyUsersOfPriceChange(String htsCode, String oldPrice, String newPrice) {
+        try {
+            List<String> userEmails = favouritesService.getUserEmailsByHtsCode(htsCode);
+            Double oldprice = Double.parseDouble(oldPrice);
+            Double newprice = Double.parseDouble(newPrice); 
+
+            if (userEmails.isEmpty()) {
+                System.out.println("No users to notify for HTS code: " + htsCode);
+                return;
+            }
+            
+            System.out.println("Notifying " + userEmails.size() + " users about price change for " + htsCode);
+            
+            for (String email : userEmails) {
+                try {
+                    
+                    emailService.sendNotificationEmail(email, htsCode, oldPrice, newPrice);
+                } catch (Exception e) {
+                    System.out.println("Failed to send email to " + email + ": " + e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error notifying users for HTS code " + htsCode + ": " + e.getMessage());
+        }
     }
 }

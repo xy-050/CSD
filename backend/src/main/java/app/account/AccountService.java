@@ -72,6 +72,15 @@ public class AccountService {
     }
 
     /**
+     * Get Account by email 
+     * @param email Target user email 
+     * @return corresponding account instance
+    */
+    public Account getAccountByEmail(String email){
+        return accountRepository.findByEmail(email); 
+    }
+
+    /**
      * Deletes an Account by User ID.
      * 
      * @param userId Target User ID.
@@ -109,6 +118,23 @@ public class AccountService {
                     "Password must be at least 8 characters long, containing a mix of uppercase letters, lowercase letters, and special symbols.");
         }
 
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+    }
+
+    public void resetPassword(String email, String newPassword) throws UserNotFoundException {
+        Account account = accountRepository.findByEmail(email); 
+    
+        if (account == null) {
+            throw new UserNotFoundException("User not found with email: " + email);
+        }
+    
+        // Validate new password
+        if (!PasswordChecker.isValidPassword(newPassword)) {
+            throw new IllegalArgumentException("Password does not meet requirements");
+        }
+    
+        // Encode and set new password
         account.setPassword(passwordEncoder.encode(newPassword));
         accountRepository.save(account);
     }
