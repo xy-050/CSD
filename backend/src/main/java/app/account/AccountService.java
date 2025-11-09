@@ -72,6 +72,16 @@ public class AccountService {
     }
 
     /**
+     * Retrieve account by email address.
+     *
+     * @param email target email
+     * @return Account or null when not found
+     */
+    public Account getAccountByEmail(String email) {
+        return accountRepository.findByEmail(email);
+    }
+
+    /**
      * Deletes an Account by User ID.
      * 
      * @param userId Target User ID.
@@ -188,5 +198,27 @@ public class AccountService {
      */
     public Account updateAccount(Account account) {
         return accountRepository.save(account);
+    }
+
+    /**
+     * Reset an account's password by email. This method will encode the password
+     * and save the account. Throws UserNotFoundException when no account exists.
+     *
+     * @param email the account's email
+     * @param newPassword the new plain-text password
+     * @throws UserNotFoundException when account not found
+     */
+    public void resetPassword(String email, String newPassword) throws UserNotFoundException {
+        Account account = accountRepository.findByEmail(email);
+        if (account == null) {
+            throw new UserNotFoundException("Account not found for email: " + email);
+        }
+
+        if (!PasswordChecker.isValidPassword(newPassword)) {
+            throw new IllegalArgumentException("Password does not meet requirements");
+        }
+
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
     }
 }

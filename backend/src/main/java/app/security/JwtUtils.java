@@ -83,4 +83,16 @@ public class JwtUtils {
             return false;
         }
     }
+
+    /**
+     * Extract the subject (username/email) from a JWT token. Returns null on failure.
+     */
+    public String getUserNameFromJwtToken(String token) {
+        try {
+            Jwt jwt = jwtDecoder.decode(token);
+            return jwt.getSubject();
+        } catch (JwtException e) {
+            return null;
+        }
+    }
 }
