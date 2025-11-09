@@ -216,34 +216,6 @@ public class ProductServiceTest {
                 .findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc("1704.90.35", queryDate);
     }
 
-    // @Test
-    // void getMostRecentProductPrice_WhenRecordExistsByCategory_ShouldReturnValue() {
-    // // Arrange
-    // Product product2 = new Product(
-    // "1704.90.40",
-    // LocalDate.of(2025, Month.APRIL, 1),
-    // "White sugar",
-    // "4.5¢/t",
-    // "Free (CA)",
-    // "sugar");
-
-    // List<Product> products = List.of(existing, product2);
-    // when(productRepository.findByCategory("sugar")).thenReturn(Optional.of(products));
-
-    // // Act
-    // Optional<List<Product>> result =
-    // productService.getProductsByCategory("sugar");
-
-    // // Assert
-    // assertTrue(result.isPresent());
-    // assertEquals(2, result.get().size());
-    // assertEquals("1704.90.35", result.get().get(0).getHtsCode());
-    // assertEquals("1704.90.40", result.get().get(1).getHtsCode());
-    // assertEquals("sugar", result.get().get(0).getCategory());
-    // assertEquals("sugar", result.get().get(1).getCategory());
-    // verify(productRepository, times(1)).findByCategory("sugar");
-    // }
-
     // -------------------------------------------------------------------
     // ---------------- testing selectPrice() method ---------------------
     // -------------------------------------------------------------------
