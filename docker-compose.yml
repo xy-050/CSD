@@ -37,10 +37,12 @@ services:
     image: ${DOCKER_USERNAME}/tariffic-frontend:latest
     container_name: CSD-frontend
     ports:
-      - "80:80"
-      - "443:443"
+      - "5173:80"
+    environment:
+      - VITE_BACKEND_URL=http://localhost:8080
     depends_on:
       - backend
+    restart: unless-stopped
 
 volumes:
   mysql-data:
