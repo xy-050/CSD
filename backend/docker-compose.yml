@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mysql:
     image: mysql:8.0
@@ -19,9 +21,7 @@ services:
     build: .
     container_name: CSD-backend
     ports:
-      - "8082:8080"
-    env_file:
-      - .env #Load environment vairables from .env file
+      - "8080:8080"
     environment:
       SPRING_DATASOURCE_HOST: mysql
       SPRING_DATASOURCE_PORT: 3306
