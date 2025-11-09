@@ -24,13 +24,13 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import app.exception.ProductNotFoundException;
-import app.query.QueryService;
+import app.query.TariffApiClient;
 
 @ExtendWith(MockitoExtension.class)
 public class ProductServiceTest {
 
     @Mock
-    private QueryService queryService;
+    private TariffApiClient apiClient;
 
     @Mock
     private ProductRepository productRepository;
@@ -74,7 +74,7 @@ public class ProductServiceTest {
         map.put("general", "5.5¢/t");
         map.put("special", "Free (AU, SG)");
 
-        when(queryService.searchTariffArticles(anyString())).thenReturn(List.of(map));
+        when(apiClient.searchTariffArticles(anyString())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.empty());
 
         // Act
@@ -103,7 +103,7 @@ public class ProductServiceTest {
         map.put("general", "6.0¢/t");
         map.put("special", "Free (AU, SG, NZ)");
 
-        when(queryService.searchTariffArticles(anyString())).thenReturn(List.of(map));
+        when(apiClient.searchTariffArticles(anyString())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
 
         // Act
@@ -130,7 +130,7 @@ public class ProductServiceTest {
         map.put("general", "5.5¢/t");
         map.put("special", "Free (AU, SG)");
 
-        when(queryService.searchTariffArticles(anyString())).thenReturn(List.of(map));
+        when(apiClient.searchTariffArticles(anyString())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
 
         // Act

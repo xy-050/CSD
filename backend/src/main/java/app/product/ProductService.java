@@ -15,18 +15,18 @@ import java.util.stream.Collectors;
 
 import app.exception.ProductNotFoundException;
 import app.fta.FTAService;
-import app.query.QueryService;
+import app.query.TariffApiClient;
 
 @Service
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final QueryService queryService;
+    private final TariffApiClient apiClient;
     private final FTAService ftaService;
 
-    public ProductService(ProductRepository productRepository, QueryService queryService, FTAService ftaService) {
+    public ProductService(ProductRepository productRepository, TariffApiClient apiClient, FTAService ftaService) {
         this.productRepository = productRepository;
-        this.queryService = queryService;
+        this.apiClient = apiClient;
         this.ftaService = ftaService;
     }
 
@@ -40,7 +40,7 @@ public class ProductService {
             List<String> keywords = List.of("sugar", "bread", "milk", "egg", "rice");
 
             for (String keyword : keywords) {
-                List<Map<String, Object>> response = queryService.searchTariffArticles(keyword);
+                List<Map<String, Object>> response = apiClient.searchTariffArticles(keyword);
 
                 for (Map<String, Object> map : response) {
                     String htsCode = (String) map.get("htsno");
@@ -129,7 +129,7 @@ public class ProductService {
      */
     private Optional<Product> fetchFromExternalApi(String htsCode) {
         try {
-            List<Map<String, Object>> apiResults = queryService.searchTariffArticles(htsCode);
+            List<Map<String, Object>> apiResults = apiClient.searchTariffArticles(htsCode);
             if (apiResults == null || apiResults.isEmpty()) {
                 return Optional.empty();
             }

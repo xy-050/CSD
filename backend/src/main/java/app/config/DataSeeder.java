@@ -109,7 +109,7 @@ public class DataSeeder {
     private void seedQuery(QueryRepository repo, String htsCode, Account user) {
         Query query = new Query();
         query.setHtsCode(htsCode);
-        query.setUserID(user);
+        query.setAccount(user);
         
         Query saved = repo.save(query);
         System.out.println("  + Created query: " + htsCode + " (ID: " + saved.getQueryID() + ")");
