@@ -28,4 +28,14 @@ public class Query {
     private Account userID; // foreign key from Account entity
 
     private String htsCode; // product code
+
+    // Explicit getters/setters added to ensure availability during CI/Docker builds
+    // (works around cases where Lombok annotation processing is not run)
+    public Long getQueryID() {
+        return this.queryID;
+    }
+
+    public void setQueryID(Long queryID) {
+        this.queryID = queryID;
+    }
 }

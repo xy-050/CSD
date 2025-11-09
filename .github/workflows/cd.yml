@@ -10,6 +10,8 @@ jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: [self-hosted, Windows, X64]
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,8 +24,17 @@ jobs:
 
       - name: Pull latest images
         run: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/tariffic-backend:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/tariffic-backend:latest || true
           docker pull ${{ secrets.DOCKER_USERNAME }}/tariffic-frontend:latest || true
+
+      - name: Create .env for docker-compose
+        run: |
+          echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" > .env
+          echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
 
       - name: Stop backend if running
         run: |
@@ -31,13 +42,10 @@ jobs:
           docker compose rm -f backend || true
 
       - name: Deploy backend (and ensure compose environment)
-        env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
-          # ensure we use the compose file from repo; pass env via .env or the above env
+          # ensure we use the compose file from repo; .env contains runtime secrets and DOCKER_USERNAME
           docker compose pull --ignore-pull-failures
-          docker compose up -d --remove-orphans backend
+          docker compose up -d --remove-orphans
           # show recent logs for troubleshooting (optional)
           docker compose ps
           docker compose logs --tail 50 backend
