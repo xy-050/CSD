@@ -1,6 +1,8 @@
 package app.security;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +23,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
@@ -36,7 +39,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/signup", "/error").permitAll()
+                        .requestMatchers("/login", "/signup", "/forgot-password", "/reset-password", "/error").permitAll()
                         .requestMatchers("/swagger-ui/index.html", "/swagger-ui.html", "/v3/api-docs").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")  // Admin-only endpoints
                         .anyRequest().authenticated())
@@ -44,7 +47,15 @@ public class SecurityConfig {
                 .oauth2ResourceServer((oauth2) -> oauth2
                         .jwt(jwt -> jwt
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())))
-                .cors(Customizer.withDefaults()) 
+                .cors(cors -> cors
+                    .configurationSource(request -> {
+                        var corsConfiguration = new CorsConfiguration();
+                        corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173"));
+                        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                        corsConfiguration.setAllowedHeaders(List.of("*"));
+                        corsConfiguration.setAllowCredentials(true);
+                        return corsConfiguration;
+                    })) 
                 .csrf(csrf -> csrf.disable()) 
                 .formLogin(form -> form.disable()) 
                 .httpBasic(basic -> basic.disable()) 

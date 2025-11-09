@@ -1,26 +1,8 @@
 package app.email;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
-
-/**
- * Compatibility wrapper class named with original lowercase type used across tests.
- * Delegates to the proper `EmailService` implementation.
- */
-@org.springframework.stereotype.Service
-public class emailService extends EmailService {
-
-    @Autowired
-    public emailService(JavaMailSender mailSender, app.security.JwtUtils jwtUtils, app.account.AccountService accountService) {
-        super(mailSender, jwtUtils, accountService);
-    }
-}
-package app.email;
-
 import app.security.JwtUtils;
 import app.account.Account;
 import app.account.AccountService;
-import app.product.ProductService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -38,8 +20,7 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final AccountService accountService;
     
-    @Autowired
-    public ProductService productService; 
+    // ProductService was removed from EmailService to avoid circular dependency
     
     private String fromAddress = "no-reply@tariffics.org";
     private String PasswordResetSubject = "Password Reset Request";

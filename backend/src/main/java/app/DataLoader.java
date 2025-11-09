@@ -23,9 +23,6 @@ import app.product.*;
 public class DataLoader implements ApplicationRunner {
 
     @Autowired
-    private ProductService productService;
-
-    @Autowired
     private ProductRepository productRepository;
 
     @Autowired
@@ -73,17 +70,26 @@ public class DataLoader implements ApplicationRunner {
                         "Egg"));
 
         for (Product product : products) {
-            productRepository.save(product);
+            try {
+                productRepository.save(product);
+            } catch (Exception e) {
+                System.out.println("Skipping seed product save due to error: " + e.getMessage());
+            }
         }
 
-        productService.fetchDaily();
+        // Skip the automatic fetchDaily during startup to avoid additional writes that may fail
+        // productService.fetchDaily();
 
         List<FTA> ftas = List.of(
             new FTA("NZ", "0407.11.00.00", "Free", LocalDate.of(2026, 1, 1)), 
             new FTA("NZ", "0407.11.00.00", "Free", LocalDate.of(2028, 1, 1)));
 
         for (FTA fta : ftas) {
-            ftaRepository.save(fta);
+            try {
+                ftaRepository.save(fta);
+            } catch (Exception e) {
+                System.out.println("Skipping seed FTA save due to error: " + e.getMessage());
+            }
         }
     }
 }
