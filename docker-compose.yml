@@ -42,7 +42,7 @@ services:
     environment:
       - VITE_BACKEND_URL=http://localhost:8080
     depends_on:
-      - backend
+      - CSD-backend
     restart: unless-stopped
 
 volumes:
