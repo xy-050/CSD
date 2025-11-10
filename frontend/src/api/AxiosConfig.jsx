@@ -13,8 +13,6 @@ const api = axios.create({
     headers: {"ngrok-skip-browser-warning": "true"},
 });
 
-console.log("Axios baseURL:", isLocalhost ? 'http:localhost:8080' : 'api');
-
 // Add a request interceptor
 api.interceptors.request.use(
     (config) => {
