@@ -26,6 +26,7 @@ export default function App() {
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<SignupPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
                     <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
                     <Route path="/results" element={<ProtectedRoute><SearchResults /></ProtectedRoute>} />
@@ -33,7 +34,6 @@ export default function App() {
                     <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                     <Route path="/favourites" element={<ProtectedRoute><FavouritesPage /></ProtectedRoute>} />
                     <Route path="/change_password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
-                    <Route path="/reset-password" element={<ForgotPasswordPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </TourProvider>
