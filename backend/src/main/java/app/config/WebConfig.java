@@ -8,12 +8,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") 
+        registry.addMapping("/**")
                 .allowedOrigins(
-                    "http://localhost:5173", 
-                    "http://tariffics.org:5173",
-                     "http://tariffics.org:3307",
-                     "https://tariffics.org") 
+                        "https://tariffics.org")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Add OPTIONS
                 .allowedHeaders("*")
                 .allowCredentials(true);
