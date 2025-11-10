@@ -10,6 +10,8 @@ COPY src ./src
 # build application (creates a WAR file)
 RUN mvn clean package -DskipTests
 
+# Stage 2: Runtime
+FROM eclipse-temurin:17 AS runtime
 WORKDIR /app
 
 # copy the built WAR/JAR from the builder stage
