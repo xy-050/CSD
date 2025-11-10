@@ -33,6 +33,7 @@ export default function App() {
                     <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                     <Route path="/favourites" element={<ProtectedRoute><FavouritesPage /></ProtectedRoute>} />
                     <Route path="/change_password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
+                    <Route path="/reset-password" element={<ProtectedRoute><ForgotPasswordPage /></ProtectedRoute>} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </TourProvider>

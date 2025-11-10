@@ -24,7 +24,7 @@ public class EmailService {
     
     private String fromAddress = "no-reply@tariffics.org";
     private String PasswordResetSubject = "Password Reset Request";
-    private String frontendUrl = "http://localhost:3000/reset-password"; // Update to your frontend URL
+    private String frontendUrl = "https://tariffics.org/reset-password"; // Update to your frontend URL
     private String notificationSubject = "Notification from Tariffics";
 
     /**
