@@ -14,6 +14,7 @@ import SearchResults from './pages/SearchResults.jsx';
 import CalculatorPage from "./pages/CalculatorPage.jsx";
 import FavouritesPage from './pages/FavouritesPage.jsx';
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
 
 import './App.css';
 import 'leaflet/dist/leaflet.css';
