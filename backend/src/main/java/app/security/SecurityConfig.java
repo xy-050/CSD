@@ -37,7 +37,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login", "/signup", "/error").permitAll()
+                        .requestMatchers("/login", "/signup", "/error").permitAll()
                         .requestMatchers("/forgot-password", "/reset-password").permitAll()
                         .requestMatchers("/swagger-ui/index.html", "/swagger-ui.html", "/v3/api-docs").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // Admin-only endpoints
