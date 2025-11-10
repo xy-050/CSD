@@ -111,16 +111,6 @@ public class AccountService {
     }
 
     /**
-     * Retrieve account by email address.
-     *
-     * @param email target email
-     * @return Account or null when not found
-     */
-    public Account getAccountByEmail(String email) {
-        return accountRepository.findByEmail(email);
-    }
-
-    /**
      * Deletes an Account by User ID.
      * 
      * @param userId Target User ID.
@@ -230,13 +220,10 @@ public class AccountService {
      * @throws UserNotFoundException when account not found
      */
     public void resetPassword(String email, String newPassword) throws UserNotFoundException {
-        Account account = accountRepository.findByEmail(email);
-        if (account == null) {
-            throw new UserNotFoundException("Account not found for email: " + email);
-        }
+        Account account = getAccountByEmail(email);
 
         if (!PasswordChecker.isValidPassword(newPassword)) {
-            throw new IllegalArgumentException("Password does not meet requirements");
+            throw new InvalidPasswordException("Password does not meet requirements");
         }
 
         account.setPassword(passwordEncoder.encode(newPassword));
