@@ -19,6 +19,7 @@ services:
       retries: 10
 
   backend:
+    build: ./backend
     image: ${DOCKER_USERNAME}/tariffic-backend:latest
     container_name: CSD-backend
     ports:
@@ -35,10 +36,11 @@ services:
     restart: unless-stopped
 
   frontend:
+    build: ./frontend
     image: ${DOCKER_USERNAME}/tariffic-frontend:latest
     container_name: CSD-frontend
     ports:
-      - "5173:80"
+      - "80:80"
     depends_on:
       - backend
     restart: unless-stopped
