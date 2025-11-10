@@ -23,15 +23,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-import app.exception.HTSCodeNotFoundException;
 import app.exception.ProductNotFoundException;
-import app.query.QueryService;
+import app.query.TariffApiClient;
 
 @ExtendWith(MockitoExtension.class)
 public class ProductServiceTest {
 
     @Mock
-    private QueryService queryService;
+    private TariffApiClient apiClient;
 
     @Mock
     private ProductRepository productRepository;
@@ -75,7 +74,7 @@ public class ProductServiceTest {
         map.put("general", "5.5¢/t");
         map.put("special", "Free (AU, SG)");
 
-        when(queryService.searchTariffArticles(anyString())).thenReturn(List.of(map));
+        when(apiClient.searchTariffArticles(anyString())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.empty());
 
         // Act
@@ -104,7 +103,7 @@ public class ProductServiceTest {
         map.put("general", "6.0¢/t");
         map.put("special", "Free (AU, SG, NZ)");
 
-        when(queryService.searchTariffArticles(anyString())).thenReturn(List.of(map));
+        when(apiClient.searchTariffArticles(anyString())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
 
         // Act
@@ -131,7 +130,7 @@ public class ProductServiceTest {
         map.put("general", "5.5¢/t");
         map.put("special", "Free (AU, SG)");
 
-        when(queryService.searchTariffArticles(anyString())).thenReturn(List.of(map));
+        when(apiClient.searchTariffArticles(anyString())).thenReturn(List.of(map));
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.of(existing));
 
         // Act
@@ -142,17 +141,17 @@ public class ProductServiceTest {
     }
 
     // -------------------------------------------------------------------
-    // ------------- testing getProductPrice() method --------------------
+    // ------------- testing getMostRecentProductPrice() method --------------------
     // -------------------------------------------------------------------
 
     @Test
-    void getProductPrice_WhenRecordExists_ShouldReturnValue() {
+    void getMostRecentProductPrice_WhenRecordExists_ShouldReturnValue() {
         // Arrange
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc("1704.90.35"))
                 .thenReturn(Optional.of(existing));
 
         // Act
-        Optional<Product> result = productService.getProductPrice("1704.90.35");
+        Optional<Product> result = productService.getMostRecentProductPrice("1704.90.35");
 
         // Assert
         assertTrue(result.isPresent());
@@ -165,13 +164,13 @@ public class ProductServiceTest {
     }
 
     @Test
-    void getProductPrice_WhenRecordDoesNotExists_ShouldNotReturnValue() {
+    void getMostRecentProductPrice_WhenRecordDoesNotExists_ShouldNotReturnValue() {
         // Arrange
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc("9999.99.99"))
                 .thenReturn(Optional.empty());
 
         // Act
-        Optional<Product> result = productService.getProductPrice("9999.99.99");
+        Optional<Product> result = productService.getMostRecentProductPrice("9999.99.99");
 
         // Assert
         assertFalse(result.isPresent());
@@ -179,18 +178,18 @@ public class ProductServiceTest {
     }
 
     // -------------------------------------------------------------------
-    // ---------- testing getProductPriceAtTime() method -----------------
+    // ---------- testing getMostRecentProductPriceAtTime() method -----------------
     // -------------------------------------------------------------------
 
     @Test
-    void getProductPriceAtTime_WhenRecordExists_ShouldReturnValue() {
+    void getMostRecentProductPriceAtTime_WhenRecordExists_ShouldReturnValue() {
         // Arrange
         LocalDate queryDate = LocalDate.of(2025, Month.MAY, 1);
         when(productRepository.findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(
                 "1704.90.35", queryDate)).thenReturn(Optional.of(existing));
 
         // Act
-        Optional<Product> result = productService.getProductPriceAtTime("1704.90.35", queryDate);
+        Optional<Product> result = productService.getMostRecentProductPriceAtTime("1704.90.35", queryDate);
 
         // Assert
         assertTrue(result.isPresent());
@@ -202,48 +201,20 @@ public class ProductServiceTest {
     }
 
     @Test
-    void getProductPriceAtTime_WhenRecordDoesNotExists_ShouldNotReturnValue() {
+    void getMostRecentProductPriceAtTime_WhenRecordDoesNotExists_ShouldNotReturnValue() {
         // Arrange
         LocalDate queryDate = LocalDate.of(2025, Month.JANUARY, 1);
         when(productRepository.findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc(
                 "1704.90.35", queryDate)).thenReturn(Optional.empty());
 
         // Act
-        Optional<Product> result = productService.getProductPriceAtTime("1704.90.35", queryDate);
+        Optional<Product> result = productService.getMostRecentProductPriceAtTime("1704.90.35", queryDate);
 
         // Assert
         assertFalse(result.isPresent());
         verify(productRepository, times(1))
                 .findTopByHtsCodeAndFetchDateLessThanEqualOrderByFetchDateDesc("1704.90.35", queryDate);
     }
-
-    // @Test
-    // void getProductPrice_WhenRecordExistsByCategory_ShouldReturnValue() {
-    // // Arrange
-    // Product product2 = new Product(
-    // "1704.90.40",
-    // LocalDate.of(2025, Month.APRIL, 1),
-    // "White sugar",
-    // "4.5¢/t",
-    // "Free (CA)",
-    // "sugar");
-
-    // List<Product> products = List.of(existing, product2);
-    // when(productRepository.findByCategory("sugar")).thenReturn(Optional.of(products));
-
-    // // Act
-    // Optional<List<Product>> result =
-    // productService.getProductsByCategory("sugar");
-
-    // // Assert
-    // assertTrue(result.isPresent());
-    // assertEquals(2, result.get().size());
-    // assertEquals("1704.90.35", result.get().get(0).getHtsCode());
-    // assertEquals("1704.90.40", result.get().get(1).getHtsCode());
-    // assertEquals("sugar", result.get().get(0).getCategory());
-    // assertEquals("sugar", result.get().get(1).getCategory());
-    // verify(productRepository, times(1)).findByCategory("sugar");
-    // }
 
     // -------------------------------------------------------------------
     // ---------------- testing selectPrice() method ---------------------
@@ -338,8 +309,8 @@ public class ProductServiceTest {
         when(productRepository.findTopByHtsCodeOrderByFetchDateDesc(anyString())).thenReturn(Optional.empty());
 
         // Act & Assert
-        HTSCodeNotFoundException exception = assertThrows(
-                HTSCodeNotFoundException.class,
+        ProductNotFoundException exception = assertThrows(
+                ProductNotFoundException.class,
                 () -> productService.mapCountryToPrice("67"));
         assertEquals(exception.getMessage(), "Product with HTS code 67 not found!");
     }

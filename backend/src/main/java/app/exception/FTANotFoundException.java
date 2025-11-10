@@ -1,6 +1,6 @@
 package app.exception;
 
-public class FTANotFoundException extends RuntimeException {
+public class FTANotFoundException extends NotFoundException {
     public FTANotFoundException(String message) {
         super(message);
     }

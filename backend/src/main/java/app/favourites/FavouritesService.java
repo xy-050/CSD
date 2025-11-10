@@ -2,18 +2,17 @@ package app.favourites;
 
 import org.springframework.stereotype.Service;
 
-import app.account.Account;
-import app.account.AccountRepository;
-import jakarta.persistence.EntityNotFoundException;
+import app.account.*;
+import app.exception.FavouritesNotFoundException;
 
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class FavouritesService {
     private final AccountRepository accountRepository;
+    private final AccountService accountService;
     private final FavouritesRepository favouritesRepository;
 
     /**
@@ -21,9 +20,21 @@ public class FavouritesService {
      * 
      * @param accountRepository Repository dependency.
      */
-    public FavouritesService(AccountRepository accountRepository, FavouritesRepository favouritesRepository) {
+    public FavouritesService(AccountRepository accountRepository, AccountService accountService,
+            FavouritesRepository favouritesRepository) {
         this.accountRepository = accountRepository;
+        this.accountService = accountService;
         this.favouritesRepository = favouritesRepository;
+    }
+
+    public Favourites getFavouritesByHtsCode(String htsCode) {
+        Optional<Favourites> favourites = favouritesRepository.findById(htsCode);
+
+        if (!favourites.isPresent()) {
+            throw new FavouritesNotFoundException(htsCode);
+        }
+
+        return favourites.get();
     }
 
     /**
@@ -34,26 +45,19 @@ public class FavouritesService {
      */
     public void addFavourite(Integer userId, String htsCode) {
         // retrieve account
-        Account account;
-        try {
-            account = accountRepository.findById(userId).orElseThrow();
-        } catch (EntityNotFoundException | NoSuchElementException e) {
-            // no such account
-            System.out.println(e.getMessage());
-            return;
-        }
+        Account account = accountService.getAccountByUserID(userId);
 
         // add account to favourites
         Favourites favourites;
         try {
             // check if favourite exists
-            favourites = favouritesRepository.findById(htsCode).orElseThrow();
+            favourites = getFavouritesByHtsCode(htsCode);
             Set<Account> accountsFavourited = favourites.getAccounts();
             accountsFavourited.add(account);
 
             // update the list of accounts with this item favourited
             favourites.setAccounts(accountsFavourited);
-        } catch (EntityNotFoundException | NoSuchElementException e) {
+        } catch (FavouritesNotFoundException e) {
             // create new favourited record if it is new
             favourites = new Favourites(htsCode, Set.of(account));
         }
@@ -74,25 +78,13 @@ public class FavouritesService {
      */
     public void removeFavourite(Integer userId, String htsCode) {
         // retrieve account
-        Account account;
-        try {
-            account = accountRepository.findById(userId).orElseThrow();
-        } catch (EntityNotFoundException | NoSuchElementException e) {
-            System.out.println(e.getMessage());
-            return;
-        }
+        Account account = accountService.getAccountByUserID(userId);
 
         // remove account from favourite
-        Favourites favourites;
-        try {
-            favourites = favouritesRepository.findById(htsCode).orElseThrow();
-            Set<Account> accountsFavourited = favourites.getAccounts();
-            accountsFavourited.remove(account);
-            favourites.setAccounts(accountsFavourited);
-        } catch (EntityNotFoundException | NoSuchElementException e) {
-            System.out.println(e.getMessage());
-            return;
-        }
+        Favourites favourites = getFavouritesByHtsCode(htsCode);
+        Set<Account> accountsFavourited = favourites.getAccounts();
+        accountsFavourited.remove(account);
+        favourites.setAccounts(accountsFavourited);
 
         // remove favourite from account
         Set<Favourites> favourited = account.getFavourites();
@@ -111,11 +103,12 @@ public class FavouritesService {
      * @return Set containing all the favouried HTS codes
      */
     public List<FavouritesDTO> getFavouritesHtsCodes(Integer userId) {
-        try {
-            return favouritesRepository.findFavouritesByAccountId(userId);
-        } catch (EntityNotFoundException | NoSuchElementException e) {
-            System.out.println(e.getMessage());
-            return null;
+        Optional<List<FavouritesDTO>> favourites = favouritesRepository.findFavouritesByAccountId(userId);
+
+        if (!favourites.isPresent()) {
+            throw new FavouritesNotFoundException("No favourites for user with user ID " + userId);
         }
+
+        return favourites.get();
     }
 }

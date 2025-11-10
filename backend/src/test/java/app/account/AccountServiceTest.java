@@ -5,20 +5,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import app.controller.AdminController.RoleUpdateRequest;
+import app.exception.InvalidPasswordException;
 import app.exception.UserConflictException;
 import app.exception.UserNotFoundException;
 
@@ -35,7 +36,7 @@ public class AccountServiceTest {
     AccountService accountService;
 
     // ----------------------------------------------------------------
-    // --------------------- updateDetails() -------------------------- 
+    // --------------------- updateDetails() --------------------------
     // ----------------------------------------------------------------
 
     // Test 1: User does not exist
@@ -45,38 +46,37 @@ public class AccountServiceTest {
         newAccount.setUsername("newUsername");
         newAccount.setEmail("new@email.com");
 
-        when(accountRepository.findByUserID(999)).thenReturn(null);
+        when(accountRepository.findByUserID(999)).thenReturn(Optional.empty());
 
         UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
             accountService.updateDetails(999, newAccount);
         });
 
-        assertEquals("User with user ID 999 does not exist", exception.getMessage());
+        assertEquals("Account with user ID 999 not found!", exception.getMessage());
         verify(accountRepository, never()).save(any(Account.class));
     }
 
     // Test 2: Successfully update details (no username/email change)
-    // @Test
-    // public void updateDetails_WhenNoUsernameOrEmailChange_ShouldUpdateSuccessfully() {
-    //     Account existingAccount = new Account();
-    //     existingAccount.setUserID(1);
-    //     existingAccount.setUsername("existingUser");
-    //     existingAccount.setEmail("existing@email.com");
+    @Test
+    public void updateDetails_WhenNoUsernameOrEmailChange_ShouldThrowIllegalArgumentException() {
+        Account existingAccount = new Account();
+        existingAccount.setUserID(1);
+        existingAccount.setUsername("existingUser");
+        existingAccount.setEmail("existing@email.com");
 
-    //     Account newAccount = new Account();
-    //     newAccount.setUserID(1);
-    //     newAccount.setUsername("existingUser"); // Same username
-    //     newAccount.setEmail("existing@email.com"); // Same email
-    //     newAccount.setPassword("newPassword123");
+        Account newAccount = new Account();
+        newAccount.setUserID(1);
+        newAccount.setUsername("existingUser"); // Same username
+        newAccount.setEmail("existing@email.com"); // Same email
+        newAccount.setPassword("newPassword123");
 
-    //     when(accountRepository.findByUserID(1)).thenReturn(existingAccount);
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(existingAccount));
 
-    //     assertDoesNotThrow(() -> accountService.updateDetails(1, newAccount));
-
-    //     verify(accountRepository).save(existingAccount);
-    //     verify(accountRepository, never()).findByUsername(anyString());
-    //     verify(accountRepository, never()).findByEmail(anyString());
-    // }
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            accountService.updateDetails(1, newAccount);
+        });
+        assertEquals("Nothing to update.", exception.getMessage());
+    }
 
     // Test 3: Update username to new unique username
     @Test
@@ -91,8 +91,8 @@ public class AccountServiceTest {
         newAccount.setUsername("newUniqueUsername");
         newAccount.setEmail("user@email.com");
 
-        when(accountRepository.findByUserID(1)).thenReturn(existingAccount);
-        when(accountRepository.findByUsername("newUniqueUsername")).thenReturn(null);
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(existingAccount));
+        when(accountRepository.findByUsername("newUniqueUsername")).thenReturn(Optional.empty());
 
         assertDoesNotThrow(() -> accountService.updateDetails(1, newAccount));
 
@@ -116,8 +116,8 @@ public class AccountServiceTest {
         conflictingAccount.setUserID(2);
         conflictingAccount.setUsername("takenUsername");
 
-        when(accountRepository.findByUserID(1)).thenReturn(existingAccount);
-        when(accountRepository.findByUsername("takenUsername")).thenReturn(conflictingAccount);
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(existingAccount));
+        when(accountRepository.findByUsername("takenUsername")).thenReturn(Optional.of(conflictingAccount));
 
         UserConflictException exception = assertThrows(UserConflictException.class, () -> {
             accountService.updateDetails(1, newAccount);
@@ -140,8 +140,8 @@ public class AccountServiceTest {
         newAccount.setUsername("username");
         newAccount.setEmail("new@email.com");
 
-        when(accountRepository.findByUserID(1)).thenReturn(existingAccount);
-        when(accountRepository.findByEmail("new@email.com")).thenReturn(null);
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(existingAccount));
+        when(accountRepository.findByEmail("new@email.com")).thenReturn(Optional.empty());
 
         assertDoesNotThrow(() -> accountService.updateDetails(1, newAccount));
 
@@ -165,14 +165,14 @@ public class AccountServiceTest {
         conflictingAccount.setUserID(2);
         conflictingAccount.setEmail("taken@email.com");
 
-        when(accountRepository.findByUserID(1)).thenReturn(existingAccount);
-        when(accountRepository.findByEmail("taken@email.com")).thenReturn(conflictingAccount);
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(existingAccount));
+        when(accountRepository.findByEmail("taken@email.com")).thenReturn(Optional.of(conflictingAccount));
 
         UserConflictException exception = assertThrows(UserConflictException.class, () -> {
             accountService.updateDetails(1, newAccount);
         });
 
-        assertEquals("Email taken@email.com already associated with another account, please use another one!",
+        assertEquals("Email taken@email.com already associated with another account, please try another one!",
                 exception.getMessage());
         verify(accountRepository, never()).save(any(Account.class));
     }
@@ -190,9 +190,9 @@ public class AccountServiceTest {
         newAccount.setUsername("newUsername");
         newAccount.setEmail("new@email.com");
 
-        when(accountRepository.findByUserID(1)).thenReturn(existingAccount);
-        when(accountRepository.findByUsername("newUsername")).thenReturn(null);
-        when(accountRepository.findByEmail("new@email.com")).thenReturn(null);
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(existingAccount));
+        when(accountRepository.findByUsername("newUsername")).thenReturn(Optional.empty());
+        when(accountRepository.findByEmail("new@email.com")).thenReturn(Optional.empty());
 
         assertDoesNotThrow(() -> accountService.updateDetails(1, newAccount));
 
@@ -217,9 +217,9 @@ public class AccountServiceTest {
         conflictingAccount.setUserID(2);
         conflictingAccount.setEmail("taken@email.com");
 
-        when(accountRepository.findByUserID(1)).thenReturn(existingAccount);
-        when(accountRepository.findByUsername("newUsername")).thenReturn(null);
-        when(accountRepository.findByEmail("taken@email.com")).thenReturn(conflictingAccount);
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(existingAccount));
+        when(accountRepository.findByUsername("newUsername")).thenReturn(Optional.empty());
+        when(accountRepository.findByEmail("taken@email.com")).thenReturn(Optional.of(conflictingAccount));
 
         UserConflictException exception = assertThrows(UserConflictException.class, () -> {
             accountService.updateDetails(1, newAccount);
@@ -230,147 +230,205 @@ public class AccountServiceTest {
     }
 
     // ----------------------------------------------------------------
-    // ---------------------- changePassword() ------------------------ 
+    // ---------------------- updatePassword() ------------------------
     // ----------------------------------------------------------------
 
-    // Test 1: User does not exist
-    // @Test
-    // public void changePassword_WhenUserDoesNotExist_ShouldThrowUserNotFoundException() {
-    //     when(accountRepository.findByUserID(999)).thenReturn(null);
+    @Test
+    void updatePassword_WhenValidPasswordChange_ShouldUpdateSuccessfully() {
+        Account account = new Account();
+        account.setUserID(1);
+        account.setPassword("encodedOldPassword");
 
-    //     UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> {
-    //         accountService.changePassword(999, "oldPass123", "newPass456");
-    //     });
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(account));
+        when(passwordEncoder.matches("oldPassword", "encodedOldPassword")).thenReturn(true);
+        when(passwordEncoder.matches("newPassword123!", "encodedOldPassword")).thenReturn(false);
+        when(passwordEncoder.encode("newPassword123!")).thenReturn("encodedNewPassword");
 
-    //     assertEquals("Account not found.", exception.getMessage());
-    //     verify(accountRepository, never()).save(any(Account.class));
-    //     verify(passwordEncoder, never()).encode(anyString());
-    // }
+        assertDoesNotThrow(() -> accountService.updatePassword(1, "oldPassword", "newPassword123!"));
 
-    // Test 2: Previous password is incorrect
-    // @Test
-    // public void changePassword_WhenPreviousPasswordIncorrect_ShouldThrowIllegalArgumentException() {
-    //     Account account = new Account();
-    //     account.setUserID(1);
-    //     account.setPassword("encodedPassword123");
+        verify(accountRepository).save(account);
+        assertEquals("encodedNewPassword", account.getPassword());
+    }
 
-    //     when(accountRepository.findByUserID(1)).thenReturn(account);
-    //     when(passwordEncoder.matches("wrongPassword", "encodedPassword123")).thenReturn(false);
+    @Test
+    void updatePassword_WhenPreviousPasswordIncorrect_ShouldThrowInvalidPasswordException() {
+        Account account = new Account();
+        account.setUserID(1);
+        account.setPassword("encodedOldPassword");
 
-    //     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-    //         accountService.changePassword(1, "wrongPassword", "newPass456");
-    //     });
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(account));
+        when(passwordEncoder.matches("wrongPassword", "encodedOldPassword")).thenReturn(false);
 
-    //     assertEquals("Previous password is incorrect.", exception.getMessage());
-    //     verify(accountRepository, never()).save(any(Account.class));
-    //     verify(passwordEncoder, never()).encode(anyString());
-    // }
+        assertThrows(
+                InvalidPasswordException.class,
+                () -> accountService.updatePassword(1, "wrongPassword", "newPassword123!"));
 
-    // Test 3: New password is same as previous password
-    // @Test
-    // public void changePassword_WhenNewPasswordSameAsPrevious_ShouldThrowIllegalArgumentException() {
-    //     Account account = new Account();
-    //     account.setUserID(1);
-    //     account.setPassword("encodedPassword123");
+        verify(accountRepository, never()).save(any());
+    }
 
-    //     when(accountRepository.findByUserID(1)).thenReturn(account);
-    //     when(passwordEncoder.matches("samePassword", "encodedPassword123")).thenReturn(true);
+    @Test
+    void updatePassword_WhenNewPasswordSameAsPrevious_ShouldThrowInvalidPasswordException() {
+        Account account = new Account();
+        account.setUserID(1);
+        account.setPassword("encodedPassword");
 
-    //     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-    //         accountService.changePassword(1, "samePassword", "samePassword");
-    //     });
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(account));
+        when(passwordEncoder.matches("samePassword", "encodedPassword")).thenReturn(true);
 
-    //     assertEquals("New password must be different from the previous password.", exception.getMessage());
-    //     verify(accountRepository, never()).save(any(Account.class));
-    // }
+        assertThrows(
+                InvalidPasswordException.class,
+                () -> accountService.updatePassword(1, "samePassword", "samePassword"));
 
-    // Test 4: Successfully change password
-    // @Test
-    // public void changePassword_WhenValidPasswordChange_ShouldUpdatePassword() {
-    //     Account account = new Account();
-    //     account.setUserID(1);
-    //     account.setPassword("encodedOldPassword");
+        verify(accountRepository, never()).save(any());
+    }
 
-    //     when(accountRepository.findByUserID(1)).thenReturn(account);
-    //     when(passwordEncoder.matches("oldPass123", "encodedOldPassword")).thenReturn(true);
-    //     when(passwordEncoder.matches("newPass456", "encodedOldPassword")).thenReturn(false);
-    //     when(passwordEncoder.encode("newPass456")).thenReturn("encodedNewPassword");
+    @Test
+    void updatePassword_WhenNewPasswordInvalid_ShouldThrowInvalidPasswordException() {
+        Account account = new Account();
+        account.setUserID(1);
+        account.setPassword("encodedOldPassword");
 
-    //     assertDoesNotThrow(() -> accountService.changePassword(1, "oldPass123", "newPass456"));
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(account));
+        when(passwordEncoder.matches("oldPassword", "encodedOldPassword")).thenReturn(true);
+        when(passwordEncoder.matches("weak", "encodedOldPassword")).thenReturn(false);
 
-    //     verify(passwordEncoder).matches("oldPass123", "encodedOldPassword");
-    //     verify(passwordEncoder).matches("newPass456", "encodedOldPassword");
-    //     verify(passwordEncoder).encode("newPass456");
-    //     verify(accountRepository).save(account);
-    //     assertEquals("encodedNewPassword", account.getPassword());
-    // }
+        assertThrows(
+                InvalidPasswordException.class,
+                () -> accountService.updatePassword(1, "oldPassword", "weak"));
 
-    // Test 5: Password matches on first check but not second (edge case validation)
-    // @Test
-    // public void changePassword_WhenPreviousPasswordCorrectAndNewPasswordDifferent_ShouldSucceed() {
-    //     Account account = new Account();
-    //     account.setUserID(1);
-    //     account.setPassword("encodedCurrentPassword");
+        verify(accountRepository, never()).save(any());
+    }
 
-    //     when(accountRepository.findByUserID(1)).thenReturn(account);
-    //     // First matches call - checking if previous password is correct
-    //     when(passwordEncoder.matches("correctOldPass", "P@ssw0rd")).thenReturn(true);
-    //     // Second matches call - checking if new password is different
-    //     when(passwordEncoder.matches("differentNewPass", "P@ssw0rd")).thenReturn(false);
-    //     when(passwordEncoder.encode("differentNewPass")).thenReturn("encodedDifferentNewPass");
+    @Test
+    void updatePassword_WhenUserNotFound_ShouldThrowUserNotFoundException() {
+        when(accountRepository.findByUserID(999)).thenReturn(Optional.empty());
 
-    //     assertDoesNotThrow(() -> accountService.changePassword(1, "correctOldPass", "differentNewPass"));
+        assertThrows(
+                UserNotFoundException.class,
+                () -> accountService.updatePassword(999, "oldPassword", "newPassword123!"));
 
-    //     verify(passwordEncoder, times(1)).matches("correctOldPass", "encodedCurrentPassword");
-    //     verify(passwordEncoder, times(1)).matches("differentNewPass", "encodedCurrentPassword");
-    //     verify(passwordEncoder).encode("differentNewPass");
-    //     verify(accountRepository).save(account);
-    // }
+        verify(accountRepository, never()).save(any());
+    }
 
-    // Test 6: Verify the order of validation (previous password checked before new
-    // password)
-    // @Test
-    // public void changePassword_WhenPreviousPasswordWrong_ShouldNotCheckNewPassword() {
-    //     Account account = new Account();
-    //     account.setUserID(1);
-    //     account.setPassword("encodedPassword");
+    // ----------------------------------------------------------------
+    // ------------------------ updateRole() --------------------------
+    // ----------------------------------------------------------------
+    @Test
+    void updateRole_WhenRoleIsUSER_ShouldUpdateSuccessfully() {
+        Account account = new Account();
+        account.setUserID(1);
+        account.setRole("ADMIN");
 
-    //     when(accountRepository.findByUserID(1)).thenReturn(account);
-    //     when(passwordEncoder.matches("wrongPrevious", "encodedPassword")).thenReturn(false);
+        RoleUpdateRequest request = new RoleUpdateRequest();
+        request.setRole("USER");
 
-    //     assertThrows(IllegalArgumentException.class, () -> {
-    //         accountService.changePassword(1, "wrongPrevious", "anyNewPassword");
-    //     });
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
 
-    //     // Verify that we only checked the previous password, not the new one
-    //     verify(passwordEncoder, times(1)).matches("wrongPrevious", "encodedPassword");
-    //     verify(passwordEncoder, never()).matches("anyNewPassword", "encodedPassword");
-    //     verify(passwordEncoder, never()).encode(anyString());
-    // }
+        Account result = accountService.updateRole(1, request);
 
-    // Test 7: Verify account is saved with updated password
-    // @Test
-    // public void changePassword_WhenSuccessful_ShouldSaveAccountWithEncodedPassword() {
-    //     Account account = new Account();
-    //     account.setUserID(1);
-    //     account.setUsername("testUser");
-    //     account.setEmail("test@email.com");
-    //     account.setPassword("oldEncodedPassword");
+        assertEquals("USER", result.getRole());
+        verify(accountRepository).save(account);
+    }
 
-    //     when(accountRepository.findByUserID(1)).thenReturn(account);
-    //     when(passwordEncoder.matches("oldPassword", "oldEncodedPassword")).thenReturn(true);
-    //     when(passwordEncoder.matches("newPassword", "oldEncodedPassword")).thenReturn(false);
-    //     when(passwordEncoder.encode("newPassword")).thenReturn("newEncodedPassword");
+    @Test
+    void updateRole_WhenRoleIsADMIN_ShouldUpdateSuccessfully() {
+        Account account = new Account();
+        account.setUserID(1);
+        account.setRole("USER");
 
-    //     assertDoesNotThrow(() -> accountService.changePassword(1, "oldPassword", "newPassword"));
+        RoleUpdateRequest request = new RoleUpdateRequest();
+        request.setRole("ADMIN");
 
-    //     ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
-    //     verify(accountRepository).save(accountCaptor.capture());
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
 
-    //     Account savedAccount = accountCaptor.getValue();
-    //     assertEquals("newEncodedPassword", savedAccount.getPassword());
-    //     assertEquals(1, savedAccount.getUserID());
-    //     assertEquals("testUser", savedAccount.getUsername());
-    //     assertEquals("test@email.com", savedAccount.getEmail());
-    // }
+        Account result = accountService.updateRole(1, request);
+
+        assertEquals("ADMIN", result.getRole());
+        verify(accountRepository).save(account);
+    }
+
+    @Test
+    void updateRole_WhenRoleIsInvalid_ShouldThrowIllegalArgumentException() {
+        RoleUpdateRequest request = new RoleUpdateRequest();
+        request.setRole("SUPERUSER");
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> accountService.updateRole(1, request));
+
+        assertEquals("Role SUPERUSER does not exist!", exception.getMessage());
+        verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    void updateRole_WhenRoleIsLowercase_ShouldThrowIllegalArgumentException() {
+        RoleUpdateRequest request = new RoleUpdateRequest();
+        request.setRole("user");
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> accountService.updateRole(1, request));
+
+        assertEquals("Role user does not exist!", exception.getMessage());
+        verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    void updateRole_WhenRoleIsNull_ShouldThrowIllegalArgumentException() {
+        RoleUpdateRequest request = new RoleUpdateRequest();
+        request.setRole(null);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> accountService.updateRole(1, request));
+
+        verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    void updateRole_WhenRoleIsEmpty_ShouldThrowIllegalArgumentException() {
+        RoleUpdateRequest request = new RoleUpdateRequest();
+        request.setRole("");
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> accountService.updateRole(1, request));
+
+        assertEquals("Role  does not exist!", exception.getMessage());
+        verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    void updateRole_WhenUserNotFound_ShouldThrowUserNotFoundException() {
+        RoleUpdateRequest request = new RoleUpdateRequest();
+        request.setRole("USER");
+
+        when(accountRepository.findByUserID(999)).thenReturn(Optional.empty());
+
+        assertThrows(
+                UserNotFoundException.class,
+                () -> accountService.updateRole(999, request));
+
+        verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    void updateRole_WhenRoleUnchanged_ShouldStillSave() {
+        Account account = new Account();
+        account.setUserID(1);
+        account.setRole("USER");
+
+        RoleUpdateRequest request = new RoleUpdateRequest();
+        request.setRole("USER");
+
+        when(accountRepository.findByUserID(1)).thenReturn(Optional.of(account));
+        when(accountRepository.save(account)).thenReturn(account);
+
+        Account result = accountService.updateRole(1, request);
+
+        assertEquals("USER", result.getRole());
+        verify(accountRepository).save(account);
+    }
 }

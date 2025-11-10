@@ -14,8 +14,8 @@ import lombok.ToString;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(exclude = {"userID"})
-@ToString(exclude = {"userID"})
+@EqualsAndHashCode(exclude = {"account"})
+@ToString(exclude = {"account"})
 public class Query {
 
     // Class implementation goes here
@@ -25,7 +25,7 @@ public class Query {
 
     @ManyToOne
     @JoinColumn(name = "userID")
-    private Account userID; // foreign key from Account entity
+    private Account account; // foreign key from Account entity
 
     private String htsCode; // product code
 
