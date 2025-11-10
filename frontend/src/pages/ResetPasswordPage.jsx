@@ -122,7 +122,7 @@ export default function ForgotPasswordPage() {
                             value={password}
                             onChange={(e) => {
                                 setPassword(e.target.value);
-                                clearError();
+                                clearMessages();
                             }}
                             required
                             minLength={8}
@@ -136,7 +136,7 @@ export default function ForgotPasswordPage() {
                             value={confirm}
                             onChange={(e) => {
                                 setConfirm(e.target.value);
-                                clearError();
+                                clearMessages();
                             }}
                             required
                         />
