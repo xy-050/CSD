@@ -3,7 +3,7 @@ FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
-# copy pom.xml and source code
+# copy pom.xml and source code #
 COPY pom.xml .
 COPY src ./src
 
