@@ -36,9 +36,9 @@ public class Account {
     private String username;
     private String password;
     private String email;
-    private String role;  // USER or ADMIN
+    private String role;
 
-    @OneToMany(mappedBy = "userID", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     private List<Query> queries = new ArrayList<>();
 
     // User favourited hts codes

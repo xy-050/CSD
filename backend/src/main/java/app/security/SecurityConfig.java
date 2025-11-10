@@ -27,7 +27,7 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity  // Enables @PreAuthorize for role-based access control
+@EnableMethodSecurity // Enables @PreAuthorize for role-based access control
 public class SecurityConfig {
 
     @Value("${jwt.secret:mySecretKey}")
@@ -40,17 +40,17 @@ public class SecurityConfig {
             .requestMatchers("/login", "/signup", "/error").permitAll()
             .requestMatchers("/forgot-password", "/reset-password").permitAll()
                         .requestMatchers("/swagger-ui/index.html", "/swagger-ui.html", "/v3/api-docs").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")  // Admin-only endpoints
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN") // Admin-only endpoints
                         .anyRequest().authenticated())
                 .sessionManagement(configurer -> configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer((oauth2) -> oauth2
                         .jwt(jwt -> jwt
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())))
-                .cors(Customizer.withDefaults()) 
-                .csrf(csrf -> csrf.disable()) 
-                .formLogin(form -> form.disable()) 
-                .httpBasic(basic -> basic.disable()) 
-                .headers(header -> header.disable()); 
+                .cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
+                .headers(header -> header.disable());
         return http.build();
     }
 

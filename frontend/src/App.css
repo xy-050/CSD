@@ -1112,6 +1112,18 @@ body {
 	display: inline-block;
 }
 
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 70px;
+    }
+    
+    .main-content {
+        width: 100%;
+    }
+}
+
 /* ========================================
    MOBILE SIDEBAR (slide-in)
    ======================================== */
@@ -1162,10 +1174,9 @@ body {
 
 .main-content {
 	flex: 1;
-	max-width: 1200px;
-	margin: 0 auto;
+	max-width: 100%;
+	overflow-x: hidden;
 	padding: 4rem 2rem;
-	width: 100%;
 }
 
 @media (min-width: 1280px) {

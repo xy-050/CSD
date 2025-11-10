@@ -8,9 +8,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import app.exception.UserConflictException;
-import app.exception.UserNotFoundException;
-
 @RestController
 public class AccountController {
 
@@ -44,15 +41,14 @@ public class AccountController {
         }
 
         Map<String, Object> userDetails = Map.of(
-            "userId", currentUser.getUserID(),
-            "username", currentUser.getUsername(),
-            "email", currentUser.getEmail(),
-            "roles", auth.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList(),
-            "favouriteHtsCodesCount", currentUser.getFavourites().size()
-        );
-        
+                "userId", currentUser.getUserID(),
+                "username", currentUser.getUsername(),
+                "email", currentUser.getEmail(),
+                "roles", auth.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .toList(),
+                "favouriteHtsCodesCount", currentUser.getFavourites().size());
+
         return ResponseEntity.ok(userDetails);
     }
 
@@ -64,13 +60,7 @@ public class AccountController {
      */
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody Account signupAccount) {
-        try {
-            accountService.createAccount(signupAccount);
-        } catch (UserConflictException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } 
+        accountService.createAccount(signupAccount);
         return ResponseEntity.ok("Signup successful for user: " + signupAccount.getUsername());
     }
 
@@ -83,15 +73,7 @@ public class AccountController {
      */
     @PostMapping("/updateUser/{userID}")
     public ResponseEntity<String> updateUser(@PathVariable Integer userID, @RequestBody Account updateAccount) {
-        try {
-            accountService.updateDetails(userID, updateAccount);
-        } catch (UserNotFoundException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (UserConflictException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        accountService.updateDetails(userID, updateAccount);
         return ResponseEntity.ok().body("Successfully updated user!");
     }
 
@@ -103,54 +85,21 @@ public class AccountController {
      * @return ResponseEntity with status and message.
      */
     @PostMapping("/updatePassword/{userID}")
-    public ResponseEntity<String> updatePassword(@PathVariable Integer userID, @RequestBody PasswordUpdateRequest passwordRequest) {
-        try {
-            accountService.changePassword(userID, passwordRequest.getOldPassword(), passwordRequest.getNewPassword());
-        } catch (UserNotFoundException | IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } 
-        
+    public ResponseEntity<String> updatePassword(@PathVariable Integer userID,
+            @RequestBody PasswordUpdateRequest passwordRequest) {
+        accountService.updatePassword(userID, passwordRequest.getOldPassword(), passwordRequest.getNewPassword());
         return ResponseEntity.ok().body("Password successfully updated!");
     }
 
     /**
-     * Deletes a user. 
+     * Deletes a user.
      * 
-     * @param userID Target user ID. 
-     * @return ResponseEntity with status and message. 
+     * @param userID Target user ID.
+     * @return ResponseEntity with status and message.
      */
     @DeleteMapping("/account/{userID}")
     public ResponseEntity<String> deleteAccount(@PathVariable Integer userID) {
-        try {
-            accountService.deleteAccount(userID);
-        } catch (UserNotFoundException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        accountService.deleteAccount(userID);
         return ResponseEntity.ok().body("Successfully deleted user.");
     }
-
-    // /**
-    //  * hasTakenTour setter endpoint.
-    //  */
-    // @PostMapping("/account/{userID}/hasTakenTour")
-    // public ResponseEntity<String> setHasTakenTour(@PathVariable Integer userID) {
-    //     try {
-    //         accountService.setHasTakenTour(userID);
-    //     } catch (UserNotFoundException e) {
-    //         return ResponseEntity.badRequest().body(e.getMessage());
-    //     }
-    //     return ResponseEntity.ok().body("Successfully updated hasTakenTour status.");
-    // }
-
-    // /** hasTakenTour getter endpoint. */
-    // @GetMapping("/account/{userID}/hasTakenTour")
-    // public ResponseEntity<Boolean> hasTakenTour(@PathVariable Integer userID) {
-    //     try {
-    //         boolean hasTakenTour = accountService.hasTakenTour(userID);
-    //         return ResponseEntity.ok().body(hasTakenTour);
-    //     } catch (UserNotFoundException e) {
-    //         return ResponseEntity.badRequest().body(null);
-    //     }
-    // }
-
 }

@@ -1,6 +1,7 @@
 package app.favourites;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -24,6 +25,6 @@ public interface FavouritesRepository extends JpaRepository<Favourites, String> 
                 WHERE p2.htsCode = f.htsCode
             ))
             """)
-    List<FavouritesDTO> findFavouritesByAccountId(Integer accountId);
+    Optional<List<FavouritesDTO>> findFavouritesByAccountId(Integer accountId);
 
 }
