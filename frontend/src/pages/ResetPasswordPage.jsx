@@ -88,26 +88,29 @@ export default function ForgotPasswordPage() {
                 <ErrorMessage message={error} />
                 <SuccessMessage message={success} />
 
-                <form className="form-container" onSubmit={handleSubmit}>
-                    <FormInput
-                        label="Token"
-                        icon="🪙"
-                        value={token}
-                        onChange={(e) => {
-                            setToken(e.target.value);
-                            clearMessages();
-                        }}
-                        required
-                    />
+                {!isAuth &&
+                    <form className="form-container" onSubmit={handleSubmit}>
+                        <FormInput
+                            label="Token"
+                            icon="🪙"
+                            value={token}
+                            onChange={(e) => {
+                                setToken(e.target.value);
+                                clearMessages();
+                            }}
+                            required
+                        />
 
-                    <button
-                        className="submit-btn login-btn"
-                        type="submit"
-                        disabled={loading}
-                    >
-                        {loading ? 'Sending link...' : 'Send reset link'}
-                    </button>
-                </form>
+                        <button
+                            className="submit-btn login-btn"
+                            type="submit"
+                            disabled={loading}
+                        >
+                            {loading ? 'Sending link...' : 'Send reset link'}
+                        </button>
+                    </form>
+                }
+
 
                 {isAuth &&
                     <form className="form-container" onSubmit={handlePasswordChange}>
@@ -126,7 +129,7 @@ export default function ForgotPasswordPage() {
                         />
 
                         <FormInput
-                            label="`Confirm` password"
+                            label="Confirm password"
                             icon="✅"
                             type="password"
                             placeholder="Repeat password"
@@ -137,8 +140,16 @@ export default function ForgotPasswordPage() {
                             }}
                             required
                         />
+
+                        <button
+                            className="submit-btn login-btn"
+                            type="submit"
+                            disabled={loading}
+                        >
+                            {loading ? 'Changing password...' : 'Successful!'}
+                        </button>
                     </form>
-                };
+                }
 
                 <div className="switch-form">
                     <p>
