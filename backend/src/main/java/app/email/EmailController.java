@@ -29,17 +29,16 @@ public class EmailController {
 
         try {
             // Send reset email (will check if user exists inside service)
-            emailService.sendPasswordResetEmail(email);
+            String token = emailService.sendPasswordResetEmail(email);
 
             // Always return success to prevent email enumeration attacks
             return ResponseEntity.ok().body(
-                    Map.of("message", "If an account exists for this email, we've sent a reset link.")
-            );
+                    Map.of("message", "If an account exists for this email, we've sent a reset link.",
+                            "token", token));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(
-                    Map.of("message", "Failed to send reset email. Please try again later.")
-            );
+                    Map.of("message", "Failed to send reset email. Please try again later."));
         }
     }
 
@@ -55,14 +54,12 @@ public class EmailController {
         // Validate inputs
         if (email == null || token == null || newPassword == null) {
             return ResponseEntity.badRequest().body(
-                    Map.of("message", "Email, token, and password are required")
-            );
+                    Map.of("message", "Email, token, and password are required"));
         }
 
         if (newPassword.length() < 8) {
             return ResponseEntity.badRequest().body(
-                    Map.of("message", "Password must be at least 8 characters long")
-            );
+                    Map.of("message", "Password must be at least 8 characters long"));
         }
 
         try {
@@ -71,18 +68,15 @@ public class EmailController {
 
             if (success) {
                 return ResponseEntity.ok().body(
-                        Map.of("message", "Password reset successful!")
-                );
+                        Map.of("message", "Password reset successful!"));
             } else {
                 return ResponseEntity.badRequest().body(
-                        Map.of("message", "Invalid or expired token")
-                );
+                        Map.of("message", "Invalid or expired token"));
             }
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(
-                    Map.of("message", "Failed to reset password. Please try again.")
-            );
+                    Map.of("message", "Failed to reset password. Please try again."));
         }
     }
 

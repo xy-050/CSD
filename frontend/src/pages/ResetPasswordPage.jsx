@@ -32,12 +32,11 @@ export default function ForgotPasswordPage() {
         setSuccess('');
 
         try {
-            await api.post('/verify-token', {
+            await api.get('/verify-token', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            localStorage.setItem('token', token);
             setIsAuth(true);
         } catch (err) {
             console.error(err);

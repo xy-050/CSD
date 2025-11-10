@@ -30,7 +30,6 @@ public class EmailService {
     /**
      * Constructor-based injection.
      */
-    @Autowired
     public EmailService(JavaMailSender mailSender, JwtUtils jwtUtils, AccountService accountService) {
         this.mailSender = mailSender;
         this.jwtUtils = jwtUtils;
@@ -54,7 +53,7 @@ public class EmailService {
     /**
      * Send password reset email with token
      */
-    public void sendPasswordResetEmail(String userEmail) {
+    public String sendPasswordResetEmail(String userEmail) {
         // Create authentication object with email
         Authentication auth = new UsernamePasswordAuthenticationToken(
             userEmail, null, Collections.emptyList()
@@ -72,6 +71,7 @@ public class EmailService {
                      "Best regards,\nThe Tariffics Team";
 
         sendEmail(userEmail, PasswordResetSubject, body);
+        return token;
     }
 
     /**

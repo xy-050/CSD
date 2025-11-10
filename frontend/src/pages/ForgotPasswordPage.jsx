@@ -30,6 +30,7 @@ export default function ForgotPasswordPage() {
             setSuccess(
                 "We've sent a reset link."
             );
+            localStorage.setItem('token', response.data.token);
             // Optional: Clear the email field after success
             // setEmail('');
         } catch (err) {
