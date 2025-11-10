@@ -102,4 +102,10 @@ public class AccountController {
         accountService.deleteAccount(userID);
         return ResponseEntity.ok().body("Successfully deleted user.");
     }
+
+    @GetMapping("/resetPassword/{email}/{newPassword}")
+    public ResponseEntity<String> resetPassword(@PathVariable String email, @PathVariable String newPassword) {
+        accountService.resetPassword(email, newPassword);
+        return ResponseEntity.ok().body("Successfully reset password!");
+    }
 }

@@ -26,9 +26,9 @@ export default function ForgotPasswordPage() {
         setSuccess('');
 
         try {
-            await api.post('/forgot-password', { email });
+            await api.post('/', { email });
             setSuccess(
-                "If an account exists for this email, we've sent a reset link."
+                "We've sent a reset link."
             );
             // Optional: Clear the email field after success
             // setEmail('');
