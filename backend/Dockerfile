@@ -10,9 +10,6 @@ COPY src ./src
 # build application (creates a WAR file)
 RUN mvn clean package -DskipTests
 
-# rnun the application
-FROM maven:3.9-eclipse-temurin-17 AS builder
-
 WORKDIR /app
 
 # copy the built WAR/JAR from the builder stage
