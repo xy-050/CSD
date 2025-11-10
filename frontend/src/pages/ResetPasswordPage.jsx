@@ -49,6 +49,19 @@ export default function ForgotPasswordPage() {
         }
     };
 
+    const validatePasswords = () => {
+        if (password !== confirm) {
+            return "Passwords do not match.";
+        }
+        if (password.length < 8) {
+            return "Password must be at least 8 characters.";
+        }
+        if (password === confirm) {
+            return "New password must be different from old password.";
+        }
+        return null;
+    };
+
     const handlePasswordChange = async (e) => {
         e.preventDefault();
         setError("");
@@ -146,7 +159,7 @@ export default function ForgotPasswordPage() {
                             type="submit"
                             disabled={loading}
                         >
-                            {loading ? 'Changing password...' : 'Successful!'}
+                            Change Password
                         </button>
                     </form>
                 }
