@@ -35,11 +35,13 @@ services:
     restart: unless-stopped
 
   frontend:
+    build:
+      context: ./frontend
+      dockerfile: dockerfile
     image: ${DOCKER_USERNAME}/tariffic-frontend:latest
     container_name: CSD-frontend
     ports:
       - "80:80"
-      - "443:443"
     depends_on:
       - backend
     restart: unless-stopped
