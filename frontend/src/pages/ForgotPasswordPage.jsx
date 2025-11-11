@@ -9,7 +9,7 @@ import { ErrorMessage } from '../components/ui/ErrorMessage/ErrorMessage.jsx';
 import { SuccessMessage } from '../components/ui/SuccessMessage/SuccessMessage.jsx';
 
 export default function ForgotPasswordPage() {
-    const [email, setEmail] = useState('');
+    const [username, setIsername] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -26,13 +26,11 @@ export default function ForgotPasswordPage() {
         setSuccess('');
 
         try {
-            const response = await api.post('/forgot-password', { email });
+            const response = await api.post('/forgot-password', { username });
             setSuccess(
                 "We've sent a reset link."
             );
             localStorage.setItem('token', response.data.token);
-            // Optional: Clear the email field after success
-            // setEmail('');
         } catch (err) {
             console.error(err);
             const errorMessage = err.response?.data?.message
@@ -51,7 +49,7 @@ export default function ForgotPasswordPage() {
 
                 <div className="login-header login-header-compact">
                     <h1>Reset password</h1>
-                    <p>Enter the email linked to your account.</p>
+                    <p>Enter the username linked to your account.</p>
                 </div>
 
                 <ErrorMessage message={error} />
@@ -59,13 +57,12 @@ export default function ForgotPasswordPage() {
 
                 <form className="form-container" onSubmit={handleSubmit}>
                     <FormInput
-                        label="Email"
+                        label="Username"
                         icon="📧"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={email}
+                        placeholder="username"
+                        value={username}
                         onChange={(e) => {
-                            setEmail(e.target.value);
+                            setUsername(e.target.value);
                             clearMessages();
                         }}
                         required
