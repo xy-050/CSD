@@ -4,16 +4,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import app.security.JwtUtils;
+
 import java.util.Map;
 
 @RestController
 public class EmailController {
 
     @Autowired
+    private final JwtUtils jwtUtils;
+
+    @Autowired
     private EmailService emailService;
 
-    public EmailController(EmailService emailService) {
+    public EmailController(EmailService emailService, JwtUtils jwtUtils) {
         this.emailService = emailService;
+        this.jwtUtils = jwtUtils;
     }
 
     /**
@@ -47,12 +53,11 @@ public class EmailController {
      */
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
         String token = request.get("token");
         String newPassword = request.get("password");
 
         // Validate inputs
-        if (email == null || token == null || newPassword == null) {
+        if (token == null || newPassword == null) {
             return ResponseEntity.badRequest().body(
                     Map.of("message", "Email, token, and password are required"));
         }
@@ -63,6 +68,13 @@ public class EmailController {
         }
 
         try {
+            //get email from token 
+            String email = jwtUtils.getUserNameFromJwtToken(token);
+
+            if (email == null) {
+                return ResponseEntity.badRequest().body(
+                    Map.of("message", "Invalid or expired token"));
+            }
             // Validate token and reset password
             boolean success = emailService.resetPasswordWithToken(email, token, newPassword);
 
@@ -81,8 +93,20 @@ public class EmailController {
     }
 
     @GetMapping("/notifications")
-    public ResponseEntity<?> getNotifications() {
-        // Implement your notification logic here
-        return ResponseEntity.ok().body(Map.of("message", "Notifications endpoint"));
+    public ResponseEntity<?> getNotifications(@RequestParam useremail, @RequestParam htsCode, @RequestParam oldPrice, @RequestParam newPrice) {
+        try{
+            boolean success = sendNotificationEmail(useremail, htsCode, oldPrice, newPrice); 
+
+            if(success){
+                return ResponseEntity.ok().body(Map.of("message", "Notifications endpoint"));
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(
+                    Map.of("message", "Failed to reset password. Please try again."));
+            
+        }
+        
     }
+
 }
