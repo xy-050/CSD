@@ -74,7 +74,6 @@ export default function ForgotPasswordPage() {
         try {
             await api.post('/reset-password', { token, password });
             setSuccess("✅ Password successfully updated! Logging you out...");
-            await new Promise(resolve => setTimeout(resolve, 2000));
             localStorage.removeItem("token");
             navigate("/login");
         } catch (error) {
