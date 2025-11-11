@@ -147,7 +147,8 @@ public class EmailService {
     /**
      * Email notifications sent every Monday (refer to Product Service)
      */
-    public void sendNotificationEmail(String userEmail, String htsCode, String oldPrice, String newPrice) {
+    public boolean sendNotificationEmail(String userEmail, String htsCode, String oldPrice, String newPrice) {
+        try {
         String body = String.format(
             "Hello!\n\n" +
             "The tariff item %s has been updated:\n" +
@@ -159,6 +160,13 @@ public class EmailService {
         );
         
         sendEmail(userEmail, notificationSubject, body);
+
+        return true; 
+        }catch(Exception e){
+            System.err.println("Error sending notifs: " + e.getMessage());
+            return false; 
+        }
+
     }
 }
 

@@ -188,6 +188,19 @@ public class AccountService {
     }
 
     /**
+     * Create/Update the password of an Account.
+     * 
+     * @param email           Target user email.
+     * @param newPassword      New password to update to.
+     */
+    public void updatePasswordViaEmail(String email, String newPassword) {
+        Account account = getAccountByEmail(email);
+
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+    }
+
+    /**
      * Update a user's role (promote or demote to admin)
      * 
      * @param userId  Target user ID
