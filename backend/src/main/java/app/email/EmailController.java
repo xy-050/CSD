@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import app.account.Account;
+import app.account.AccountService;
 import app.security.JwtUtils;
 
 import java.util.Map;
@@ -17,9 +19,13 @@ public class EmailController {
     @Autowired
     private EmailService emailService;
 
-    public EmailController(EmailService emailService, JwtUtils jwtUtils) {
+    @Autowired
+    private AccountService accountService; 
+
+    public EmailController(EmailService emailService, JwtUtils jwtUtils, AccountService accountService) {
         this.emailService = emailService;
         this.jwtUtils = jwtUtils;
+        this.accountService = accountService;
     }
 
     /**
@@ -68,14 +74,14 @@ public class EmailController {
         }
 
         try {
-            //get email from token 
+            // get email from token
             String email = jwtUtils.getUserNameFromJwtToken(token);
 
             if (email == null) {
                 return ResponseEntity.badRequest().body(
-                    Map.of("message", "Invalid or expired token"));
+                        Map.of("message", "Invalid or expired token"));
             }
-            
+
             // Validate token and reset password
             boolean success = emailService.resetPasswordWithToken(email, token, newPassword);
 
@@ -93,21 +99,25 @@ public class EmailController {
         }
     }
 
-    // @GetMapping("/notifications")
-    // public ResponseEntity<?> getNotifications(@RequestParam useremail, @RequestParam htsCode, @RequestParam oldPrice, @RequestParam newPrice) {
-    //     try{
-    //         boolean success = sendNotificationEmail(useremail, htsCode, oldPrice, newPrice); 
+    @GetMapping("/notifications")
+    public ResponseEntity<?> getNotifications(
+            @RequestParam int userId,
+            @RequestParam String htsCode,
+            @RequestParam String price) {
+        try {
+            Account account = accountService.getAccountByUserID(userId);
+            String useremail = account.getEmail();
+            boolean success = emailService.sendNotificationEmail(useremail, htsCode, price);
 
-    //         if(success){
-    //             return ResponseEntity.ok().body(Map.of("message", "Notifications endpoint"));
-    //         }
-    //     }catch(Exception e){
-    //         e.printStackTrace();
-    //         return ResponseEntity.status(500).body(
-    //                 Map.of("message", "Failed to reset password. Please try again."));
-            
-    //     }
-        
-    // }
+            if (success) {
+                return ResponseEntity.ok().body(Map.of("message", "Notifications endpoint"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return ResponseEntity.status(500).body(
+                Map.of("message", "Failed to reset password. Please try again."));
+    }
 
 }

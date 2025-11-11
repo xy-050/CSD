@@ -109,6 +109,20 @@ export default function CalculatorPage() {
         }
     };
 
+    const handleSendEmail = async() => {
+        try {
+            const response = await api.get(`/notifications`, {
+                params: {
+                    userId: user, 
+                    htsCode: htsCode,
+                    price: dutyTotal
+                }
+            });
+        } catch(error) {
+            alert("Failed to send email. Please try again.");
+        }
+    }
+
     return (
         <div className="homepage">
             <NavBar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
@@ -147,6 +161,14 @@ export default function CalculatorPage() {
                             landedCost={landedCost}
                             lines={lines}
                         />
+
+                        <form className="form-container" onSubmit={handleSendEmail}>
+                            <button
+                                className="submit-btnn"
+                                type="submit"
+                            >
+                            </button>
+                        </form>
                     </div>
 
                     <DataVisualizationsSection
