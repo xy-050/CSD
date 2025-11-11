@@ -2,8 +2,11 @@ package app.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import app.security.AuthController.MessageResponse;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -30,5 +33,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleUserConflictException(UserConflictException e) {
         e.printStackTrace();
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<?> handleAuthenticationException(AuthenticationException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Error: Invalid username or password!"));
     }
 }
