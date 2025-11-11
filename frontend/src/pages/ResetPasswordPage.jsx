@@ -8,7 +8,7 @@ import { FormInput } from '../components/ui/FormInput/FormInput.jsx';
 import { ErrorMessage } from '../components/ui/ErrorMessage/ErrorMessage.jsx';
 import { SuccessMessage } from '../components/ui/SuccessMessage/SuccessMessage.jsx';
 
-import { useCurrentUser } from '../hooks/auth/useCurrentUser.jsx';
+//import { useCurrentUser } from '../hooks/auth/useCurrentUser.jsx';
 
 export default function ForgotPasswordPage() {
     const [token, setToken] = useState('');
@@ -61,6 +61,7 @@ export default function ForgotPasswordPage() {
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
+        setLoading(true);
         setError("");
         setSuccess("");
 
@@ -68,6 +69,7 @@ export default function ForgotPasswordPage() {
         const validationError = validatePasswords();
         if (validationError) {
             setError(validationError);
+            setLoading(false);
             return;
         }
 
@@ -83,6 +85,8 @@ export default function ForgotPasswordPage() {
                 || error.response?.data
                 || "Failed to update password. Please try again.";
             setError(errorMessage);
+        } finally {
+            setLoading(false);
         }
     };
 
