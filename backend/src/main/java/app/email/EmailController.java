@@ -75,6 +75,7 @@ public class EmailController {
                 return ResponseEntity.badRequest().body(
                     Map.of("message", "Invalid or expired token"));
             }
+            
             // Validate token and reset password
             boolean success = emailService.resetPasswordWithToken(email, token, newPassword);
 
@@ -92,21 +93,21 @@ public class EmailController {
         }
     }
 
-    @GetMapping("/notifications")
-    public ResponseEntity<?> getNotifications(@RequestParam useremail, @RequestParam htsCode, @RequestParam oldPrice, @RequestParam newPrice) {
-        try{
-            boolean success = sendNotificationEmail(useremail, htsCode, oldPrice, newPrice); 
+    // @GetMapping("/notifications")
+    // public ResponseEntity<?> getNotifications(@RequestParam useremail, @RequestParam htsCode, @RequestParam oldPrice, @RequestParam newPrice) {
+    //     try{
+    //         boolean success = sendNotificationEmail(useremail, htsCode, oldPrice, newPrice); 
 
-            if(success){
-                return ResponseEntity.ok().body(Map.of("message", "Notifications endpoint"));
-            }
-        }catch(Exception e){
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(
-                    Map.of("message", "Failed to reset password. Please try again."));
+    //         if(success){
+    //             return ResponseEntity.ok().body(Map.of("message", "Notifications endpoint"));
+    //         }
+    //     }catch(Exception e){
+    //         e.printStackTrace();
+    //         return ResponseEntity.status(500).body(
+    //                 Map.of("message", "Failed to reset password. Please try again."));
             
-        }
+    //     }
         
-    }
+    // }
 
 }
