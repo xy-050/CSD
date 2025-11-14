@@ -249,4 +249,6 @@ public class AccountService {
         account.setPassword(passwordEncoder.encode(newPassword));
         accountRepository.save(account);
     }
+
+   
 }

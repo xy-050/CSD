@@ -2,7 +2,8 @@ version: '3.8'
 
 services:
   frontend:
-    build: .
+    build: 
+      context: ./frontend
     image: ${DOCKER_USERNAME}/tariffic-frontend:latest
     container_name: CSD-frontend
     ports:
