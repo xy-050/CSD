@@ -1,15 +1,24 @@
 package app.email;
 
+import app.security.AuthController.JwtResponse;
+import app.security.AuthController.MessageResponse;
 import app.security.JwtUtils;
+import lombok.Data;
+import lombok.Getter;
 import app.account.Account;
 import app.account.AccountService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
+import org.springframework.security.authentication.AuthenticationManager;
 
 import java.util.Collections;
 
@@ -19,9 +28,10 @@ public class EmailService {
     private final JwtUtils jwtUtils;
     private final JavaMailSender mailSender;
     private final AccountService accountService;
-    
+    private final AuthenticationManager authenticationManager;
+
     // ProductService was removed from EmailService to avoid circular dependency
-    
+
     private String fromAddress = "no-reply@tariffics.org";
     private String PasswordResetSubject = "Password Reset Request";
     private String frontendUrl = "https://tariffics.org/reset-password"; // Update to your frontend URL
@@ -30,11 +40,24 @@ public class EmailService {
     /**
      * Constructor-based injection.
      */
-    public EmailService(JavaMailSender mailSender, JwtUtils jwtUtils, AccountService accountService) {
+    public EmailService(JavaMailSender mailSender, JwtUtils jwtUtils, AccountService accountService,
+            AuthenticationManager authenticationManager) {
         this.mailSender = mailSender;
         this.jwtUtils = jwtUtils;
         this.accountService = accountService;
+        this.authenticationManager = authenticationManager;
     }
+
+    @Data
+    public static class LoginRequest {
+        private String username;
+
+        public String getUsername(){
+            return username; 
+        }
+    }
+
+
 
     /**
      * Helper method to send email
@@ -50,28 +73,37 @@ public class EmailService {
         System.out.println("Email sent via SES SMTP to: " + to);
     }
 
+
+
     /**
      * Send password reset email with token
      */
-    public String sendPasswordResetEmail(String userEmail) {
+    public String sendPasswordResetEmail(String loginRequest) {
+        String username = loginRequest.getUsername(); 
         // Create authentication object with email
-        Authentication auth = new UsernamePasswordAuthenticationToken(
-            userEmail, null, Collections.emptyList()
-        );
+        Account account = accountService.getAccountByUsername(username);
+        String email = account.getEmail();
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getUsername()));
+
+        String jwt = jwtUtils.generateJwtToken(authentication);
 
         // Generate JWT token
-        String token = jwtUtils.generateJwtToken(auth);
-
+        String token = jwtUtils.generateJwtToken(authentication);
         // Build email body with token
         String body = "You requested a password reset for your Tariff-ic account.\n\n" +
-                     "Your reset token is:\n\n" + token + "\n\n" +
-                     "Enter this token on the password reset page: " + frontendUrl + "\n\n" +
-                     "This token will expire in 24 hours.\n\n" +
-                     "If you did not request this reset, please ignore this email.\n\n" +
-                     "Best regards,\nThe Tariffics Team";
+                "Your reset token is:\n\n" + token + "\n\n" +
+                "Enter this token on the password reset page: " + frontendUrl + "\n\n" +
+                "This token will expire in 24 hours.\n\n" +
+                "If you did not request this reset, please ignore this email.\n\n" +
+                "Best regards,\nThe Tariffics Team";
 
-        sendEmail(userEmail, PasswordResetSubject, body);
+        sendEmail(email, PasswordResetSubject, body);
+
         return token;
+
     }
 
     /**
@@ -93,7 +125,8 @@ public class EmailService {
 
             // Verify the email from token matches the provided email
             if (tokenEmail == null || !tokenEmail.equals(email)) {
-                System.out.println("Email mismatch or token missing subject: token=" + tokenEmail + ", provided=" + email);
+                System.out.println(
+                        "Email mismatch or token missing subject: token=" + tokenEmail + ", provided=" + email);
                 return null;
             }
 
@@ -106,7 +139,7 @@ public class EmailService {
 
             System.out.println("Token validated successfully for: " + email);
             return email;
-            
+
         } catch (Exception e) {
             System.err.println("Error validating token: " + e.getMessage());
             e.printStackTrace();
@@ -149,24 +182,22 @@ public class EmailService {
      */
     public boolean sendNotificationEmail(String userEmail, String htsCode, String oldPrice, String newPrice) {
         try {
-        String body = String.format(
-            "Hello!\n\n" +
-            "The tariff item %s has been updated:\n" +
-            "Previous rate: %s\n" +
-            "New rate: %s\n\n" +
-            "View details: https://tariffics.org/product/%s\n\n" +
-            "Best regards,\nThe Tariffics Team",
-            htsCode, oldPrice, newPrice, htsCode
-        );
-        
-        sendEmail(userEmail, notificationSubject, body);
+            String body = String.format(
+                    "Hello!\n\n" +
+                            "The tariff item %s has been updated:\n" +
+                            "Previous rate: %s\n" +
+                            "New rate: %s\n\n" +
+                            "View details: https://tariffics.org/product/%s\n\n" +
+                            "Best regards,\nThe Tariffics Team",
+                    htsCode, oldPrice, newPrice, htsCode);
 
-        return true; 
-        }catch(Exception e){
+            sendEmail(userEmail, notificationSubject, body);
+
+            return true;
+        } catch (Exception e) {
             System.err.println("Error sending notifs: " + e.getMessage());
-            return false; 
+            return false;
         }
 
     }
 }
-

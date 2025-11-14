@@ -19,7 +19,8 @@ services:
       retries: 10
 
   backend:
-    build: .
+    build: 
+      context: ./backend
     image: ${DOCKER_USERNAME}/tariffic-backend:latest
     container_name: CSD-backend
     ports:

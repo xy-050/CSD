@@ -27,15 +27,15 @@ public class EmailController {
      */
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
+        String username = request.get("username");
 
-        if (email == null || email.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Email is required");
+        if (username == null || username.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Username is required");
         }
 
         try {
             // Send reset email (will check if user exists inside service)
-            String token = emailService.sendPasswordResetEmail(email);
+            String token = emailService.sendPasswordResetEmail(username);
 
             // Always return success to prevent email enumeration attacks
             return ResponseEntity.ok().body(
