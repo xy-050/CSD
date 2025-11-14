@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.security.auth.login.AccountNotFoundException;
+
 @Service
 public class AccountService {
     private final AccountRepository accountRepository;
@@ -92,15 +94,20 @@ public class AccountService {
      * @return Account object that is saved.
      */
     public Account createAccount(Account account) throws UserConflictException {
-        Account existing = getAccountByUsername(account.getUsername());
-        if (existing != null) {
+        try {
+            Account existing = getAccountByUsername(account.getUsername());
             throw new UserConflictException("Username " + existing.getUsername() + " already exists!");
+        } catch (UserNotFoundException e) {
+            
         }
 
-        existing = getAccountByEmail(account.getEmail());
-        if (existing != null) {
+        try {
+            Account existing = getAccountByEmail(account.getEmail());
             throw new UserConflictException("Email already associated with a different account!");
+        } catch (UserNotFoundException e) {
+            
         }
+
 
         if (!PasswordChecker.isValidPassword(account.getPassword())) {
             throw new InvalidPasswordException("Password does not meet the minimum requirements.");
@@ -182,6 +189,19 @@ public class AccountService {
         } else if (!PasswordChecker.isValidPassword(newPassword)) {
             throw new InvalidPasswordException();
         }
+
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+    }
+
+    /**
+     * Create/Update the password of an Account.
+     * 
+     * @param email           Target user email.
+     * @param newPassword      New password to update to.
+     */
+    public void updatePasswordViaEmail(String email, String newPassword) {
+        Account account = getAccountByEmail(email);
 
         account.setPassword(passwordEncoder.encode(newPassword));
         accountRepository.save(account);

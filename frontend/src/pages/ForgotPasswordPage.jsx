@@ -26,10 +26,11 @@ export default function ForgotPasswordPage() {
         setSuccess('');
 
         try {
-            await api.post('/forgot-password', { email });
+            const response = await api.post('/forgot-password', { email });
             setSuccess(
-                "If an account exists for this email, we've sent a reset link."
+                "We've sent a reset link."
             );
+            localStorage.setItem('token', response.data.token);
             // Optional: Clear the email field after success
             // setEmail('');
         } catch (err) {

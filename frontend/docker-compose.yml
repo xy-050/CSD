@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: .
+    image: ${DOCKER_USERNAME}/tariffic-frontend:latest
+    container_name: CSD-frontend
+    ports:
+      - "80:80"
+    restart: unless-stopped

@@ -24,13 +24,12 @@ public class EmailService {
     
     private String fromAddress = "no-reply@tariffics.org";
     private String PasswordResetSubject = "Password Reset Request";
-    private String frontendUrl = "http://localhost:3000/reset-password"; // Update to your frontend URL
+    private String frontendUrl = "https://tariffics.org/reset-password"; // Update to your frontend URL
     private String notificationSubject = "Notification from Tariffics";
 
     /**
      * Constructor-based injection.
      */
-    @Autowired
     public EmailService(JavaMailSender mailSender, JwtUtils jwtUtils, AccountService accountService) {
         this.mailSender = mailSender;
         this.jwtUtils = jwtUtils;
@@ -54,7 +53,7 @@ public class EmailService {
     /**
      * Send password reset email with token
      */
-    public void sendPasswordResetEmail(String userEmail) {
+    public String sendPasswordResetEmail(String userEmail) {
         // Create authentication object with email
         Authentication auth = new UsernamePasswordAuthenticationToken(
             userEmail, null, Collections.emptyList()
@@ -72,6 +71,7 @@ public class EmailService {
                      "Best regards,\nThe Tariffics Team";
 
         sendEmail(userEmail, PasswordResetSubject, body);
+        return token;
     }
 
     /**
@@ -147,7 +147,8 @@ public class EmailService {
     /**
      * Email notifications sent every Monday (refer to Product Service)
      */
-    public void sendNotificationEmail(String userEmail, String htsCode, String oldPrice, String newPrice) {
+    public boolean sendNotificationEmail(String userEmail, String htsCode, String oldPrice, String newPrice) {
+        try {
         String body = String.format(
             "Hello!\n\n" +
             "The tariff item %s has been updated:\n" +
@@ -159,6 +160,13 @@ public class EmailService {
         );
         
         sendEmail(userEmail, notificationSubject, body);
+
+        return true; 
+        }catch(Exception e){
+            System.err.println("Error sending notifs: " + e.getMessage());
+            return false; 
+        }
+
     }
 }
 

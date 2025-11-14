@@ -19,7 +19,7 @@ services:
       retries: 10
 
   backend:
-    build: ./backend
+    build: .
     image: ${DOCKER_USERNAME}/tariffic-backend:latest
     container_name: CSD-backend
     ports:
@@ -33,17 +33,6 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    restart: unless-stopped
-
-  frontend:
-    build: ./frontend
-    image: ${DOCKER_USERNAME}/tariffic-frontend:latest
-    container_name: CSD-frontend
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - backend
     restart: unless-stopped
 
 volumes:

@@ -14,6 +14,7 @@ import SearchResults from './pages/SearchResults.jsx';
 import CalculatorPage from "./pages/CalculatorPage.jsx";
 import FavouritesPage from './pages/FavouritesPage.jsx';
 import ChangePasswordPage from './pages/ChangePasswordPage.jsx';
+import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 
 import './App.css';
 import 'leaflet/dist/leaflet.css';
@@ -26,6 +27,7 @@ export default function App() {
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/signup" element={<SignupPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
                     <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
                     <Route path="/results" element={<ProtectedRoute><SearchResults /></ProtectedRoute>} />

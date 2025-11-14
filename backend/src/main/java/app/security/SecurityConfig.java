@@ -36,9 +36,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-        .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/login", "/signup", "/error").permitAll()
-            .requestMatchers("/forgot-password", "/reset-password").permitAll()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/login", "/signup", "/error").permitAll()
+                        .requestMatchers("/forgot-password", "/reset-password").permitAll()
                         .requestMatchers("/swagger-ui/index.html", "/swagger-ui.html", "/v3/api-docs").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // Admin-only endpoints
                         .anyRequest().authenticated())
@@ -83,8 +83,10 @@ public class SecurityConfig {
     }
 
     /**
-     * Explicitly ignore the unauthenticated endpoints from the security filter chain.
-     * This ensures endpoints like /forgot-password and /reset-password are accessible
+     * Explicitly ignore the unauthenticated endpoints from the security filter
+     * chain.
+     * This ensures endpoints like /forgot-password and /reset-password are
+     * accessible
      * without triggering the resource-server authentication entry point.
      */
     @Bean
