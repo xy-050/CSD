@@ -37,7 +37,7 @@ export default function NavBar({ onToggleSidebar, sidebarOpen }) {
     useEffect(() => {
         const getUsername = async () => {
             try {
-                const response = await api.get("/currentUserDetails");
+                const response = await api.get("/account");
                 console.log(response);
                 setUsername(response.data.username);
             } catch (error) {

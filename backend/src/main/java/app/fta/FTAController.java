@@ -16,7 +16,7 @@ public class FTAController {
     }
 
     // Logic to delete FTA data by id
-    @DeleteMapping("/fta/delete/{id}")
+    @DeleteMapping("/fta/{id}")
     public ResponseEntity<String> deleteFTAData(@PathVariable Long id) {
         if (id == null || id <= 0) {
             return ResponseEntity.badRequest().body("Invalid FTA ID");

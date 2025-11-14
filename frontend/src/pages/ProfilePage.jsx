@@ -50,7 +50,7 @@ export default function ProfilePage() {
         setSuccess("");
 
         try {
-            const response = await api.post(`/updateUser/${encodeURIComponent(user.userId)}`, {
+            const response = await api.put(`/account/${encodeURIComponent(user.userId)}`, {
                 userID: user.userId,
                 username: username,
                 email: email

@@ -28,7 +28,7 @@ public class AccountController {
      * 
      * @return User details
      */
-    @GetMapping("/currentUserDetails")
+    @GetMapping("/account")
     public ResponseEntity<Map<String, Object>> getCurrentUserDetails() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
@@ -71,7 +71,7 @@ public class AccountController {
      * @param updateAccount Account object from request body.
      * @return ResponseEntity with status and message.
      */
-    @PostMapping("/updateUser/{userID}")
+    @PutMapping("/account/{userID}")
     public ResponseEntity<String> updateUser(@PathVariable Integer userID, @RequestBody Account updateAccount) {
         accountService.updateDetails(userID, updateAccount);
         return ResponseEntity.ok().body("Successfully updated user!");
@@ -84,7 +84,7 @@ public class AccountController {
      * @param updateAccount Account object from request body.
      * @return ResponseEntity with status and message.
      */
-    @PostMapping("/updatePassword/{userID}")
+    @PutMapping("/password/{userID}")
     public ResponseEntity<String> updatePassword(@PathVariable Integer userID,
             @RequestBody PasswordUpdateRequest passwordRequest) {
         accountService.updatePassword(userID, passwordRequest.getOldPassword(), passwordRequest.getNewPassword());
@@ -103,7 +103,14 @@ public class AccountController {
         return ResponseEntity.ok().body("Successfully deleted user.");
     }
 
-    @GetMapping("/resetPassword/{email}/{newPassword}")
+    /**
+     * Reset password for a user.
+     * 
+     * @param email       Email of target user
+     * @param newPassword Password to reset to
+     * @return ResponseEntity with status and message
+     */
+    @PutMapping("/password/{email}/{newPassword}")
     public ResponseEntity<String> resetPassword(@PathVariable String email, @PathVariable String newPassword) {
         accountService.resetPassword(email, newPassword);
         return ResponseEntity.ok().body("Successfully reset password!");

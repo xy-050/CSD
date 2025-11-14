@@ -40,7 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/signup", "/error").permitAll()
                         .requestMatchers("/forgot-password", "/reset-password").permitAll()
                         .requestMatchers("/swagger-ui/index.html", "/swagger-ui.html", "/v3/api-docs").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN") // Admin-only endpoints
+                        .requestMatchers("/admin/**").hasRole("ADMIN") // Admin-only endpoints
                         .anyRequest().authenticated())
                 .sessionManagement(configurer -> configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer((oauth2) -> oauth2
