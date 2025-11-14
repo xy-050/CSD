@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
+@RequestMapping("/ftas")
 public class FTAController {
 
     private final FTAService ftaService;
@@ -16,7 +17,7 @@ public class FTAController {
     }
 
     // Logic to delete FTA data by id
-    @DeleteMapping("/fta/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteFTAData(@PathVariable Long id) {
         if (id == null || id <= 0) {
             return ResponseEntity.badRequest().body("Invalid FTA ID");
@@ -31,8 +32,7 @@ public class FTAController {
     }
     
     // Logic to list all FTA entries
-    /*NEED TO UPDATE THE ftaENTRIES*/
-    @GetMapping("/fta/list")
+    @GetMapping
     public ResponseEntity<List<FTA>> listAllFTAEntries() {
         List<FTA> ftaEntries = ftaService.getAllFTAs();
         if (ftaEntries == null || ftaEntries.isEmpty()) {

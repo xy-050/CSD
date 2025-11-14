@@ -66,7 +66,7 @@ export default function ChangePasswordPage() {
         }
 
         try {
-            const response = await api.post(`/updatePassword/${encodeURIComponent(user.userId)}`, {
+            const response = await api.put(`/accounts/${encodeURIComponent(user.userId)}/password`, {
                 oldPassword: oldPassword,
                 newPassword: newPassword
             });

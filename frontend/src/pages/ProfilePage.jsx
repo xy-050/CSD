@@ -50,7 +50,7 @@ export default function ProfilePage() {
         setSuccess("");
 
         try {
-            const response = await api.post(`/updateUser/${encodeURIComponent(user.userId)}`, {
+            const response = await api.put(`/accounts/${encodeURIComponent(user.userId)}`, {
                 userID: user.userId,
                 username: username,
                 email: email
@@ -97,7 +97,7 @@ export default function ProfilePage() {
         setError("");
 
         try {
-            const response = await api.delete(`/account/${encodeURIComponent(user.userId)}`);
+            const response = await api.delete(`/accounts/${encodeURIComponent(user.userId)}`);
             console.log(response);
             localStorage.removeItem("token");
             navigate("/login");

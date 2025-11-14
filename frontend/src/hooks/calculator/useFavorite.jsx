@@ -12,7 +12,7 @@ export function useFavorite(userId, htsCode) {
             if (!userId || !htsCode) return;
 
             try {
-                const res = await api.get(`/account/${userId}/favourites`);
+                const res = await api.get(`/accounts/${userId}/favourites`);
                 const list = Array.isArray(res.data) ? res.data : (res.data?.items || []);
                 setIsFavorite(list.some(item => item.htsno === htsCode));
             } catch (err) {
@@ -33,12 +33,12 @@ export function useFavorite(userId, htsCode) {
 
         try {
             if (isFavorite) {
-                await api.delete(`/account/${userId}/favourites`, {
+                await api.delete(`/accounts/${userId}/favourites`, {
                     params: { htsCode }
                 });
                 setIsFavorite(false);
             } else {
-                await api.post(`/account/${userId}/favourites`, null, {
+                await api.post(`/accounts/${userId}/favourites`, null, {
                     params: { htsCode }
                 });
                 setIsFavorite(true);

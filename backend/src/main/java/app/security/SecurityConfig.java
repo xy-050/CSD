@@ -5,6 +5,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -37,8 +38,10 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/signup", "/error").permitAll()
-                        .requestMatchers("/forgot-password", "/reset-password").permitAll()
+                        .requestMatchers("/login", "/error").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/accounts").permitAll()
+                        .requestMatchers("/accounts/password-resets").permitAll()
+                        .requestMatchers("/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
                         .requestMatchers("/swagger-ui/index.html", "/swagger-ui.html", "/v3/api-docs").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // Admin-only endpoints
                         .anyRequest().authenticated())
@@ -91,7 +94,7 @@ public class SecurityConfig {
      */
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/forgot-password", "/reset-password");
+        return (web) -> web.ignoring().requestMatchers("/api/auth/forgot-password", "/api/auth/reset-password");
     }
 
     @Bean

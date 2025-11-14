@@ -13,7 +13,7 @@ export function useCurrentUser() {
     useEffect(() => {
         const getUserDetails = async () => {
             try {
-                const response = await api.get("/currentUserDetails");
+                const response = await api.get("/accounts/current");
                 console.log(response);
                 setUser({
                     username: response.data.username,

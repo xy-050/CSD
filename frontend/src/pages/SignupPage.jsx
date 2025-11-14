@@ -52,7 +52,7 @@ export default function SignupPage() {
         // Submit
         setIsLoading(true);
         try {
-            const response = await api.post("/signup", {
+            const response = await api.post("/accounts", {
                 username,
                 email,
                 password
