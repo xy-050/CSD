@@ -46,13 +46,13 @@ jobs:
             echo "${{ secrets.PRIVATEKEY_PEM }}" > privatekey.pem
             
             # Pull latest images
-            docker compose pull
+            docker-compose pull
             
             # Stop and remove old containers
-            docker compose down
+            docker-compose down
             
             # Start new containers
-            docker compose up -d
+            docker-compose up -d
             
             # Clean up old images
             docker image prune -af
@@ -64,7 +64,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             cd ~/CSD
-            docker compose ps
+            docker-compose ps
           EOF
       
       - name: Cleanup SSH key
