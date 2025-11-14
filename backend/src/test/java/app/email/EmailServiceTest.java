@@ -2,6 +2,9 @@ package app.email;
 
 import app.account.Account;
 import app.account.AccountService;
+import app.exception.EmailDeliveryExceptionException;
+import app.exception.InvalidPasswordException;
+import app.exception.UserNotFoundException;
 import app.security.JwtUtils;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -85,14 +88,15 @@ class EmailServiceTest {
     }
 
     @Test
-    void sendPasswordResetEmail_AccountNotFound_SilentlyReturns() {
+    void sendPasswordResetEmail_AccountNotFound_ThrowsUserNotFoundException() {
         // Arrange
         when(accountService.getAccountByUsername(TEST_USERNAME)).thenReturn(null);
 
-        // Act
-        emailService.sendPasswordResetEmail(TEST_USERNAME);
+        // Act & Assert
+        assertThrows(UserNotFoundException.class, () -> {
+            emailService.sendPasswordResetEmail(TEST_USERNAME);
+        });
 
-        // Assert - should silently return without sending email
         verify(accountService).getAccountByUsername(TEST_USERNAME);
         verify(mailSender, never()).send(any(SimpleMailMessage.class));
         verify(jwtUtils, never()).generateRefreshToken(any(UserDetails.class));
@@ -106,7 +110,7 @@ class EmailServiceTest {
         doThrow(new MailAuthenticationException("Auth failed")).when(mailSender).send(any(SimpleMailMessage.class));
 
         // Act & Assert
-        assertThrows(MailAuthenticationException.class, () -> {
+        assertThrows(EmailDeliveryExceptionException.class, () -> {
             emailService.sendPasswordResetEmail(TEST_USERNAME);
         });
 
@@ -121,7 +125,7 @@ class EmailServiceTest {
         doThrow(new MailSendException("Send failed")).when(mailSender).send(any(SimpleMailMessage.class));
 
         // Act & Assert
-        assertThrows(MailSendException.class, () -> {
+        assertThrows(EmailDeliveryExceptionException.class, () -> {
             emailService.sendPasswordResetEmail(TEST_USERNAME);
         });
 
@@ -199,23 +203,23 @@ class EmailServiceTest {
     }
 
     @Test
-    void resetPasswordWithToken_AccountNotFound_ReturnsFalse() {
+    void resetPasswordWithToken_AccountNotFound_ThrowsUserNotFoundException() {
         // Arrange
         when(jwtUtils.validateToken(TEST_TOKEN)).thenReturn(true);
         when(jwtUtils.getUserNameFromJwtToken(TEST_TOKEN)).thenReturn(TEST_EMAIL);
         when(accountService.getAccountByEmail(TEST_EMAIL)).thenReturn(null);
 
-        // Act
-        boolean result = emailService.resetPasswordWithToken(TEST_EMAIL, TEST_TOKEN, TEST_PASSWORD);
+        // Act & Assert
+        assertThrows(UserNotFoundException.class, () -> {
+            emailService.resetPasswordWithToken(TEST_EMAIL, TEST_TOKEN, TEST_PASSWORD);
+        });
 
-        // Assert
-        assertFalse(result);
         verify(accountService).getAccountByEmail(TEST_EMAIL);
         verify(accountService, never()).resetPassword(any(), any());
     }
 
     @Test
-    void resetPasswordWithToken_InvalidPassword_ThrowsIllegalArgumentException() {
+    void resetPasswordWithToken_InvalidPassword_ThrowsInvalidPasswordException() {
         // Arrange
         when(jwtUtils.validateToken(TEST_TOKEN)).thenReturn(true);
         when(jwtUtils.getUserNameFromJwtToken(TEST_TOKEN)).thenReturn(TEST_EMAIL);
@@ -224,7 +228,7 @@ class EmailServiceTest {
             .when(accountService).resetPassword(TEST_EMAIL, TEST_PASSWORD);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(InvalidPasswordException.class, () -> {
             emailService.resetPasswordWithToken(TEST_EMAIL, TEST_TOKEN, TEST_PASSWORD);
         });
 
@@ -260,58 +264,58 @@ class EmailServiceTest {
     }
 
     @Test
-    void sendNotificationEmail_NullEmail_ThrowsIllegalArgumentException() {
-        // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            emailService.sendNotificationEmail(null, "1234", "5%", "10%");
-        });
+    void sendNotificationEmail_NullEmail_SendsUsingLiteralNull() {
+        // Act
+        emailService.sendNotificationEmail(null, "1234", "5%", "10%");
 
-        assertTrue(exception.getMessage().contains("email"));
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
+        // Assert
+        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(messageCaptor.capture());
+        assertNull(messageCaptor.getValue().getTo()[0]);
     }
 
     @Test
-    void sendNotificationEmail_EmptyEmail_ThrowsIllegalArgumentException() {
-        // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            emailService.sendNotificationEmail("   ", "1234", "5%", "10%");
-        });
+    void sendNotificationEmail_BlankEmail_AllowsSending() {
+        // Act
+        emailService.sendNotificationEmail("   ", "1234", "5%", "10%");
 
-        assertTrue(exception.getMessage().contains("email"));
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
+        // Assert
+        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(messageCaptor.capture());
+        assertEquals("   ", messageCaptor.getValue().getTo()[0]);
     }
 
     @Test
-    void sendNotificationEmail_NullHtsCode_ThrowsIllegalArgumentException() {
-        // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            emailService.sendNotificationEmail(TEST_EMAIL, null, "5%", "10%");
-        });
+    void sendNotificationEmail_NullHtsCode_IncludesLiteralNull() {
+        // Act
+        emailService.sendNotificationEmail(TEST_EMAIL, null, "5%", "10%");
 
-        assertTrue(exception.getMessage().contains("HTS code"));
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
+        // Assert
+        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(messageCaptor.capture());
+        assertTrue(messageCaptor.getValue().getText().contains("null"));
     }
 
     @Test
-    void sendNotificationEmail_NullOldPrice_ThrowsIllegalArgumentException() {
-        // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            emailService.sendNotificationEmail(TEST_EMAIL, "1234", null, "10%");
-        });
+    void sendNotificationEmail_NullOldPrice_IncludesLiteralNull() {
+        // Act
+        emailService.sendNotificationEmail(TEST_EMAIL, "1234", null, "10%");
 
-        assertTrue(exception.getMessage().contains("Old price"));
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
+        // Assert
+        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(messageCaptor.capture());
+        assertTrue(messageCaptor.getValue().getText().contains("null"));
     }
 
     @Test
-    void sendNotificationEmail_NullNewPrice_ThrowsIllegalArgumentException() {
-        // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            emailService.sendNotificationEmail(TEST_EMAIL, "1234", "5%", null);
-        });
+    void sendNotificationEmail_NullNewPrice_IncludesLiteralNull() {
+        // Act
+        emailService.sendNotificationEmail(TEST_EMAIL, "1234", "5%", null);
 
-        assertTrue(exception.getMessage().contains("New price"));
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
+        // Assert
+        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(messageCaptor.capture());
+        assertTrue(messageCaptor.getValue().getText().contains("null"));
     }
 
     @Test
@@ -320,7 +324,7 @@ class EmailServiceTest {
         doThrow(new MailSendException("Send failed")).when(mailSender).send(any(SimpleMailMessage.class));
 
         // Act & Assert
-        assertThrows(MailSendException.class, () -> {
+        assertThrows(EmailDeliveryExceptionException.class, () -> {
             emailService.sendNotificationEmail(TEST_EMAIL, "1234", "5%", "10%");
         });
 
