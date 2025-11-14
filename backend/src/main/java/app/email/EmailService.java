@@ -1,68 +1,188 @@
 package app.email;
 
-import app.security.AuthController.JwtResponse;
-import app.security.AuthController.MessageResponse;
 import app.security.JwtUtils;
-import lombok.Data;
-import lombok.Getter;
 import app.account.Account;
 import app.account.AccountService;
+import app.exception.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+
+import javax.security.auth.login.AccountNotFoundException;
 
 @Service
 public class EmailService {
 
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
+
     private final JwtUtils jwtUtils;
     private final JavaMailSender mailSender;
     private final AccountService accountService;
-    private final AuthenticationManager authenticationManager;
 
-    // ProductService was removed from EmailService to avoid circular dependency
+    @Value("${app.email.from:no-reply@tariffics.org}")
+    private String fromAddress;
 
-    private String fromAddress = "no-reply@tariffics.org";
-    private String PasswordResetSubject = "Password Reset Request";
-    private String frontendUrl = "https://tariffics.org/reset-password"; // Update to your frontend URL
-    private String notificationSubject = "Notification from Tariffics";
+    @Value("${app.frontend.url:https://tariffics.org}")
+    private String frontendUrl;
 
-    /**
-     * Constructor-based injection.
-     */
-    public EmailService(JavaMailSender mailSender, JwtUtils jwtUtils, AccountService accountService,
-            AuthenticationManager authenticationManager) {
+    private static final String PASSWORD_RESET_SUBJECT = "Password Reset Request";
+    private static final String NOTIFICATION_SUBJECT = "Notification from Tariffics";
+
+    public EmailService(JavaMailSender mailSender, JwtUtils jwtUtils, AccountService accountService) {
         this.mailSender = mailSender;
         this.jwtUtils = jwtUtils;
         this.accountService = accountService;
-        this.authenticationManager = authenticationManager;
     }
 
-    @Data
-    public static class LoginRequest {
-        private String username;
+    /**
+     * Sends password reset email to user.
+     * Throws AccountNotFoundException if user doesn't exist (caught by global handler).
+     * 
+     * @param username Username or email of the account
+     * @throws AccountNotFoundException if account doesn't exist
+     * @throws EmailDeliveryExceptionException if email fails to send
+     */
+    public void sendPasswordResetEmail(String username) {
+        Account account = accountService.getAccountByUsername(username);
+        
+        if (account == null) {
+            logger.info("Password reset requested for non-existent user: {}", username);
+            throw new UserNotFoundException(username);
+        }
 
-        public String getUsername(){
-            return username; 
+        String email = account.getEmail();
+        
+        try {
+            // Create a minimal UserDetails for token generation
+            UserDetails userDetails = User.builder()
+                    .username(email)
+                    .password("")
+                    .authorities(Collections.emptyList())
+                    .build();
+            
+            String token = jwtUtils.generateRefreshToken(userDetails);
+            String body = buildPasswordResetEmailBody(token);
+            
+            sendEmail(email, PASSWORD_RESET_SUBJECT, body);
+            logger.info("Password reset email sent to: {}", email);
+            
+        } catch (MailException e) {
+            logger.error("Failed to send password reset email to: {}", email, e);
+            throw new EmailDeliveryExceptionException("Failed to send password reset email", e);
+        } catch (Exception e) {
+            logger.error("Unexpected error sending password reset email for: {}", username, e);
+            throw new EmailServiceException("Error sending password reset email", e);
         }
     }
 
+    /**
+     * Validates reset token and resets password if valid.
+     * 
+     * @param email User's email
+     * @param token Reset token
+     * @param newPassword New password to set
+     * @return true if password was successfully reset
+     * @throws InvalidResetTokenException if token is invalid or expired
+     * @throws TokenEmailMismatchException if token email doesn't match
+     * @throws UserNotFoundException if account doesn't exist
+     */
+    public boolean resetPasswordWithToken(String email, String token, String newPassword) {
+        // Validate token
+        validateResetToken(email, token);
+        
+        // Get account
+        Account account = accountService.getAccountByEmail(email);
+        if (account == null) {
+            logger.warn("Password reset attempted for non-existent email: {}", email);
+            throw new UserNotFoundException(email);
+        }
 
+        try {
+            accountService.resetPassword(email, newPassword);
+            logger.info("Password successfully reset for: {}", email);
+            return true;
+            
+        } catch (IllegalArgumentException e) {
+            logger.warn("Invalid password provided for: {}", email);
+            throw new InvalidPasswordException(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error resetting password for: {}", email, e);
+            throw new EmailServiceException("Failed to reset password", e);
+        }
+    }
 
     /**
-     * Helper method to send email
+     * Sends notification email about tariff changes.
+     * 
+     * @param userEmail Recipient email
+     * @param htsCode HTS code of the product
+     * @param oldPrice Previous tariff rate
+     * @param newPrice New tariff rate
+     * @return true if email was sent successfully
+     * @throws EmailDeliveryExceptionException if email fails to send
      */
-    public void sendEmail(String to, String subject, String body) {
+    public boolean sendNotificationEmail(String userEmail, String htsCode, String oldPrice, String newPrice) {
+        try {
+            String body = buildNotificationEmailBody(htsCode, oldPrice, newPrice);
+            sendEmail(userEmail, NOTIFICATION_SUBJECT, body);
+            
+            logger.info("Notification email sent to: {} for HTS code: {}", userEmail, htsCode);
+            return true;
+            
+        } catch (MailException e) {
+            logger.error("Failed to send notification email to: {}", userEmail, e);
+            throw new EmailDeliveryExceptionException("Failed to send notification email", e);
+        } catch (Exception e) {
+            logger.error("Unexpected error sending notification to: {}", userEmail, e);
+            throw new EmailServiceException("Error sending notification email", e);
+        }
+    }
+
+    /**
+     * Validates reset token matches the email and hasn't expired.
+     * 
+     * @param email User's email
+     * @param token Reset token to validate
+     * @throws JwtException if token is invalid, expired, or email mismatch
+     */
+    private void validateResetToken(String email, String token) {
+        if (!jwtUtils.validateToken(token)) {
+            logger.warn("Token validation failed for email: {}", email);
+            throw new JwtException("Token is invalid or expired");
+        }
+
+        String tokenEmail = jwtUtils.getUserNameFromJwtToken(token);
+        
+        if (tokenEmail == null) {
+            logger.warn("Token has no subject for email: {}", email);
+            throw new JwtException("Token is malformed - missing subject");
+        }
+        
+        if (!tokenEmail.equals(email)) {
+            logger.warn("Token email mismatch - Token: {}, Provided: {}", tokenEmail, email);
+            throw new JwtException("Token email does not match provided email");
+        }
+    }
+
+    /**
+     * Sends an email using configured mail sender.
+     * 
+     * @param to Recipient email address
+     * @param subject Email subject
+     * @param body Email body
+     * @throws MailException if email fails to send
+     */
+    private void sendEmail(String to, String subject, String body) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromAddress);
         message.setTo(to);
@@ -70,134 +190,36 @@ public class EmailService {
         message.setText(body);
 
         mailSender.send(message);
-        System.out.println("Email sent via SES SMTP to: " + to);
-    }
-
-
-
-    /**
-     * Send password reset email with token
-     */
-    public String sendPasswordResetEmail(String loginRequest) {
-        String username = loginRequest.getUsername(); 
-        // Create authentication object with email
-        Account account = accountService.getAccountByUsername(username);
-        String email = account.getEmail();
-
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername()));
-
-        String jwt = jwtUtils.generateJwtToken(authentication);
-
-        // Generate JWT token
-        String token = jwtUtils.generateJwtToken(authentication);
-        // Build email body with token
-        String body = "You requested a password reset for your Tariff-ic account.\n\n" +
-                "Your reset token is:\n\n" + token + "\n\n" +
-                "Enter this token on the password reset page: " + frontendUrl + "\n\n" +
-                "This token will expire in 24 hours.\n\n" +
-                "If you did not request this reset, please ignore this email.\n\n" +
-                "Best regards,\nThe Tariffics Team";
-
-        sendEmail(email, PasswordResetSubject, body);
-
-        return token;
-
+        logger.debug("Email sent to: {}", to);
     }
 
     /**
-     * Validate the reset token and return the email if valid.
-     * The actual password reset will be handled by AccountService.
-     * 
-     * @return The email from the token if valid, null otherwise
+     * Builds password reset email body.
      */
-    public String validateResetToken(String email, String token) {
-        try {
-            // Validate the JWT token
-            if (!jwtUtils.validateToken(token)) {
-                System.out.println("Invalid token");
-                return null;
-            }
-
-            // Extract email from token
-            String tokenEmail = jwtUtils.getUserNameFromJwtToken(token);
-
-            // Verify the email from token matches the provided email
-            if (tokenEmail == null || !tokenEmail.equals(email)) {
-                System.out.println(
-                        "Email mismatch or token missing subject: token=" + tokenEmail + ", provided=" + email);
-                return null;
-            }
-
-            // Verify user exists
-            Account account = accountService.getAccountByEmail(email);
-            if (account == null) {
-                System.out.println("User not found: " + email);
-                return null;
-            }
-
-            System.out.println("Token validated successfully for: " + email);
-            return email;
-
-        } catch (Exception e) {
-            System.err.println("Error validating token: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
+    private String buildPasswordResetEmailBody(String token) {
+        return String.format(
+            "You requested a password reset for your Tariff-ic account.\n\n" +
+            "Your reset token is:\n\n%s\n\n" +
+            "Enter this token on the password reset page: %s/reset-password\n\n" +
+            "This token will expire in 7 days.\n\n" +
+            "If you did not request this reset, please ignore this email.\n\n" +
+            "Best regards,\nThe Tariffics Team",
+            token, frontendUrl
+        );
     }
 
     /**
-     * Reset password using token. Returns true when successful.
+     * Builds notification email body for tariff changes.
      */
-    public boolean resetPasswordWithToken(String email, String token, String newPassword) {
-        try {
-            // Validate token
-            if (!jwtUtils.validateToken(token)) {
-                return false;
-            }
-
-            String tokenEmail = jwtUtils.getUserNameFromJwtToken(token);
-            if (tokenEmail == null || !tokenEmail.equals(email)) {
-                return false;
-            }
-
-            // Ensure account exists
-            Account account = accountService.getAccountByEmail(email);
-            if (account == null) {
-                return false;
-            }
-
-            // Delegate to AccountService which handles password encoding and validation
-            accountService.resetPassword(email, newPassword);
-            return true;
-        } catch (Exception e) {
-            System.err.println("Error resetting password: " + e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Email notifications sent every Monday (refer to Product Service)
-     */
-    public boolean sendNotificationEmail(String userEmail, String htsCode, String oldPrice, String newPrice) {
-        try {
-            String body = String.format(
-                    "Hello!\n\n" +
-                            "The tariff item %s has been updated:\n" +
-                            "Previous rate: %s\n" +
-                            "New rate: %s\n\n" +
-                            "View details: https://tariffics.org/product/%s\n\n" +
-                            "Best regards,\nThe Tariffics Team",
-                    htsCode, oldPrice, newPrice, htsCode);
-
-            sendEmail(userEmail, notificationSubject, body);
-
-            return true;
-        } catch (Exception e) {
-            System.err.println("Error sending notifs: " + e.getMessage());
-            return false;
-        }
-
+    private String buildNotificationEmailBody(String htsCode, String oldPrice, String newPrice) {
+        return String.format(
+            "Hello!\n\n" +
+            "The tariff item %s has been updated:\n" +
+            "Previous rate: %s\n" +
+            "New rate: %s\n\n" +
+            "View details: %s/product/%s\n\n" +
+            "Best regards,\nThe Tariffics Team",
+            htsCode, oldPrice, newPrice, frontendUrl, htsCode
+        );
     }
 }

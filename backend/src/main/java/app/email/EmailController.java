@@ -1,21 +1,22 @@
 package app.email;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import app.email.dto.ForgotPasswordRequest;
+import app.email.dto.ResetPasswordRequest;
+import app.email.dto.NotificationRequest;
+import app.email.dto.ApiResponse;
 import app.security.JwtUtils;
 
-import java.util.Map;
+import jakarta.validation.Valid;
 
 @RestController
+@RequestMapping("/api/auth")
 public class EmailController {
 
-    @Autowired
+    private final EmailService emailService;
     private final JwtUtils jwtUtils;
-
-    @Autowired
-    private EmailService emailService;
 
     public EmailController(EmailService emailService, JwtUtils jwtUtils) {
         this.emailService = emailService;
@@ -23,91 +24,94 @@ public class EmailController {
     }
 
     /**
-     * Step 1: User requests password reset by providing email
+     * Initiates password reset process by sending reset email.
+     * 
+     * Possible exceptions (handled by GlobalExceptionHandler):
+     * - MethodArgumentNotValidException: Invalid request body (400)
+     * - AccountNotFoundException: Account doesn't exist (200 with generic message to prevent enumeration)
+     * - EmailDeliveryException: Email failed to send (503)
+     * - MailException: Mail server error (503)
+     * - EmailServiceException: General service error (500)
+     * 
+     * @param request Contains username/email for password reset
+     * @return Success message (always, to prevent user enumeration)
      */
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
-        String username = request.get("username");
-
-        if (username == null || username.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Username is required");
-        }
-
-        try {
-            // Send reset email (will check if user exists inside service)
-            String token = emailService.sendPasswordResetEmail(username);
-
-            // Always return success to prevent email enumeration attacks
-            return ResponseEntity.ok().body(
-                    Map.of("message", "If an account exists for this email, we've sent a reset link.",
-                            "token", token));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(
-                    Map.of("message", "Failed to send reset email. Please try again later."));
-        }
+    public ResponseEntity<ApiResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        // Exceptions are thrown and handled by GlobalExceptionHandler
+        emailService.sendPasswordResetEmail(request.getUsername());
+        
+        return ResponseEntity.ok(new ApiResponse(
+            "If an account exists for this email, we've sent a reset link.",
+            true
+        ));
     }
 
     /**
-     * Step 2: User submits token and new password to reset
+     * Completes password reset using token and new password.
+     * 
+     * Possible exceptions (handled by GlobalExceptionHandler):
+     * - MethodArgumentNotValidException: Invalid request body (400)
+     * - JwtException: JWT parsing/validation error (401)
+     * - InvalidResetTokenException: Token invalid or expired (400)
+     * - TokenEmailMismatchException: Token email doesn't match (400)
+     * - AccountNotFoundException: Account doesn't exist (404)
+     * - InvalidPasswordException: Password doesn't meet requirements (400)
+     * - EmailServiceException: General service error (500)
+     * 
+     * @param request Contains token and new password
+     * @return Success or error message
      */
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
-        String token = request.get("token");
-        String newPassword = request.get("password");
+    public ResponseEntity<ApiResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        // Extract and validate email from token first
+        String email = jwtUtils.getUserNameFromJwtToken(request.getToken());
 
-        // Validate inputs
-        if (token == null || newPassword == null) {
-            return ResponseEntity.badRequest().body(
-                    Map.of("message", "Email, token, and password are required"));
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                .body(new ApiResponse("Invalid or expired token", false));
         }
+        
+        // Exceptions are thrown and handled by GlobalExceptionHandler
+        emailService.resetPasswordWithToken(email, request.getToken(), request.getPassword());
 
-        if (newPassword.length() < 8) {
-            return ResponseEntity.badRequest().body(
-                    Map.of("message", "Password must be at least 8 characters long"));
-        }
-
-        try {
-            //get email from token 
-            String email = jwtUtils.getUserNameFromJwtToken(token);
-
-            if (email == null) {
-                return ResponseEntity.badRequest().body(
-                    Map.of("message", "Invalid or expired token"));
-            }
-            
-            // Validate token and reset password
-            boolean success = emailService.resetPasswordWithToken(email, token, newPassword);
-
-            if (success) {
-                return ResponseEntity.ok().body(
-                        Map.of("message", "Password reset successful!"));
-            } else {
-                return ResponseEntity.badRequest().body(
-                        Map.of("message", "Invalid or expired token"));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(
-                    Map.of("message", "Failed to reset password. Please try again."));
-        }
+        return ResponseEntity.ok(new ApiResponse("Password reset successful!", true));
     }
 
-    // @GetMapping("/notifications")
-    // public ResponseEntity<?> getNotifications(@RequestParam useremail, @RequestParam htsCode, @RequestParam oldPrice, @RequestParam newPrice) {
-    //     try{
-    //         boolean success = sendNotificationEmail(useremail, htsCode, oldPrice, newPrice); 
-
-    //         if(success){
-    //             return ResponseEntity.ok().body(Map.of("message", "Notifications endpoint"));
-    //         }
-    //     }catch(Exception e){
-    //         e.printStackTrace();
-    //         return ResponseEntity.status(500).body(
-    //                 Map.of("message", "Failed to reset password. Please try again."));
-            
-    //     }
+    /**
+     * Sends tariff change notification email.
+     * 
+     * Possible exceptions (handled by GlobalExceptionHandler):
+     * - MailAuthenticationException: Mailjet credentials invalid (503)
+     * - MailSendException: Email send failed (503)
+     * - MailParseException: Malformed email address (400)
+     * - SocketTimeoutException: Mailjet connection timeout (504)
+     * - IllegalArgumentException: Invalid input parameters (400)
+     * 
+     * @param userEmail Recipient email address
+     * @param htsCode HTS code of the tariff item
+     * @param oldPrice Previous tariff rate
+     * @param newPrice New tariff rate
+     * @return Success message
+     */
+    @PostMapping("/notifications")
+    public ResponseEntity<ApiResponse> sendNotification(
+            @Valid @RequestBody NotificationRequest request) {
         
-    // }
+        // Exceptions are thrown and handled by GlobalExceptionHandler
+        emailService.sendNotificationEmail(
+            request.getUserEmail(), 
+            request.getHtsCode(), 
+            request.getOldPrice(), 
+            request.getNewPrice()
+        );
 
+        return ResponseEntity.ok(new ApiResponse(
+            "Notification email sent successfully",
+            true
+        ));
+    }
 }
+
+
+
