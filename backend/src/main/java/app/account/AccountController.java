@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
+@RequestMapping("/accounts")
 public class AccountController {
 
     private final AccountService accountService;
@@ -28,7 +29,7 @@ public class AccountController {
      * 
      * @return User details
      */
-    @GetMapping("/account")
+    @GetMapping("/current")
     public ResponseEntity<Map<String, Object>> getCurrentUserDetails() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
@@ -58,10 +59,11 @@ public class AccountController {
      * @param signupAccount Account object from request body.
      * @return ResponseEntity with status and message.
      */
-    @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody Account signupAccount) {
+    @PostMapping
+    public ResponseEntity<String> createAccount(@RequestBody Account signupAccount) {
         accountService.createAccount(signupAccount);
-        return ResponseEntity.ok("Signup successful for user: " + signupAccount.getUsername());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Signup successful for user: " + signupAccount.getUsername());
     }
 
     /**
@@ -71,7 +73,7 @@ public class AccountController {
      * @param updateAccount Account object from request body.
      * @return ResponseEntity with status and message.
      */
-    @PutMapping("/account/{userID}")
+    @PutMapping("/{userID}")
     public ResponseEntity<String> updateUser(@PathVariable Integer userID, @RequestBody Account updateAccount) {
         accountService.updateDetails(userID, updateAccount);
         return ResponseEntity.ok().body("Successfully updated user!");
@@ -84,7 +86,7 @@ public class AccountController {
      * @param updateAccount Account object from request body.
      * @return ResponseEntity with status and message.
      */
-    @PutMapping("/password/{userID}")
+    @PutMapping("/{userID}/password")
     public ResponseEntity<String> updatePassword(@PathVariable Integer userID,
             @RequestBody PasswordUpdateRequest passwordRequest) {
         accountService.updatePassword(userID, passwordRequest.getOldPassword(), passwordRequest.getNewPassword());
@@ -97,22 +99,15 @@ public class AccountController {
      * @param userID Target user ID.
      * @return ResponseEntity with status and message.
      */
-    @DeleteMapping("/account/{userID}")
+    @DeleteMapping("/{userID}")
     public ResponseEntity<String> deleteAccount(@PathVariable Integer userID) {
         accountService.deleteAccount(userID);
         return ResponseEntity.ok().body("Successfully deleted user.");
     }
 
-    /**
-     * Reset password for a user.
-     * 
-     * @param email       Email of target user
-     * @param newPassword Password to reset to
-     * @return ResponseEntity with status and message
-     */
-    @PutMapping("/password/{email}/{newPassword}")
-    public ResponseEntity<String> resetPassword(@PathVariable String email, @PathVariable String newPassword) {
-        accountService.resetPassword(email, newPassword);
+    @PostMapping("/password-resets")
+    public ResponseEntity<String> resetPassword(@RequestBody PasswordResetRequest passwordResetRequest) {
+        accountService.resetPassword(passwordResetRequest.getEmail(), passwordResetRequest.getNewPassword());
         return ResponseEntity.ok().body("Successfully reset password!");
     }
 }

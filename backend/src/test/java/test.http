@@ -22,7 +22,7 @@ GET http://localhost:8080/api/tariffs/search?keyword=1704
 Accept: application/json
 
 ###
-POST http://localhost:8080/signup
+POST http://localhost:8080/accounts
 Content-Type: application/json
 
 {
@@ -46,21 +46,13 @@ Content-Type: application/json
 
 
 ### 
-POST http://localhost:8080/updateEmail/15
+PUT http://localhost:8080/accounts/15
 Content-Type: application/json
 
 {
   "userID": 15,
+  "username": "restuser15",
   "email": "restuser3@gmail.com"
-}
-
-###
-POST http://localhost:8080/updateUsername/15
-Content-Type: application/json
-
-{
-  "userID": 15,
-  "username": "rest"
 }
 
 ###

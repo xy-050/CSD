@@ -18,7 +18,7 @@ export function useFavourites(userId) {
                 setLoading(true);
                 setError(null);
 
-                const res = await api.get(`/account/${userId}/favourites`);
+                const res = await api.get(`/accounts/${userId}/favourites`);
                 const data = res.data;
 
                 console.log("Favourites data:", data);
@@ -39,7 +39,7 @@ export function useFavourites(userId) {
         if (!userId) return;
 
         try {
-            await api.delete(`/account/${userId}/favourites`, {
+            await api.delete(`/accounts/${userId}/favourites`, {
                 params: { htsCode }
             });
 
@@ -58,7 +58,7 @@ export function useFavourites(userId) {
 
         try {
             setLoading(true);
-            const res = await api.get(`/account/${userId}/favourites`);
+            const res = await api.get(`/accounts/${userId}/favourites`);
             const data = res.data;
             setFavourites(Array.isArray(data) ? data : []);
         } catch (err) {

@@ -7,10 +7,12 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/accounts/{userID}/favourites")
 public class FavouritesController {
 
     private final FavouritesService favouritesService;
@@ -19,19 +21,19 @@ public class FavouritesController {
         this.favouritesService = favouritesService;
     }
 
-    @PostMapping("/account/{userID}/favourites")
+    @PostMapping
     public ResponseEntity<?> addFavourite(@PathVariable Integer userID, @RequestParam String htsCode) {
         favouritesService.addFavourite(userID, htsCode);
         return ResponseEntity.ok("Added favourite: " + htsCode);
     }
 
-    @DeleteMapping("/account/{userID}/favourites")
+    @DeleteMapping
     public ResponseEntity<?> removeFavourite(@PathVariable Integer userID, @RequestParam String htsCode) {
         favouritesService.removeFavourite(userID, htsCode);
         return ResponseEntity.ok("Removed favourite: " + htsCode);
     }
 
-    @GetMapping("/account/{userID}/favourites")
+    @GetMapping
     public ResponseEntity<List<FavouritesDTO>> getFavourites(@PathVariable Integer userID) {
         return ResponseEntity.ok(favouritesService.getFavouritesHtsCodes(userID));
     }
