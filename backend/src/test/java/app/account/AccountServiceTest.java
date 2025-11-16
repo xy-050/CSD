@@ -2,10 +2,12 @@ package app.account;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,7 +38,7 @@ public class AccountServiceTest {
     AccountService accountService;
 
     // ----------------------------------------------------------------
-    // --------------------- updateDetails() --------------------------
+    // -------------- testing updateDetails() method ------------------
     // ----------------------------------------------------------------
 
     // Test 1: User does not exist
@@ -230,7 +232,7 @@ public class AccountServiceTest {
     }
 
     // ----------------------------------------------------------------
-    // ---------------------- updatePassword() ------------------------
+    // --------------- testing updatePassword() method ----------------
     // ----------------------------------------------------------------
 
     @Test
@@ -311,7 +313,7 @@ public class AccountServiceTest {
     }
 
     // ----------------------------------------------------------------
-    // ------------------------ updateRole() --------------------------
+    // ----------------- testing updateRole() method ------------------
     // ----------------------------------------------------------------
     @Test
     void updateRole_WhenRoleIsUSER_ShouldUpdateSuccessfully() {
@@ -430,5 +432,173 @@ public class AccountServiceTest {
 
         assertEquals("USER", result.getRole());
         verify(accountRepository).save(account);
+    }
+
+    // Add these tests to the existing AccountServiceTest class
+
+    // -------------------------------------------------------------------
+    // ----------------- testing createAccount() method ------------------
+    // -------------------------------------------------------------------
+
+    @Test
+    void createAccount_WhenValidAccount_ShouldCreateSuccessfully() {
+        // Arrange
+        Account newAccount = new Account();
+        newAccount.setUsername("newuser");
+        newAccount.setEmail("newuser@example.com");
+        newAccount.setPassword("ValidPass123!");
+
+        when(accountRepository.findByUsername("newuser"))
+                .thenThrow(new UserNotFoundException("Account with username newuser not found!"));
+        when(accountRepository.findByEmail("newuser@example.com"))
+                .thenThrow(new UserNotFoundException("Account with email newuser@example.com not found!"));
+        when(passwordEncoder.encode("ValidPass123!")).thenReturn("encodedPassword");
+        when(accountRepository.save(any(Account.class))).thenReturn(newAccount);
+
+        // Act
+        Account result = accountService.createAccount(newAccount);
+
+        // Assert
+        assertNotNull(result);
+        verify(passwordEncoder, times(1)).encode("ValidPass123!");
+        verify(accountRepository, times(1)).save(newAccount);
+    }
+
+    @Test
+    void createAccount_WhenUsernameAlreadyExists_ShouldThrowUserConflictException() {
+        // Arrange
+        Account existingAccount = new Account();
+        existingAccount.setUsername("existinguser");
+        existingAccount.setEmail("existing@example.com");
+
+        Account newAccount = new Account();
+        newAccount.setUsername("existinguser");
+        newAccount.setEmail("new@example.com");
+        newAccount.setPassword("ValidPass123!");
+
+        when(accountRepository.findByUsername("existinguser"))
+                .thenReturn(Optional.of(existingAccount));
+
+        // Act & Assert
+        UserConflictException exception = assertThrows(
+                UserConflictException.class,
+                () -> accountService.createAccount(newAccount));
+        assertEquals("Username existinguser already exists!", exception.getMessage());
+        verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    void createAccount_WhenEmailAlreadyExists_ShouldThrowUserConflictException() {
+        // Arrange
+        Account existingAccount = new Account();
+        existingAccount.setUsername("existinguser");
+        existingAccount.setEmail("existing@example.com");
+
+        Account newAccount = new Account();
+        newAccount.setUsername("newuser");
+        newAccount.setEmail("existing@example.com");
+        newAccount.setPassword("ValidPass123!");
+
+        when(accountRepository.findByUsername("newuser"))
+                .thenThrow(new UserNotFoundException("Account with username newuser not found!"));
+        when(accountRepository.findByEmail("existing@example.com"))
+                .thenReturn(Optional.of(existingAccount));
+
+        // Act & Assert
+        UserConflictException exception = assertThrows(
+                UserConflictException.class,
+                () -> accountService.createAccount(newAccount));
+        assertEquals("Email already associated with a different account!", exception.getMessage());
+        verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    void createAccount_WhenInvalidPassword_ShouldThrowInvalidPasswordException() {
+        // Arrange
+        Account newAccount = new Account();
+        newAccount.setUsername("newuser");
+        newAccount.setEmail("newuser@example.com");
+        newAccount.setPassword("weak");
+
+        when(accountRepository.findByUsername("newuser"))
+                .thenThrow(new UserNotFoundException("Account with username newuser not found!"));
+        when(accountRepository.findByEmail("newuser@example.com"))
+                .thenThrow(new UserNotFoundException("Account with email newuser@example.com not found!"));
+
+        // Act & Assert
+        assertThrows(InvalidPasswordException.class, () -> accountService.createAccount(newAccount));
+        verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    void createAccount_WhenPasswordValid_ShouldEncodePassword() {
+        // Arrange
+        Account newAccount = new Account();
+        newAccount.setUsername("newuser");
+        newAccount.setEmail("newuser@example.com");
+        newAccount.setPassword("ValidPass123!");
+
+        when(accountRepository.findByUsername("newuser"))
+                .thenThrow(new UserNotFoundException("Account with username newuser not found!"));
+        when(accountRepository.findByEmail("newuser@example.com"))
+                .thenThrow(new UserNotFoundException("Account with email newuser@example.com not found!"));
+        when(passwordEncoder.encode("ValidPass123!")).thenReturn("encodedPassword");
+        when(accountRepository.save(newAccount)).thenReturn(newAccount);
+
+        // Act
+        accountService.createAccount(newAccount);
+
+        // Assert
+        assertEquals("encodedPassword", newAccount.getPassword());
+        verify(passwordEncoder, times(1)).encode("ValidPass123!");
+    }
+
+    // -------------------------------------------------------------------
+    // ------------ testing updatePasswordViaEmail() method --------------
+    // -------------------------------------------------------------------
+
+    @Test
+    void updatePasswordViaEmail_WhenValidEmail_ShouldUpdateSuccessfully() {
+        // Arrange
+        Account account = new Account();
+        account.setUserID(1);
+        account.setEmail("test@example.com");
+        account.setPassword("oldEncodedPassword");
+
+        when(accountRepository.findByEmail("test@example.com")).thenReturn(Optional.of(account));
+        when(passwordEncoder.encode("NewPassword123!")).thenReturn("newEncodedPassword");
+
+        // Act
+        accountService.updatePasswordViaEmail("test@example.com", "NewPassword123!");
+
+        // Assert
+        assertEquals("newEncodedPassword", account.getPassword());
+        verify(passwordEncoder, times(1)).encode("NewPassword123!");
+        verify(accountRepository, times(1)).save(account);
+    }
+
+    @Test
+    void updatePasswordViaEmail_WhenEmailNotFound_ShouldThrowUserNotFoundException() {
+        // Arrange
+        when(accountRepository.findByEmail("nonexistent@example.com"))
+                .thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(
+                UserNotFoundException.class,
+                () -> accountService.updatePasswordViaEmail("nonexistent@example.com", "NewPassword123!"));
+        verify(accountRepository, never()).save(any());
+    }
+
+    @Test
+    void updatePasswordViaEmail_WhenNullEmail_ShouldThrowUserNotFoundException() {
+        // Arrange
+        when(accountRepository.findByEmail(null)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(
+                UserNotFoundException.class,
+                () -> accountService.updatePasswordViaEmail(null, "NewPassword123!"));
+        verify(accountRepository, never()).save(any());
     }
 }
