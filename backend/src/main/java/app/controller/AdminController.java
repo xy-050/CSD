@@ -22,7 +22,7 @@ import app.exception.UserNotFoundException;
  * - Manage user roles
  */
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')") // All endpoints require ADMIN role
 public class AdminController {
 
@@ -33,7 +33,7 @@ public class AdminController {
     }
 
     /**
-     * GET /api/admin/users
+     * GET /admin/users
      * Lists all user accounts in the system.
      * 
      * @return List of all accounts
@@ -45,7 +45,7 @@ public class AdminController {
     }
 
     /**
-     * DELETE /api/admin/users/{userId}
+     * DELETE /admin/users/{userId}
      * deletes a user account.
      * 
      * @param userId The user ID to delete
@@ -62,7 +62,7 @@ public class AdminController {
     }
 
     /**
-     * GET /api/admin/stats
+     * GET /admin/stats
      * returns system statistics (user count, query count, etc.)
      * 
      * @return Statistics object
@@ -81,7 +81,7 @@ public class AdminController {
     }
 
     /**
-     * PUT /api/admin/users/{userId}/role
+     * PUT /admin/users/{userId}/role
      * updates a user's role (promote to admin or demote to user).
      * 
      * @param userId  The user ID to update

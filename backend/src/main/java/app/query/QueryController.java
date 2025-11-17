@@ -35,7 +35,7 @@ public class QueryController {
 	 * @param htsno
 	 * @return
 	 */
-	@GetMapping("/compare-countries")
+	@GetMapping("/countries")
 	public ResponseEntity<Map<String, Object>> compareCountryTariffs(@RequestParam String htsno) {
 		Map<String, Object> item = tariffService.searchByHtsNo(htsno);
 		Map<String, Object> countryTariffs = tariffService.extractCountryTariffs(item);
