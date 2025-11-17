@@ -75,7 +75,7 @@ public class FavouritesIntegrationTest {
 
         // Get auth token
         String loginJson = "{\"username\":\"favuser\",\"password\":\"Password123!\"}";
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+        MvcResult loginResult = mockMvc.perform(post("/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(loginJson))
                 .andReturn();
@@ -100,16 +100,13 @@ public class FavouritesIntegrationTest {
      */
     @Test
     public void testAddFavourite_Success() throws Exception {
-        String favouriteJson = "{\"htsCode\":\"0407.11.00.00\"}";
-
-        mockMvc.perform(post("/api/favourites")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(favouriteJson)
+        mockMvc.perform(post("/accounts/" + testUser.getUserID() + "/favourites")
+                .param("htsCode", "0407.11.00.00")
                 .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk());
 
         // Verify favourite was saved
-        Favourites savedFav = favouritesRepository.findByHtsCode("0407.11.00.00").orElse(null);
+        Favourites savedFav = favouritesRepository.findById("0407.11.00.00").orElse(null);
         assertNotNull(savedFav, "Favourite should be saved");
     }
 
@@ -143,7 +140,7 @@ public class FavouritesIntegrationTest {
         accountRepository.save(testUser);
 
         // Get favourites
-        MvcResult result = mockMvc.perform(get("/api/favourites")
+        MvcResult result = mockMvc.perform(get("/accounts/" + testUser.getUserID() + "/favourites")
                 .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -179,13 +176,17 @@ public class FavouritesIntegrationTest {
         accountRepository.save(testUser);
 
         // Remove favourite
-        mockMvc.perform(delete("/api/favourites/" + favourite.getFavouritesID())
+        String htsCodeToRemove = favourite.getHtsCode();
+        mockMvc.perform(delete("/accounts/" + testUser.getUserID() + "/favourites")
+                .param("htsCode", htsCodeToRemove)
                 .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk());
 
-        // Verify removed
-        assertFalse(favouritesRepository.existsById(favourite.getFavouritesID()),
-                    "Favourite should be deleted");
+        // Verify removed from user's favourites (favourite record still exists in DB)
+        Account updatedUser = accountRepository.findById(testUser.getUserID()).orElseThrow();
+        assertFalse(updatedUser.getFavourites().stream()
+                .anyMatch(f -> f.getHtsCode().equals(htsCodeToRemove)),
+                "Favourite should be removed from user");
     }
 
     /**
@@ -202,17 +203,14 @@ public class FavouritesIntegrationTest {
     @Test
     public void testAddDuplicateFavourite_HandledGracefully() throws Exception {
         // Add favourite first time
-        String favouriteJson = "{\"htsCode\":\"0407.11.00.00\"}";
-        mockMvc.perform(post("/api/favourites")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(favouriteJson)
+        mockMvc.perform(post("/accounts/" + testUser.getUserID() + "/favourites")
+                .param("htsCode", "0407.11.00.00")
                 .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk());
 
         // Try to add same favourite again
-        mockMvc.perform(post("/api/favourites")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(favouriteJson)
+        mockMvc.perform(post("/accounts/" + testUser.getUserID() + "/favourites")
+                .param("htsCode", "0407.11.00.00")
                 .header("Authorization", "Bearer " + authToken));
         // Should either succeed (idempotent) or return conflict status
 
@@ -260,7 +258,7 @@ public class FavouritesIntegrationTest {
         accountRepository.save(testUser);
 
         // Get testUser's favourites
-        MvcResult result = mockMvc.perform(get("/api/favourites")
+        MvcResult result = mockMvc.perform(get("/accounts/" + testUser.getUserID() + "/favourites")
                 .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -286,7 +284,7 @@ public class FavouritesIntegrationTest {
      */
     @Test
     public void testGetFavourites_WithoutAuth_Fails() throws Exception {
-        mockMvc.perform(get("/api/favourites"))
+        mockMvc.perform(get("/accounts/" + testUser.getUserID() + "/favourites"))
                 .andExpect(status().isUnauthorized());
     }
 }

@@ -61,7 +61,7 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
-      <version>1.18.26</version>
+      <version>1.18.42</version>
       <scope>provided</scope>
     </dependency>
 
@@ -146,7 +146,7 @@
             <path>
               <groupId>org.projectlombok</groupId>
               <artifactId>lombok</artifactId>
-              <version>1.18.26</version>
+              <version>1.18.42</version>
             </path>
           </annotationProcessorPaths>
         </configuration>
@@ -166,6 +166,29 @@
           </includes>
         </configuration>
       </plugin>
+
+      <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.8.12</version> <!-- use latest -->
+            <executions>
+                <!-- Attach JaCoCo agent when tests run -->
+                <execution>
+                    <goals>
+                        <goal>prepare-agent</goal>
+                    </goals>
+                </execution>
+
+                <!-- Generate the coverage report after tests -->
+                <execution>
+                    <id>report</id>
+                    <phase>test</phase>
+                    <goals>
+                        <goal>report</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
     </plugins>
   </build>
 </project>

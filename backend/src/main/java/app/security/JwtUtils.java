@@ -50,9 +50,9 @@ public class JwtUtils {
                 .claim("scope", scope)
                 .build();
 
-        // Create JWT with HMAC SHA-512 signature
+        // Create JWT with HMAC SHA-256 signature
         var encoderParameters = JwtEncoderParameters.from(
-                JwsHeader.with(MacAlgorithm.HS512).build(),
+                JwsHeader.with(MacAlgorithm.HS256).build(),
                 claims);
 
         return this.jwtEncoder.encode(encoderParameters).getTokenValue();

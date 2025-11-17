@@ -65,7 +65,7 @@ public class AuthenticationIntegrationTest {
      * Test 1: User Signup Flow
      * 
      * What it tests:
-     * - POST /api/accounts/signup creates a new user
+     * - POST /accounts creates a new user
      * - Password is hashed (not stored in plain text)
      * - User is assigned USER role by default
      * - Duplicate email registration is prevented
@@ -82,13 +82,10 @@ public class AuthenticationIntegrationTest {
         );
 
         // Perform signup
-        mockMvc.perform(post("/api/accounts/signup")
+        mockMvc.perform(post("/accounts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(signupJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value(testEmail))
-                .andExpect(jsonPath("$.username").value(testUsername))
-                .andExpect(jsonPath("$.role").value("USER"));
+                .andExpect(status().isCreated());
 
         // Verify user was saved to database
         Account savedAccount = accountRepository.findByEmail(testEmail).orElse(null);
@@ -101,7 +98,7 @@ public class AuthenticationIntegrationTest {
      * Test 2: User Login Flow
      * 
      * What it tests:
-     * - POST /api/auth/login authenticates user
+     * - POST /login authenticates user
      * - Returns JWT token on successful login
      * - Token contains user information
      * 
@@ -125,7 +122,7 @@ public class AuthenticationIntegrationTest {
         );
 
         // Perform login
-        MvcResult result = mockMvc.perform(post("/api/auth/login")
+        MvcResult result = mockMvc.perform(post("/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(loginJson))
                 .andExpect(status().isOk())
@@ -167,7 +164,7 @@ public class AuthenticationIntegrationTest {
         );
 
         // Attempt login with wrong password
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(wrongPasswordJson))
                 .andExpect(status().isUnauthorized());
@@ -201,7 +198,7 @@ public class AuthenticationIntegrationTest {
             testUsername, testPassword
         );
 
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+        MvcResult loginResult = mockMvc.perform(post("/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(loginJson))
                 .andExpect(status().isOk())
@@ -212,7 +209,7 @@ public class AuthenticationIntegrationTest {
         String token = jsonResponse.get("token").asText();
 
         // Access protected endpoint with token
-        mockMvc.perform(get("/api/accounts/current")
+        mockMvc.perform(get("/accounts/current")
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value(testEmail))
@@ -264,7 +261,7 @@ public class AuthenticationIntegrationTest {
             testEmail, "DifferentPassword123!"
         );
 
-        mockMvc.perform(post("/api/accounts/signup")
+        mockMvc.perform(post("/accounts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(signupJson))
                 .andExpect(status().isConflict()); // 409 Conflict

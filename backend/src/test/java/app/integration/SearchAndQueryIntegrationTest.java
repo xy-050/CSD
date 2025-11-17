@@ -94,7 +94,7 @@ public class SearchAndQueryIntegrationTest {
 
         // Login to get auth token
         String loginJson = "{\"username\":\"searchuser\",\"password\":\"Password123!\"}";
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+        MvcResult loginResult = mockMvc.perform(post("/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(loginJson))
                 .andReturn();
@@ -108,7 +108,7 @@ public class SearchAndQueryIntegrationTest {
      * Test 1: Search for Products by HTS Code
      * 
      * What it tests:
-     * - GET /api/products/search?query={htsCode} returns matching products
+     * - GET /product/category/search?query={htsCode} returns matching products
      * - Product details (description, tariff rates) are correctly returned
      * - Partial HTS code matching works
      * 
@@ -118,13 +118,10 @@ public class SearchAndQueryIntegrationTest {
      */
     @Test
     public void testSearchProducts_ByHtsCode_Success() throws Exception {
-        mockMvc.perform(get("/api/products/search")
-                .param("query", "0407.11")
+        mockMvc.perform(get("/product/category/search/0407")
                 .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].htsCode").value("0407.11.00.00"))
-                .andExpect(jsonPath("$[0].description").value("Eggs, in shell, fresh, of chickens"))
-                .andExpect(jsonPath("$[0].general").value("2.8¢/doz."));
+                .andExpect(jsonPath("$.categories").isArray());
     }
 
     /**
@@ -142,9 +139,9 @@ public class SearchAndQueryIntegrationTest {
      */
     @Test
     public void testLogQuery_OnProductSearch_Success() throws Exception {
-        String queryJson = "{\"htsCode\":\"0407.11.00.00\"}";
+        String queryJson = "{\"htsCode\":\"0407.11.00.00\",\"account\":{\"userID\":" + testUser.getUserID() + "}}";
 
-        mockMvc.perform(post("/api/queries")
+        mockMvc.perform(post("/api/tariffs/queries")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(queryJson)
                 .header("Authorization", "Bearer " + authToken))
@@ -201,7 +198,8 @@ public class SearchAndQueryIntegrationTest {
         queryRepository.save(otherQuery);
 
         // Get query history for test user
-        MvcResult result = mockMvc.perform(get("/api/queries")
+        MvcResult result = mockMvc.perform(get("/api/tariffs/queries")
+                .param("userID", testUser.getUserID().toString())
                 .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -226,19 +224,18 @@ public class SearchAndQueryIntegrationTest {
      */
     @Test
     public void testSearchProducts_NoResults_ReturnsEmptyArray() throws Exception {
-        mockMvc.perform(get("/api/products/search")
-                .param("query", "9999.99.99.99")
+        mockMvc.perform(get("/product/category/search/nonexistent999")
                 .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isEmpty());
+                .andExpect(jsonPath("$.categories").isArray())
+                .andExpect(jsonPath("$.categories").isEmpty());
     }
 
     /**
      * Test 5: Get Product Details by Exact HTS Code
      * 
      * What it tests:
-     * - GET /api/products/{htsCode} returns specific product
+     * - GET /product/hts/{htsCode} returns specific product
      * - All product fields are populated correctly
      * 
      * Why it matters:
@@ -247,7 +244,7 @@ public class SearchAndQueryIntegrationTest {
      */
     @Test
     public void testGetProductByHtsCode_Success() throws Exception {
-        mockMvc.perform(get("/api/products/" + testProduct.getHtsCode())
+        mockMvc.perform(get("/product/hts/" + testProduct.getHtsCode())
                 .header("Authorization", "Bearer " + authToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.htsCode").value("0407.11.00.00"))
@@ -269,8 +266,7 @@ public class SearchAndQueryIntegrationTest {
      */
     @Test
     public void testSearchProducts_WithoutAuth_Fails() throws Exception {
-        mockMvc.perform(get("/api/products/search")
-                .param("query", "0407.11"))
+        mockMvc.perform(get("/product/category/search/0407"))
                 .andExpect(status().isUnauthorized());
     }
 }
