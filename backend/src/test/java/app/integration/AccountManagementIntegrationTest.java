@@ -253,7 +253,7 @@ public class AccountManagementIntegrationTest {
      * Test 6: Admin Can View All Accounts
      * 
      * What it tests:
-     * - GET /api/admin/users returns all users (admin only)
+     * - GET /admin/users returns all users (admin only)
      * - Regular users cannot access this endpoint
      * - Passwords are not included in response
      * 
@@ -264,7 +264,7 @@ public class AccountManagementIntegrationTest {
      */
     @Test
     public void testAdminGetAllAccounts_Success() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/admin/users")
+        MvcResult result = mockMvc.perform(get("/admin/users")
                 .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -289,7 +289,7 @@ public class AccountManagementIntegrationTest {
      */
     @Test
     public void testRegularUserCannotAccessAdminEndpoints_Fails() throws Exception {
-        mockMvc.perform(get("/api/admin/users")
+        mockMvc.perform(get("/admin/users")
                 .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isForbidden());
     }
@@ -298,7 +298,7 @@ public class AccountManagementIntegrationTest {
      * Test 8: Admin Can Change User Role
      * 
      * What it tests:
-     * - PATCH /api/admin/users/{id}/role changes user's role
+     * - PATCH /admin/users/{id}/role changes user's role
      * - Admin can promote USER to ADMIN
      * - Admin can demote ADMIN to USER
      * 
@@ -311,7 +311,7 @@ public class AccountManagementIntegrationTest {
     public void testAdminChangeUserRole_Success() throws Exception {
         String roleJson = "{\"role\":\"ADMIN\"}";
 
-        mockMvc.perform(put("/api/admin/users/" + testUser.getUserID() + "/role")
+        mockMvc.perform(put("/admin/users/" + testUser.getUserID() + "/role")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(roleJson)
                 .header("Authorization", "Bearer " + adminToken))

@@ -112,7 +112,7 @@ public class AdminControllerIntegrationTest {
      * Test 1: Admin Can View All Users
      * 
      * What it tests:
-     * - GET /api/admin/users returns all user accounts
+     * - GET /admin/users returns all user accounts
      * - Response includes all users (admin + regular users)
      * - User details are properly serialized
      * 
@@ -123,7 +123,7 @@ public class AdminControllerIntegrationTest {
      */
     @Test
     public void testAdminGetAllUsers_Success() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/admin/users")
+        MvcResult result = mockMvc.perform(get("/admin/users")
                 .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -149,7 +149,7 @@ public class AdminControllerIntegrationTest {
      * Test 2: Regular User Cannot Access Admin Endpoints
      * 
      * What it tests:
-     * - Non-admin users are blocked from /api/admin/* endpoints
+     * - Non-admin users are blocked from /admin/* endpoints
      * - Returns 403 Forbidden status
      * - @PreAuthorize security annotation works
      * 
@@ -160,7 +160,7 @@ public class AdminControllerIntegrationTest {
      */
     @Test
     public void testRegularUserCannotAccessAdminEndpoints_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/admin/users")
+        mockMvc.perform(get("/admin/users")
                 .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isForbidden());
     }
@@ -178,7 +178,7 @@ public class AdminControllerIntegrationTest {
      */
     @Test
     public void testUnauthenticatedUserCannotAccessAdminEndpoints_ReturnsUnauthorized() throws Exception {
-        mockMvc.perform(get("/api/admin/users"))
+        mockMvc.perform(get("/admin/users"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -186,7 +186,7 @@ public class AdminControllerIntegrationTest {
      * Test 4: Admin Can Delete User Account
      * 
      * What it tests:
-     * - DELETE /api/admin/users/{userId} removes user
+     * - DELETE /admin/users/{userId} removes user
      * - User is actually deleted from database
      * - Returns success message
      * 
@@ -199,7 +199,7 @@ public class AdminControllerIntegrationTest {
     public void testAdminDeleteUser_Success() throws Exception {
         Integer userIdToDelete = regularUser2.getUserID();
 
-        mockMvc.perform(delete("/api/admin/users/" + userIdToDelete)
+        mockMvc.perform(delete("/admin/users/" + userIdToDelete)
                 .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(content().string("User deleted successfully"));
@@ -225,7 +225,7 @@ public class AdminControllerIntegrationTest {
     public void testAdminDeleteNonExistentUser_ReturnsNotFound() throws Exception {
         Integer nonExistentUserId = 99999;
 
-        mockMvc.perform(delete("/api/admin/users/" + nonExistentUserId)
+        mockMvc.perform(delete("/admin/users/" + nonExistentUserId)
                 .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isNotFound());
     }
@@ -243,7 +243,7 @@ public class AdminControllerIntegrationTest {
      */
     @Test
     public void testRegularUserCannotDeleteUser_ReturnsForbidden() throws Exception {
-        mockMvc.perform(delete("/api/admin/users/" + regularUser2.getUserID())
+        mockMvc.perform(delete("/admin/users/" + regularUser2.getUserID())
                 .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isForbidden());
 
@@ -256,7 +256,7 @@ public class AdminControllerIntegrationTest {
      * Test 7: Admin Can View System Statistics
      * 
      * What it tests:
-     * - GET /api/admin/stats returns system metrics
+     * - GET /admin/stats returns system metrics
      * - Statistics include total users and admin count
      * - Counts are accurate
      * 
@@ -267,7 +267,7 @@ public class AdminControllerIntegrationTest {
      */
     @Test
     public void testAdminGetSystemStats_Success() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/admin/stats")
+        MvcResult result = mockMvc.perform(get("/admin/stats")
                 .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -297,7 +297,7 @@ public class AdminControllerIntegrationTest {
      */
     @Test
     public void testRegularUserCannotViewStats_ReturnsForbidden() throws Exception {
-        mockMvc.perform(get("/api/admin/stats")
+        mockMvc.perform(get("/admin/stats")
                 .header("Authorization", "Bearer " + userToken))
                 .andExpect(status().isForbidden());
     }
@@ -306,7 +306,7 @@ public class AdminControllerIntegrationTest {
      * Test 9: Admin Can Promote User to Admin
      * 
      * What it tests:
-     * - PUT /api/admin/users/{userId}/role changes user role
+     * - PUT /admin/users/{userId}/role changes user role
      * - User role is updated to ADMIN
      * - Changes are persisted to database
      * 
@@ -319,7 +319,7 @@ public class AdminControllerIntegrationTest {
     public void testAdminPromoteUserToAdmin_Success() throws Exception {
         String roleUpdateJson = "{\"role\":\"ADMIN\"}";
 
-        mockMvc.perform(put("/api/admin/users/" + regularUser1.getUserID() + "/role")
+        mockMvc.perform(put("/admin/users/" + regularUser1.getUserID() + "/role")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(roleUpdateJson)
                 .header("Authorization", "Bearer " + adminToken))
@@ -352,7 +352,7 @@ public class AdminControllerIntegrationTest {
         // Then demote back to USER
         String roleUpdateJson = "{\"role\":\"USER\"}";
 
-        mockMvc.perform(put("/api/admin/users/" + regularUser1.getUserID() + "/role")
+        mockMvc.perform(put("/admin/users/" + regularUser1.getUserID() + "/role")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(roleUpdateJson)
                 .header("Authorization", "Bearer " + adminToken))
@@ -379,7 +379,7 @@ public class AdminControllerIntegrationTest {
     public void testRegularUserCannotChangeRoles_ReturnsForbidden() throws Exception {
         String roleUpdateJson = "{\"role\":\"ADMIN\"}";
 
-        mockMvc.perform(put("/api/admin/users/" + regularUser2.getUserID() + "/role")
+        mockMvc.perform(put("/admin/users/" + regularUser2.getUserID() + "/role")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(roleUpdateJson)
                 .header("Authorization", "Bearer " + userToken))
@@ -406,7 +406,7 @@ public class AdminControllerIntegrationTest {
         Integer nonExistentUserId = 99999;
         String roleUpdateJson = "{\"role\":\"ADMIN\"}";
 
-        mockMvc.perform(put("/api/admin/users/" + nonExistentUserId + "/role")
+        mockMvc.perform(put("/admin/users/" + nonExistentUserId + "/role")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(roleUpdateJson)
                 .header("Authorization", "Bearer " + adminToken))
@@ -429,7 +429,7 @@ public class AdminControllerIntegrationTest {
     @Test
     public void testSystemStatsUpdateAfterRoleChange_Success() throws Exception {
         // Get initial stats
-        MvcResult initialResult = mockMvc.perform(get("/api/admin/stats")
+        MvcResult initialResult = mockMvc.perform(get("/admin/stats")
                 .header("Authorization", "Bearer " + adminToken))
                 .andReturn();
         JsonNode initialStats = objectMapper.readTree(initialResult.getResponse().getContentAsString());
@@ -437,14 +437,14 @@ public class AdminControllerIntegrationTest {
 
         // Promote user to admin
         String roleUpdateJson = "{\"role\":\"ADMIN\"}";
-        mockMvc.perform(put("/api/admin/users/" + regularUser1.getUserID() + "/role")
+        mockMvc.perform(put("/admin/users/" + regularUser1.getUserID() + "/role")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(roleUpdateJson)
                 .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk());
 
         // Get updated stats
-        MvcResult updatedResult = mockMvc.perform(get("/api/admin/stats")
+        MvcResult updatedResult = mockMvc.perform(get("/admin/stats")
                 .header("Authorization", "Bearer " + adminToken))
                 .andReturn();
         JsonNode updatedStats = objectMapper.readTree(updatedResult.getResponse().getContentAsString());
@@ -472,14 +472,14 @@ public class AdminControllerIntegrationTest {
     public void testAdminListShowsUpdatedRoles_Success() throws Exception {
         // Promote user to admin
         String roleUpdateJson = "{\"role\":\"ADMIN\"}";
-        mockMvc.perform(put("/api/admin/users/" + regularUser1.getUserID() + "/role")
+        mockMvc.perform(put("/admin/users/" + regularUser1.getUserID() + "/role")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(roleUpdateJson)
                 .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk());
 
         // Get all users
-        MvcResult result = mockMvc.perform(get("/api/admin/users")
+        MvcResult result = mockMvc.perform(get("/admin/users")
                 .header("Authorization", "Bearer " + adminToken))
                 .andReturn();
 
