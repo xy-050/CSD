@@ -7,6 +7,7 @@ import java.util.Set;
 
 import app.favourites.Favourites;
 import app.query.Query;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -38,10 +39,12 @@ public class Account {
     private String email;
     private String role;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     private List<Query> queries = new ArrayList<>();
 
     // User favourited hts codes
+    @JsonIgnore
     @ManyToMany
     @JoinTable(
         name = "account_favourites",
